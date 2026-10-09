@@ -17,7 +17,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
 | Giveaways | Planned | Entry controls, restart-safe timers, fair draws, rerolls |
-| Community | Planned | Starboard, counters, reminders, polls, autoresponders, bump reminders |
+| Community | Native polls with multiple choices and Discord-managed expiration | Starboard, counters, reminders, autoresponders, bump reminders |
 | VoiceMaster | Planned | Temporary rooms, ownership, permissions, cleanup |
 | Music and TTS | Planned | Voice transport, queue, source adapters, volume/loop, effects, licensed provider support |
 | Last.fm and Spotify | Planned | Linking, listening stats, artist searches, leaderboards, metadata adapters |

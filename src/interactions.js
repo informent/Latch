@@ -42,6 +42,25 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (commandName === 'poll') {
+      if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to publish a poll.') };
+      const options = optionsOf(interaction);
+      const question = findOption(options, 'question');
+      const rawAnswers = findOption(options, 'answers');
+      const hours = findOption(options, 'hours') ?? 24;
+      const multiple = findOption(options, 'multiple') ?? false;
+      const answers = typeof rawAnswers === 'string' ? rawAnswers.split('|').map((text) => text.trim()) : [];
+      if (typeof question !== 'string' || !question.trim() || question.length > 300 || answers.length < 2 || answers.length > 10 || answers.some((text) => !text || text.length > 55) || new Set(answers.map((text) => text.toLowerCase())).size !== answers.length || !Number.isInteger(hours) || hours < 1 || hours > 768 || typeof multiple !== 'boolean') return { immediate: response('Use a question up to 300 characters, 2 to 10 distinct choices separated by | (55 characters each), and 1 to 768 hours.') };
+      return { immediate: defer(), work: async () => {
+        try {
+          await discord.createMessage(interaction.channel_id, { poll: { question: { text: question.trim() }, answers: answers.map((text) => ({ poll_media: { text } })), duration: hours, allow_multiselect: multiple, layout_type: 1 }, allowed_mentions: { parse: [] } });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Poll published in this channel. Discord manages voting and expiration even while OpenDesk is offline.', allowed_mentions: { parse: [] } });
+        } catch {
+          logger('poll_publish_failed', {});
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not publish the poll. Check the bot Send Messages and Send Polls permissions and that this channel supports polls.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'fun') {
       const action = subcommand?.name;
       if (action === 'coin') return { immediate: response(`Coin flip: **${crypto.randomInt(2) ? 'Heads' : 'Tails'}**.`) };

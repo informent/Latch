@@ -7,6 +7,10 @@ const reason = option(3, 'reason', 'Reason recorded in the server audit log.', {
 
 const commands = [
   {
+    name: 'poll', description: 'Create a native Discord community poll.', type: 1, default_member_permissions: '8192',
+    options: [option(3, 'question', 'Question to vote on.', { required: true, max_length: 300 }), option(3, 'answers', 'Separate 2 to 10 choices with | (each up to 55 characters).', { required: true, max_length: 600 }), option(4, 'hours', 'Voting duration in hours (default 24).', { min_value: 1, max_value: 768 }), option(5, 'multiple', 'Allow voters to select multiple choices.')]
+  },
+  {
     name: 'ticket', description: 'Create or close a private support ticket.', type: 1,
     options: [subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })])]
   },

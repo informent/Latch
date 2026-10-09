@@ -13,6 +13,7 @@ test('registers each feature command without bulk-replacing other app commands',
   assert.equal(calls.length, commands.length);
   assert.equal(calls[0][0], 'POST');
   assert.equal(calls[0][1], `/applications/${config.applicationId}/guilds/${config.guildId}/commands`);
+  calls.shift();
   assert.equal(calls[0][2].name, 'ticket');
   assert.equal(Array.isArray(calls[0][2]), false);
   const close = calls[0][2].options.find((option) => option.name === 'close');

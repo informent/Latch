@@ -1,5 +1,9 @@
 # OpenDesk
 
+### Community polls
+
+Use `/poll question:"Next event?" answers:"Games | Movie | Trivia" hours:24 multiple:false` to publish a native Discord poll in the current channel. Staff need Manage Messages; the bot needs Send Messages and Send Polls. Questions allow 300 characters, with 2–10 distinct choices of up to 55 characters each. Voting lasts 1–768 hours and continues while OpenDesk is offline. Discord handles votes and expiration; OpenDesk does not store voter records. Re-run `npm run register` after updating to register the new command. Native poll constraints follow the [Discord API documentation](https://docs.discord.com/developers/resources/poll).
+
 OpenDesk is a free, open-source, self-hosted Discord server bot. Its current feature suites cover moderation, role management, persistent staff warnings, server utilities, private support tickets, and a per-server coin economy. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.

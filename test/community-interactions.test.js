@@ -4,6 +4,28 @@ const assert = require('node:assert/strict');
 const { createInteractionHandler } = require('../src/interactions');
 const config = { guildId: '123456789012345678', applicationId: '223456789012345678' };
 const base = { type: 2, guild_id: config.guildId, channel_id: '323456789012345678', token: 'fake', member: { user: { id: '423456789012345678' }, permissions: '0' } };
+
+test('polls enforce staff access and create native channel votes with safe defaults', async () => {
+  const sent = [];
+  const handler = createInteractionHandler({ config, discord: { createMessage: async (...args) => sent.push(args), editOriginalResponse: async () => {} } });
+  const data = { name: 'poll', options: [{ name: 'question', value: 'Next event?' }, { name: 'answers', value: ' Games | Movie ' }] };
+  assert.match((await handler({ ...base, data })).immediate.data.content, /Manage Messages/);
+  const result = await handler({ ...base, data, member: { ...base.member, permissions: '8192' } });
+  assert.equal(result.immediate.data.flags, 64);
+  await result.work();
+  assert.deepEqual(sent, [[base.channel_id, { poll: { question: { text: 'Next event?' }, answers: [{ poll_media: { text: 'Games' } }, { poll_media: { text: 'Movie' } }], duration: 24, allow_multiselect: false, layout_type: 1 }, allowed_mentions: { parse: [] } }]]);
+});
+
+test('polls reject invalid choices and durations before API calls and hide transport errors', async () => {
+  const edits = [];
+  const logs = [];
+  const handler = createInteractionHandler({ config, logger: (...args) => logs.push(args), discord: { createMessage: async () => { throw new Error('secret-token'); }, editOriginalResponse: async (...args) => edits.push(args) } });
+  const invoke = (answers, hours = 24) => handler({ ...base, member: { ...base.member, permissions: '8192' }, data: { name: 'poll', options: [{ name: 'question', value: 'Vote' }, { name: 'answers', value: answers }, { name: 'hours', value: hours }] } });
+  for (const [choices, hours] of [['A|a', 24], ['A||B', 24], ['a'.repeat(56) + '|B', 24], ['A|B', 769], ['A|B', 1.5]]) assert.equal((await invoke(choices, hours)).work, undefined);
+  await (await invoke('A|B')).work();
+  assert.match(edits[0][2].content, /Could not publish/);
+  assert.doesNotMatch(JSON.stringify({ edits, logs }), /secret-token/);
+});
 test('embeds require authorization and publish only to the invoking channel without mentions', async () => {
   const sent = [];
   const handler = createInteractionHandler({ config, discord: { createMessage: async (...args) => sent.push(args), editOriginalResponse: async () => {} } });
