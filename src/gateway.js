@@ -36,6 +36,7 @@ class GatewayClient {
     this.lastHeartbeatAck = true;
     this.reconnectAttempt = 0;
     this.messageQueue = Promise.resolve();
+    this.dispatchQueue = Promise.resolve();
   }
 
   start() {
@@ -128,7 +129,9 @@ class GatewayClient {
       this.reconnectAttempt = 0;
       this.#log('gateway_resumed', {});
     }
-    await this.onDispatch(packet.t, packet.d);
+    this.dispatchQueue = this.dispatchQueue.then(() => this.onDispatch(packet.t, packet.d)).catch((error) => {
+      this.#log('gateway_dispatch_failed', { event: packet.t, message: error.message });
+    });
   }
 
   #hello(interval) {

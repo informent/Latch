@@ -95,3 +95,31 @@ test('fatal authentication close stops instead of reconnecting', async () => {
   await timers.advance(60_000);
   assert.equal(sockets.length, 1);
 });
+
+test('slow dispatch handlers do not block heartbeat acknowledgements', async () => {
+  const timers = new FakeTimers();
+  const sockets = [];
+  let releaseDispatch;
+  const dispatchWait = new Promise((resolve) => { releaseDispatch = resolve; });
+  const client = new GatewayClient({
+    token: 'fake-token', intents: 513, timers, random: () => 0.5,
+    getGateway: async () => ({ url: 'wss://gateway.discord.gg/' }),
+    webSocketFactory: (url) => { const socket = new FakeSocket(url); sockets.push(socket); return socket; },
+    onDispatch: async () => dispatchWait
+  });
+  client.start();
+  await flush();
+  sockets[0].packet({ op: 10, d: { heartbeat_interval: 1000 } });
+  sockets[0].packet({ op: 0, s: 1, t: 'READY', d: { session_id: 'session', resume_gateway_url: 'wss://resume.discord.gg/' } });
+  await flush();
+  sockets[0].packet({ op: 0, s: 2, t: 'MESSAGE_CREATE', d: { id: 'message' } });
+  await flush();
+  assert.equal(client.lastHeartbeatAck, true);
+  await timers.advance(500);
+  assert.equal(client.lastHeartbeatAck, false);
+  sockets[0].packet({ op: 11, d: null });
+  await flush();
+  assert.equal(client.lastHeartbeatAck, true);
+  releaseDispatch();
+  client.stop();
+});
