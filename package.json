@@ -1,0 +1,14 @@
+{
+  "name": "opendesk-discord",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
+  "license": "MIT",
+  "engines": { "node": ">=22.9.0" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "register": "node --env-file-if-exists=.env scripts/register-commands.js",
+    "test": "node --experimental-test-coverage test/run.js",
+    "check": "node --check src/config.js && node --check src/commands.js && node --check src/discord-api.js && node --check src/gateway.js && node --check src/guild-events.js && node --check src/level-store.js && node --check src/ticket-store.js && node --check src/moderation-store.js && node --check src/economy-store.js && node --check src/ticket-service.js && node --check src/interactions.js && node --check src/server.js && node --check scripts/register-commands.js"
+  }
+}

@@ -1,0 +1,5 @@
+.env
+data/tickets.json
+data/*.tmp
+node_modules/
+npm-debug.log*

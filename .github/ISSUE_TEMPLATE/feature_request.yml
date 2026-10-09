@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a free, self-hostable feature.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Please describe the community need. OpenDesk aims to stay free, self-hostable,
+        and privacy-conscious by default.
+  - type: textarea
+    id: need
+    attributes:
+      label: What problem would this solve?
+      description: Who would benefit and how often does this come up?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would a useful solution look like?
+    validations:
+      required: true
+  - type: textarea
+    id: tradeoffs
+    attributes:
+      label: Privacy, hosting, or maintenance tradeoffs
+      description: Note any extra data collection, dependencies, or operational burden.
+    validations:
+      required: false

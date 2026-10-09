@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a reproducible OpenDesk problem.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Please use a test server and fabricated IDs/content. Never include bot tokens,
+        interaction tokens, private messages, ticket-store files, or real member IDs.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the behavior and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Use fake users and a test server; avoid sharing private server details.
+      placeholder: 1. Configure ... 2. Run ... 3. Observe ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: OpenDesk version or commit
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: Node.js version and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant redacted logs
+      description: Remove tokens, IDs, URLs containing secrets, and private content before posting.
+    validations:
+      required: false
