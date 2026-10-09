@@ -58,3 +58,18 @@ test('account limit rejects a new member without changing existing balances', as
   assert.equal(store.accounts.size, MAX_LEVEL_ACCOUNTS);
   assert.equal(store.get(guild, member).xp, 0);
 });
+
+test('failed durable XP write rolls back the in-memory award', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-levels-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const blockedParent = path.join(root, 'is-a-directory');
+  await fs.mkdir(blockedParent);
+  const blockedPath = path.join(blockedParent, 'levels.json');
+  const store = new LevelStore(blockedPath, { now: () => Date.parse('2026-10-09T00:00:00.000Z') });
+  await store.load();
+  await fs.rm(blockedParent, { recursive: true });
+  await fs.writeFile(blockedParent, 'parent path is now a file');
+  await assert.rejects(store.awardMessage(guild, member));
+  assert.equal(store.accounts.size, 0);
+  assert.equal(store.get(guild, member).xp, 0);
+});

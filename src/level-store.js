@@ -76,6 +76,7 @@ class LevelStore {
 
   async #transaction(update) {
     const task = this.queue.then(async () => {
+      const previous = new Map(this.accounts);
       const result = update();
       if (result.awarded === false) return result;
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
@@ -86,6 +87,7 @@ class LevelStore {
         return result;
       } catch (error) {
         await fs.rm(tempPath, { force: true }).catch(() => {});
+        this.accounts = previous;
         throw error;
       }
     });

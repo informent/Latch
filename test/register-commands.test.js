@@ -27,3 +27,23 @@ test('registers each feature command without bulk-replacing other app commands',
   assert.equal(calls[5][2].options[0].name, 'user');
   assert.deepEqual(calls[6][2].options.map((option) => option.name), ['levels', 'coins']);
 });
+
+test('all slash-command payloads conform to documented name, description, and nesting limits', () => {
+  const namePattern = /^[-_'\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u;
+  for (const command of commands) {
+    assert.match(command.name, namePattern);
+    assert.ok(command.description.length >= 1 && command.description.length <= 100);
+    assert.ok(command.options.length <= 25);
+    const topLevelKinds = new Set(command.options.map((item) => item.type));
+    assert.ok(topLevelKinds.size <= 1, `${command.name} mixes subcommands and parameters`);
+    for (const item of command.options) {
+      assert.match(item.name, namePattern);
+      assert.ok(item.description.length >= 1 && item.description.length <= 100);
+      assert.ok((item.options || []).length <= 25);
+      for (const parameter of item.options || []) {
+        assert.match(parameter.name, namePattern);
+        assert.ok(parameter.description.length >= 1 && parameter.description.length <= 100);
+      }
+    }
+  }
+});
