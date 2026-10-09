@@ -9,6 +9,7 @@ const { EconomyStore } = require('./economy-store');
 const { GatewayClient } = require('./gateway');
 const { GuildEventService } = require('./guild-events');
 const { LevelStore } = require('./level-store');
+const { AutoModService } = require('./automod-service');
 const { TicketService } = require('./ticket-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
@@ -107,7 +108,8 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   await levels.load();
   const botUser = await discord.getCurrentUser();
   const tickets = new TicketService({ config, store, discord, botUserId: botUser.id });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, discord, logger });
+  const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
   const guildEvents = new GuildEventService({ config, discord, levels, logger });
   if (config.gatewayEnabled !== false && gateway) {

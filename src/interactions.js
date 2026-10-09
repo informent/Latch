@@ -34,7 +34,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, moderation, economy, levels, discord, logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, discord, logger = () => {}, now = () => new Date() }) {
   return async function handle(interaction) {
     if (interaction.type === 1) return { immediate: { type: 1 } };
     if (interaction.type !== 2 || interaction.guild_id !== config.guildId) return { immediate: response('This command is not available here.') };
@@ -42,6 +42,65 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (commandName === 'fun') {
+      const action = subcommand?.name;
+      if (action === 'coin') return { immediate: response(`Coin flip: **${crypto.randomInt(2) ? 'Heads' : 'Tails'}**.`) };
+      if (action === 'roll') {
+        const sides = findOption(subcommand.options || [], 'sides') ?? 6;
+        if (!Number.isInteger(sides) || sides < 2 || sides > 1000) return { immediate: response('Choose a die with 2 to 1000 sides.') };
+        return { immediate: response(`D${sides}: **${crypto.randomInt(1, sides + 1)}**.`) };
+      }
+      if (action === 'eightball') {
+        const question = findOption(subcommand.options || [], 'question');
+        if (typeof question !== 'string' || !question.trim() || question.length > 300) return { immediate: response('Enter a question up to 300 characters.') };
+        const answers = ['Yes.', 'No.', 'Most likely.', 'Ask again later.', 'The outlook is good.', 'Very doubtful.', 'Signs point to yes.', 'Cannot predict now.'];
+        return { immediate: response(`Magic eight ball: **${answers[crypto.randomInt(answers.length)]}**`) };
+      }
+      return { immediate: response('Choose a game.') };
+    }
+    if (commandName === 'embed') {
+      if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to publish an embed.') };
+      const options = optionsOf(interaction);
+      const title = findOption(options, 'title');
+      const description = findOption(options, 'description');
+      const colorText = findOption(options, 'color') || '5865f2';
+      if (typeof title !== 'string' || !title.trim() || title.length > 256 || typeof description !== 'string' || !description.trim() || description.length > 4000 || typeof colorText !== 'string' || !/^#?[0-9a-f]{6}$/i.test(colorText)) return { immediate: response('Enter a title up to 256 characters, a body up to 4000 characters, and a six-digit hex color.') };
+      return { immediate: defer(), work: async () => {
+        try {
+          await discord.createMessage(interaction.channel_id, { embeds: [{ title, description, color: parseInt(colorText.replace('#', ''), 16) }], allowed_mentions: { parse: [] } });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Embed published in this channel.', allowed_mentions: { parse: [] } });
+        } catch {
+          logger('embed_publish_failed', {});
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not publish the embed. Check the bot Send Messages and Embed Links permissions.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
+    if (commandName === 'automod') {
+      if (!hasPermission(interaction.member?.permissions, 32n)) return { immediate: response('You need Manage Server to manage AutoMod rules.') };
+      if (!automod) return { immediate: response('AutoMod is unavailable. Ask an administrator to check the bot setup.') };
+      const action = subcommand?.name;
+      if (!['list', 'keywords', 'mentions', 'spam', 'enable', 'disable', 'remove'].includes(action)) return { immediate: response('Choose an AutoMod action.') };
+      return { immediate: defer(), work: async () => {
+        try {
+          const options = subcommand.options || [];
+          let content;
+          if (action === 'list') {
+            const rules = await automod.list();
+            content = rules.length ? `**Server AutoMod rules**\n${rules.slice(0, 20).map((rule) => `${safeText(rule.name)} | ID: ${rule.id} | ${rule.enabled ? 'enabled' : 'disabled'}`).join('\n')}` : 'No AutoMod rules are configured.';
+          } else if (['keywords', 'mentions', 'spam'].includes(action)) {
+            const rule = await automod.create({ kind: action, name: findOption(options, 'name'), keywords: findOption(options, 'keywords'), limit: findOption(options, 'limit'), actorId: user.id });
+            content = `Created disabled AutoMod rule ${rule.id}. Review it in Server Settings > AutoMod, then use /automod enable with that ID.`;
+          } else {
+            await automod.change({ ruleId: findOption(options, 'rule'), action, actorId: user.id });
+            content = `AutoMod rule ${action === 'remove' ? 'removed' : action + 'd'}.`;
+          }
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+        } catch (error) {
+          logger('automod_action_failed', { action });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the AutoMod action. Check the rule ID, keyword limits, bot Manage Server permission, and Discord rule limits. OpenDesk only changes rules it created.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'ticket' && subcommand?.name === 'create') {
       return { immediate: defer(), work: async () => {
         try {
@@ -134,6 +193,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       } };
     }
     if (commandName === 'utility') {
+      if (subcommand?.name === 'help') return { immediate: response(`**OpenDesk features**\n/ticket: private support\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/economy and /leaderboard coins: server coins\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
       if (subcommand?.name === 'ping') return { immediate: response('OpenDesk is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {
         try {

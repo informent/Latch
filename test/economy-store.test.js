@@ -54,3 +54,22 @@ test('refuses malformed economy data without replacing the source file', async (
   await assert.rejects(new EconomyStore(file).load(), /invalid records/);
   assert.equal(await fs.readFile(file, 'utf8'), original);
 });
+
+test('failed durable transfers roll back both balances and failed claims roll back cooldowns', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-economy-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const store = new EconomyStore(path.join(root, 'economy.json'));
+  await store.load();
+  const now = new Date('2026-10-09T00:00:00Z');
+  await store.claim(guildId, alice, 'daily', now);
+  const blocker = path.join(root, 'blocker');
+  await fs.writeFile(blocker, 'not a directory');
+  store.filePath = path.join(blocker, 'economy.json');
+  await assert.rejects(store.transfer(guildId, alice, bob, 80));
+  assert.equal(store.balance(guildId, alice), 100);
+  assert.equal(store.balance(guildId, bob), 0);
+  await assert.rejects(store.claim(guildId, bob, 'daily', now));
+  assert.equal(store.balance(guildId, bob), 0);
+  store.filePath = path.join(root, 'economy.json');
+  assert.equal((await store.claim(guildId, bob, 'daily', now)).claimed, true);
+});

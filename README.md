@@ -2,7 +2,7 @@
 
 OpenDesk is a free, open-source, self-hosted Discord server bot. Its current feature suites cover moderation, role management, persistent staff warnings, server utilities, private support tickets, and a per-server coin economy. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
-This is an early prototype. Automated tests cover command authorization, moderation API requests, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling, but it has not yet been exercised against a live Discord server. Test first in a private sandbox server. Automatic message filtering, automatic raid response, and music are not implemented yet. Raid detection only reports join bursts; it does not ban users or lock channels.
+This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores
 
@@ -33,7 +33,7 @@ For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only
    npm start
    ```
 
-   `register` adds or updates `/ticket`, `/moderation`, `/utility`, `/roles`, and `/economy` for the configured test server using individual upserts; it does not bulk-replace the app's other commands. It makes a Discord API change, so verify the IDs and bot credentials before running it. Discord documents that creating an existing command name updates that command, while its separate bulk-overwrite endpoint replaces the whole list.
+   `register` adds or updates all ten command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
 4. Configure the Discord application's **Interactions Endpoint URL** to your HTTPS proxy URL ending in `/interactions`. Discord will send a signed ping while validating it; OpenDesk verifies Ed25519 request signatures and answers that ping.
 5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP awards 15 points no more than once per member each minute. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
 6. In the test server, verify `/utility ping`, `/utility server`, `/ticket create`, `/ticket close`, `/level`, `/leaderboard levels`, and `/leaderboard coins`. Use a disposable test member to check moderation and role commands. Confirm unauthorized members are rejected and the bot's role position permits each operation.
@@ -41,6 +41,11 @@ For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only
 The start and register scripts load `.env` with Node's built-in env-file support, so no dotenv package is needed. In production, a process manager or secret store is preferable to a plaintext `.env` file. On PowerShell, you can instead set values for the current session with `$env:NAME = 'value'`.
 
 ## Commands
+
+- `/utility help` shows available suites and whether Gateway and XP awards are enabled.
+- `/automod list`, `/automod keywords`, `/automod mentions`, and `/automod spam` manage native Discord message filters. Staff and bot need **Manage Server**. New rules are disabled for review; `/automod enable`, `/automod disable`, and `/automod remove` take a rule ID. Only rules created by this bot with the OpenDesk name prefix can be changed. Keyword input supports up to 100 comma-separated terms, with Discord wildcard matching. Mention limits range from 1 to 50. Discord applies its own rule-count limits. Native rules continue running while the bot is offline and do not require OpenDesk to receive chat content. Review exemptions in Server Settings > AutoMod. [Discord AutoMod reference](https://docs.discord.com/developers/resources/auto-moderation).
+- `/embed title description color` posts a custom announcement in the current channel. Staff need **Manage Messages**; the bot needs **Send Messages** and **Embed Links**. Mentions are disabled. Publishing to another channel is not supported.
+- `/fun coin`, `/fun roll`, and `/fun eightball` provide coin flips, dice with 2 to 1000 sides, and random answers. These have no currency stakes or paid features.
 
 - `/moderation ban`, `/moderation kick`, `/moderation timeout`, and `/moderation untimeout` perform Discord moderation actions with audit-log reasons. Discord enforces the bot's permissions and role hierarchy.
 - `/moderation purge` deletes up to 100 recent messages from the current channel and skips messages older than 14 days. `/moderation slowmode` sets or disables the current channel's slowmode.

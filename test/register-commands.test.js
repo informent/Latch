@@ -19,7 +19,7 @@ test('registers each feature command without bulk-replacing other app commands',
   assert.equal(close.options[0].name, 'channel');
   assert.equal(close.options[0].required, false);
   assert.deepEqual(close.options[0].channel_types, [0]);
-  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard']);
+  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard', 'automod', 'embed', 'fun']);
   const moderation = calls[1][2].options;
   assert.deepEqual(moderation.map((option) => option.name), ['ban', 'kick', 'timeout', 'untimeout', 'purge', 'slowmode', 'warn', 'warnings', 'clear-warnings']);
   assert.equal(moderation.find((option) => option.name === 'timeout').options.find((option) => option.name === 'minutes').max_value, 40320);
@@ -34,8 +34,8 @@ test('all slash-command payloads conform to documented name, description, and ne
     assert.match(command.name, namePattern);
     assert.ok(command.description.length >= 1 && command.description.length <= 100);
     assert.ok(command.options.length <= 25);
-    const topLevelKinds = new Set(command.options.map((item) => item.type));
-    assert.ok(topLevelKinds.size <= 1, `${command.name} mixes subcommands and parameters`);
+    const hasSubcommands = command.options.some((item) => item.type === 1 || item.type === 2);
+    assert.ok(!hasSubcommands || command.options.every((item) => item.type === 1 || item.type === 2), `${command.name} mixes subcommands and parameters`);
     for (const item of command.options) {
       assert.match(item.name, namePattern);
       assert.ok(item.description.length >= 1 && item.description.length <= 100);

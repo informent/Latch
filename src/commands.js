@@ -26,7 +26,7 @@ const commands = [
   },
   {
     name: 'utility', description: 'Useful server information and bot health.', type: 1,
-    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.')]
+    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('help', 'Show available feature suites and configuration status.')]
   },
   {
     name: 'economy', description: 'Earn, save, and share server coins.', type: 1,
@@ -53,7 +53,26 @@ const commands = [
   {
     name: 'leaderboard', description: 'Show a server leaderboard.', type: 1,
     options: [subcommand('levels', 'Show the XP leaderboard.'), subcommand('coins', 'Show the coin leaderboard.')]
+  },
+  {
+    name: 'automod', description: 'Manage Discord native message filtering rules.', type: 1, default_member_permissions: '32',
+    options: [
+      subcommand('list', 'List server AutoMod rules and their IDs.'),
+      subcommand('keywords', 'Create a disabled keyword filter for review.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 }), option(3, 'keywords', 'Comma-separated words or phrases; Discord wildcards supported.', { required: true, max_length: 2000 })]),
+      subcommand('mentions', 'Create a disabled mention spam and raid filter.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 }), option(4, 'limit', 'Maximum unique mentions allowed per message.', { required: true, min_value: 1, max_value: 50 })]),
+      subcommand('spam', 'Create a disabled Discord spam filter.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 })]),
+      ...['enable', 'disable', 'remove'].map((action) => subcommand(action, `${action} an OpenDesk rule by ID.`, [option(3, 'rule', 'Rule ID from /automod list.', { required: true, max_length: 25 })]))
+    ]
+  },
+  {
+    name: 'embed', description: 'Publish a custom embed in the current channel.', type: 1, default_member_permissions: '8192',
+    options: [option(3, 'title', 'Announcement title.', { required: true, max_length: 256 }), option(3, 'description', 'Announcement body.', { required: true, max_length: 4000 }), option(3, 'color', 'Optional six-digit hex color, for example 5865f2.', { required: false, max_length: 7 })]
+  },
+  {
+    name: 'fun', description: 'Free random games and utilities.', type: 1,
+    options: [subcommand('coin', 'Flip a coin.'), subcommand('roll', 'Roll a die.', [option(4, 'sides', 'Number of sides.', { required: false, min_value: 2, max_value: 1000 })]), subcommand('eightball', 'Ask the magic eight ball.', [option(3, 'question', 'Your question.', { required: true, max_length: 300 })])]
   }
 ];
+
 
 module.exports = { commands };

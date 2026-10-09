@@ -32,6 +32,11 @@ class DiscordApi {
   }
 
   getCurrentUser() { return this.request('GET', '/users/@me'); }
+  listAutoModRules(guildId) { return this.request('GET', `/guilds/${guildId}/auto-moderation/rules`); }
+  getAutoModRule(guildId, ruleId) { return this.request('GET', `/guilds/${guildId}/auto-moderation/rules/${ruleId}`); }
+  createAutoModRule(guildId, data, reason) { return this.request('POST', `/guilds/${guildId}/auto-moderation/rules`, data, { auditReason: reason }); }
+  editAutoModRule(guildId, ruleId, data, reason) { return this.request('PATCH', `/guilds/${guildId}/auto-moderation/rules/${ruleId}`, data, { auditReason: reason }); }
+  deleteAutoModRule(guildId, ruleId, reason) { return this.request('DELETE', `/guilds/${guildId}/auto-moderation/rules/${ruleId}`, undefined, { auditReason: reason }); }
   getGatewayBot() { return this.request('GET', '/gateway/bot'); }
   getGuild(guildId) { return this.request('GET', `/guilds/${guildId}?with_counts=true`); }
   createMessage(channelId, data) { return this.request('POST', `/channels/${channelId}/messages`, data); }

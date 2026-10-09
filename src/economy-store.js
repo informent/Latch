@@ -91,8 +91,10 @@ class EconomyStore {
 
   async #transaction(update) {
     const task = this.queue.then(async () => {
-      const previous = this.accounts;
-      const result = update();
+      const previous = new Map(this.accounts);
+      let result;
+      try { result = update(); }
+      catch (error) { this.accounts = previous; throw error; }
       if (result.claimed === false) return result;
       if (this.accounts.size > MAX_ACCOUNTS) { this.accounts = previous; throw new Error('Economy account limit reached.'); }
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;

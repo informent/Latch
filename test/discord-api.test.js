@@ -83,3 +83,24 @@ test('role and nickname endpoints retain audit reasons', async () => {
   assert.deepEqual(JSON.parse(calls[2].options.body), { nick: null });
   assert.equal(calls[2].options.headers['X-Audit-Log-Reason'], 'staff%20reset');
 });
+
+test('native AutoMod endpoints retain authorization, rule bodies and audit reasons', async () => {
+  const calls = [];
+  const api = new DiscordApi('fake-bot-secret', async (url, options) => {
+    calls.push({ url, options });
+    return { ok: true, status: options.method === 'DELETE' ? 204 : 200, json: async () => ({ id: '323456789012345678' }) };
+  });
+  const guild = '123456789012345678';
+  const rule = '323456789012345678';
+  await api.listAutoModRules(guild);
+  await api.getAutoModRule(guild, rule);
+  await api.createAutoModRule(guild, { enabled: false }, 'staff create');
+  await api.editAutoModRule(guild, rule, { enabled: true }, 'staff enable');
+  await api.deleteAutoModRule(guild, rule, 'staff remove');
+  assert.deepEqual(calls.map((call) => call.options.method), ['GET', 'GET', 'POST', 'PATCH', 'DELETE']);
+  assert.equal(calls[0].url, `https://discord.com/api/v10/guilds/${guild}/auto-moderation/rules`);
+  assert.equal(calls[1].url, `https://discord.com/api/v10/guilds/${guild}/auto-moderation/rules/${rule}`);
+  assert.deepEqual(JSON.parse(calls[3].options.body), { enabled: true });
+  assert.equal(calls[4].options.headers['X-Audit-Log-Reason'], 'staff%20remove');
+  assert.ok(calls.every((call) => call.options.headers.Authorization === 'Bot fake-bot-secret'));
+});

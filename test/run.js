@@ -1,6 +1,8 @@
 'use strict';
 
 require('./config.test');
+require('./automod.test');
+require('./community-interactions.test');
 require('./discord-api.test');
 require('./moderation-store.test');
 require('./moderation-interactions.test');
