@@ -40,7 +40,7 @@ test('ban action passes the actor reason to the Discord adapter and replies priv
   assert.deepEqual(edited[0][2].allowed_mentions, { parse: [] });
 });
 
-test('timeout uses a bounded duration and warns persist through the moderation store', async () => {
+test('timeout and untimeout actions, bounded durations, and warnings persist', async () => {
   const timeouts = [];
   const warnings = [];
   const edited = [];
@@ -62,7 +62,12 @@ test('timeout uses a bounded duration and warns persist through the moderation s
   assert.equal(warnings[0].actorId, userId);
   assert.equal(warnings[0].reason, 'Please follow the rules');
   assert.match(warnings[0].id, /^[0-9a-f-]{36}$/i);
-  assert.equal(edited.length, 2);
+  const untimeout = await handler(base('untimeout', String(1n << 40n), [targetOption, { name: 'reason', value: 'Appeal accepted' }]));
+  await untimeout.work();
+  assert.equal(timeouts[1][2], null);
+  assert.equal(timeouts[1][3], 'Appeal accepted');
+  assert.match(edited[2][2].content, /Removed the timeout/);
+  assert.equal(edited.length, 3);
 });
 
 test('purge skips messages older than Discord bulk-delete retention and slowmode is bounded', async () => {

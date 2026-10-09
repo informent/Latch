@@ -42,7 +42,7 @@ The start and register scripts load `.env` with Node's built-in env-file support
 
 ## Commands
 
-- `/moderation ban`, `/moderation kick`, and `/moderation timeout` perform Discord moderation actions with audit-log reasons. Discord enforces the bot's permissions and role hierarchy.
+- `/moderation ban`, `/moderation kick`, `/moderation timeout`, and `/moderation untimeout` perform Discord moderation actions with audit-log reasons. Discord enforces the bot's permissions and role hierarchy.
 - `/moderation purge` deletes up to 100 recent messages from the current channel and skips messages older than 14 days. `/moderation slowmode` sets or disables the current channel's slowmode.
 - `/roles grant`, `/roles revoke`, `/roles nickname`, and `/roles clear-nickname` manage member roles and nicknames. Discord enforces role hierarchy and permissions.
 - `/moderation warn`, `/moderation warnings`, and `/moderation clear-warnings` maintain a local staff-warning register.

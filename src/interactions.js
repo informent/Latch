@@ -32,7 +32,7 @@ function hasPermission(permissions, bit) {
 }
 function safeText(value) { return String(value).replace(/[`@<>]/g, (character) => ({ '`': 'ˋ', '@': '＠', '<': '‹', '>': '›' })[character]); }
 
-const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, kick: 2n, timeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
+const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, moderation, economy, levels, discord, logger = () => {}, now = () => new Date() }) {
   return async function handle(interaction) {
@@ -79,7 +79,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       const targetId = typeof targetUser === 'object' ? targetUser.id : targetUser;
       const providedReason = findOption(options, 'reason');
       const reasonText = typeof providedReason === 'string' && providedReason.trim() ? providedReason.trim() : 'No reason provided.';
-      const targetActions = ['ban', 'kick', 'timeout', 'warn', 'warnings', 'clear-warnings'];
+      const targetActions = ['ban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings'];
       if (targetActions.includes(action) && !/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
       if (['warn', 'warnings', 'clear-warnings'].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
       if (action === 'warn' && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for the warning.') };
@@ -91,7 +91,8 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
             const minutes = Number(findOption(options, 'minutes'));
             if (!Number.isInteger(minutes) || minutes < 1 || minutes > 40_320) throw new Error('Timeout length must be between 1 and 40320 minutes.');
             await discord.timeoutMember(interaction.guild_id, targetId, new Date(now().getTime() + minutes * 60_000).toISOString(), reasonText);
-          } else if (action === 'purge') {
+          } else if (action === 'untimeout') await discord.timeoutMember(interaction.guild_id, targetId, null, reasonText);
+          else if (action === 'purge') {
             const count = Number(findOption(options, 'count'));
             if (!Number.isInteger(count) || count < 2 || count > 100) throw new Error('Purge count must be between 2 and 100.');
             const messages = await discord.getChannelMessages(interaction.channel_id, count);
@@ -123,11 +124,12 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
             return;
           }
           const label = action === 'timeout' ? `for ${findOption(options, 'minutes')} minute(s)` : '';
-          const content = action === 'warn' ? `Recorded a warning for <@${targetId}>.` : `<@${targetId}> ${action}${label ? ` ${label}` : ''}.`;
+          const content = action === 'warn' ? `Recorded a warning for <@${targetId}>.` : action === 'untimeout' ? `Removed the timeout for <@${targetId}>.` : `<@${targetId}> ${action}${label ? ` ${label}` : ''}.`;
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
         } catch (error) {
           logger('moderation_action_failed', { action, message: error.message });
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Could not complete ${action}. Check the bot's permissions, role position, and moderation store.`, allowed_mentions: { parse: [] } }).catch(() => {});
+          const detail = ['ban', 'kick', 'timeout', 'untimeout'].includes(action) ? 'Check the bot permissions and role hierarchy, and confirm the target is still in the server.' : 'Check the bot permissions and moderation store.';
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Could not complete ${action}. ${detail}`, allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
     }

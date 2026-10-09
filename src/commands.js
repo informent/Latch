@@ -16,6 +16,7 @@ const commands = [
       subcommand('ban', 'Ban a member from this server.', [target, reason]),
       subcommand('kick', 'Remove a member from this server.', [target, reason]),
       subcommand('timeout', 'Temporarily prevent a member from participating.', [target, option(4, 'minutes', 'Timeout length in minutes (1 to 40320).', { required: true, min_value: 1, max_value: 40320 }), reason]),
+      subcommand('untimeout', 'Remove a member timeout.', [target, reason]),
       subcommand('purge', 'Delete recent messages from this channel.', [option(4, 'count', 'Number of recent messages to remove (2 to 100).', { required: true, min_value: 2, max_value: 100 })]),
       subcommand('slowmode', 'Set the current channel slowmode.', [option(4, 'seconds', 'Delay between messages (0 to disable, maximum 21600).', { required: true, min_value: 0, max_value: 21600 })]),
       subcommand('warn', 'Record a staff warning for a member.', [target, option(3, 'reason', 'Why this warning was issued.', { required: true, max_length: 400 })]),
