@@ -86,15 +86,18 @@ test('shutdown signals stop listening and wait for active ticket work', async ()
   let releaseDrain;
   let drainCount = 0;
   let closeCount = 0;
+  let gatewayStopCount = 0;
+  const gateway = { stop: () => gatewayStopCount++ };
   server.listening = false;
   server.close = () => { closeCount++; };
   server.pendingWorkCount = () => 1;
   server.drain = () => { drainCount++; return new Promise((resolve) => { releaseDrain = resolve; }); };
-  installShutdownHandlers(server, { processRef, log: () => {}, timeoutMs: 1000 });
+  installShutdownHandlers(server, { gateway, processRef, log: () => {}, timeoutMs: 1000 });
 
   processRef.emit('SIGTERM');
   processRef.emit('SIGINT');
   assert.equal(drainCount, 1);
+  assert.equal(gatewayStopCount, 1);
   assert.equal(closeCount, 0);
   server.listening = true;
   server.emit('listening');
@@ -121,6 +124,23 @@ test('shutdown timeout marks a non-zero exit and records remaining work', async 
   assert.deepEqual(logs, [['shutdown_drain_timed_out', { pending: 2 }]]);
   releaseDrain();
   await new Promise((resolve) => setImmediate(resolve));
+});
+
+test('runtime starts the Gateway only when configured and wires guild events', async (t) => {
+  const pair = crypto.generateKeyPairSync('ed25519');
+  const publicRaw = pair.publicKey.export({ format: 'der', type: 'spki' }).subarray(-32);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-gateway-runtime-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const store = new TicketStore(path.join(dir, 'tickets.json'));
+  const gateway = { starts: 0, start() { this.starts++; }, stop() {}, intents: 0, onDispatch: null };
+  const config = { applicationId: '123456789012345678', guildId: '223456789012345678', port: 0, host: '127.0.0.1', storePath: path.join(dir, 'tickets.json'), moderationStorePath: path.join(dir, 'moderation.json'), economyStorePath: path.join(dir, 'economy.json'), levelStorePath: path.join(dir, 'levels.json'), gatewayEnabled: true, gatewayIntents: 513, levelingEnabled: false, memberEventsEnabled: false, welcomeChannelId: null, raidJoinThreshold: 0, raidJoinWindowMs: 10000 };
+  const discord = { getCurrentUser: async () => ({ id: '323456789012345678' }) };
+  const server = await createServerRuntime({ config, publicKey: publicKeyFromHex(publicRaw.toString('hex')), discord, store, gateway });
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  assert.equal(gateway.starts, 1);
+  assert.equal(gateway.intents, 513);
+  assert.equal(typeof gateway.onDispatch, 'function');
+  assert.equal(server.gateway, gateway);
 });
 
 test('signed HTTP create and close flow reaches Discord adapter and persists private ticket state', async (t) => {

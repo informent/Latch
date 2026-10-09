@@ -33,8 +33,7 @@ const commands = [
       subcommand('balance', 'Check your balance or another member’s balance.', [option(6, 'user', 'Member to check.', { required: false })]),
       subcommand('daily', 'Claim your daily coin reward.'),
       subcommand('work', 'Earn coins by working. Cooldown applies.'),
-      subcommand('pay', 'Send coins to another member.', [option(6, 'user', 'Member to pay.', { required: true }), option(4, 'amount', 'Number of coins to send.', { required: true, min_value: 1, max_value: 1_000_000 })]),
-      subcommand('leaderboard', 'Show the richest members in this server.')
+      subcommand('pay', 'Send coins to another member.', [option(6, 'user', 'Member to pay.', { required: true }), option(4, 'amount', 'Number of coins to send.', { required: true, min_value: 1, max_value: 1_000_000 })])
     ]
   },
   {

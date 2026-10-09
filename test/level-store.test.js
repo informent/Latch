@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { LevelStore, XP_COOLDOWN_MS } = require('../src/level-store');
+const { LevelStore, XP_COOLDOWN_MS, MAX_LEVEL_ACCOUNTS } = require('../src/level-store');
 
 const guild = '123456789012345678';
 const member = '223456789012345678';
@@ -46,4 +46,15 @@ test('levels only leaderboard is guild scoped and corrupt records are preserved'
   await fs.writeFile(file, original);
   await assert.rejects(new LevelStore(file).load(), /invalid records/);
   assert.equal(await fs.readFile(file, 'utf8'), original);
+});
+
+test('account limit rejects a new member without changing existing balances', async () => {
+  const store = new LevelStore('unused.json');
+  for (let index = 0; index < MAX_LEVEL_ACCOUNTS; index++) {
+    const userId = String(100000000000000000n + BigInt(index));
+    store.accounts.set(`${guild}:${userId}`, Object.freeze({ guildId: guild, userId, xp: 15, lastAward: '2026-10-09T00:00:00.000Z' }));
+  }
+  await assert.rejects(store.awardMessage(guild, '999999999999999999'), /account limit/);
+  assert.equal(store.accounts.size, MAX_LEVEL_ACCOUNTS);
+  assert.equal(store.get(guild, member).xp, 0);
 });

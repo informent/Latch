@@ -9,7 +9,7 @@ test('welcome and raid detection only act on configured human joins for the conf
   const sent = [];
   const logs = [];
   const service = new GuildEventService({
-    config: { guildId: 'guild', welcomeChannelId: 'channel', welcomeMessage: 'Hello {user}, welcome to {server}', raidJoinThreshold: 2, raidJoinWindowMs: 5000 },
+    config: { guildId: 'guild', memberEventsEnabled: true, welcomeChannelId: 'channel', welcomeMessage: 'Hello {user}, welcome to {server}', raidJoinThreshold: 2, raidJoinWindowMs: 5000 },
     discord: { createMessage: async (...args) => sent.push(args) },
     logger: (...args) => logs.push(args),
     now: () => now
@@ -28,7 +28,7 @@ test('welcome and raid detection only act on configured human joins for the conf
 test('welcome failures log identifiers without message content', async () => {
   const logs = [];
   const service = new GuildEventService({
-    config: { guildId: 'guild', welcomeChannelId: 'channel', welcomeMessage: 'welcome', raidJoinThreshold: 0, raidJoinWindowMs: 5000 },
+    config: { guildId: 'guild', memberEventsEnabled: true, welcomeChannelId: 'channel', welcomeMessage: 'welcome', raidJoinThreshold: 0, raidJoinWindowMs: 5000 },
     discord: { createMessage: async () => { throw new Error('failed'); } },
     logger: (...args) => logs.push(args)
   });
@@ -36,11 +36,22 @@ test('welcome failures log identifiers without message content', async () => {
   assert.deepEqual(logs, [['welcome_message_failed', { guildId: 'guild', channelId: 'channel', message: 'failed' }]]);
 });
 
+test('member events are ignored unless configured', async () => {
+  let sent = 0;
+  const service = new GuildEventService({
+    config: { guildId: 'guild', memberEventsEnabled: false, welcomeChannelId: 'channel', welcomeMessage: 'welcome', raidJoinThreshold: 1, raidJoinWindowMs: 5000 },
+    discord: { createMessage: async () => { sent++; } }
+  });
+  await service.dispatch('GUILD_MEMBER_ADD', { guild_id: 'guild', user: { id: 'member' } });
+  assert.equal(sent, 0);
+});
+
 test('leveling awards human guild messages without reading or storing their content', async () => {
   const awards = [];
-  const config = { guildId: 'guild', levelingEnabled: true, welcomeChannelId: null };
+  const config = { guildId: 'guild', levelingEnabled: true, memberEventsEnabled: false, welcomeChannelId: null };
   const service = new GuildEventService({ config, discord: {}, levels: { awardMessage: async (...args) => awards.push(args) } });
   await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, content: 'never persist this text' });
+  await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, content: '   ' });
   await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'bot', bot: true }, content: 'ignored' });
   await service.dispatch('MESSAGE_CREATE', { guild_id: 'other', channel_id: 'channel', author: { id: 'member' } });
   await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, webhook_id: 'hook' });

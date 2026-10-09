@@ -200,20 +200,13 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (commandName === 'economy') {
       if (!economy) return { immediate: response('The economy store is unavailable. Ask an administrator to check the bot setup.') };
       const action = subcommand?.name;
-      if (!['balance', 'daily', 'work', 'pay', 'leaderboard'].includes(action)) return { immediate: response('Choose an economy action.') };
+      if (!['balance', 'daily', 'work', 'pay'].includes(action)) return { immediate: response('Choose an economy action.') };
       const options = subcommand.options || [];
       if (action === 'balance') {
         const selected = findOption(options, 'user');
         const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
         if (!/^\d{5,25}$/.test(targetId)) return { immediate: response('Choose a valid server member.') };
         return { immediate: response(`<@${targetId}> has **${economy.balance(interaction.guild_id, targetId)}** coins.`) };
-      }
-      if (action === 'leaderboard') {
-        const leaders = economy.leaderboard(interaction.guild_id, 10);
-        const content = leaders.length
-          ? `**Server coin leaderboard**\n${leaders.map((account, index) => `${index + 1}. <@${account.userId}> — **${account.balance}**`).join('\n')}`
-          : 'No one has earned coins yet.';
-        return { immediate: response(content) };
       }
       if (action === 'pay') {
         const selected = findOption(options, 'user');

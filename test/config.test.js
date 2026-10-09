@@ -18,9 +18,10 @@ test('loads required config and safe loopback defaults', () => {
   assert.equal(config.supportRoleId, null);
   assert.equal(config.moderationStorePath, './data/moderation.json');
   assert.equal(config.economyStorePath, './data/economy.json');
-  assert.equal(config.gatewayEnabled, true);
+  assert.equal(config.gatewayEnabled, false);
   assert.equal(config.gatewayIntents, 513);
   assert.equal(config.levelingEnabled, false);
+  assert.equal(config.memberEventsEnabled, false);
   assert.equal(config.levelStorePath, './data/levels.json');
   assert.equal(config.welcomeChannelId, null);
   assert.equal(config.raidJoinThreshold, 0);
@@ -39,6 +40,14 @@ test('leveling enables the message and message-content intents explicitly', () =
   const config = loadConfig({ ...valid, DISCORD_LEVELING_ENABLED: 'true' });
   assert.equal(config.levelingEnabled, true);
   assert.equal(config.gatewayIntents, 33281);
+});
+
+test('member features enable the Gateway while slash-only setup remains HTTP-only', () => {
+  const memberConfig = loadConfig({ ...valid, DISCORD_ENABLE_MEMBER_EVENTS: 'true' });
+  assert.equal(memberConfig.gatewayEnabled, true);
+  assert.equal(memberConfig.memberEventsEnabled, true);
+  assert.equal(memberConfig.gatewayIntents, 515);
+  assert.equal(loadConfig({ ...valid, DISCORD_GATEWAY_ENABLED: 'true' }).gatewayEnabled, true);
 });
 
 test('rejects missing secrets, malformed IDs, public-key lengths, and invalid ports', () => {

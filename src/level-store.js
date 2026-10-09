@@ -52,8 +52,9 @@ class LevelStore {
       const currentTime = this.now();
       const last = existing.lastAward ? Date.parse(existing.lastAward) : 0;
       if (last && currentTime - last < XP_COOLDOWN_MS) return { awarded: false, ...this.get(guildId, userId) };
+      if (!this.accounts.has(key) && this.accounts.size >= MAX_LEVEL_ACCOUNTS) throw new Error('Level account limit reached.');
+      if (existing.xp > Number.MAX_SAFE_INTEGER - XP_PER_MESSAGE) throw new Error('XP limit reached.');
       const updated = Object.freeze({ ...existing, xp: existing.xp + XP_PER_MESSAGE, lastAward: new Date(currentTime).toISOString() });
-      if (!Number.isSafeInteger(updated.xp) || updated.xp > Number.MAX_SAFE_INTEGER - XP_PER_MESSAGE) throw new Error('XP limit reached.');
       this.accounts.set(key, updated);
       const before = this.levelFor(existing.xp);
       const after = this.levelFor(updated.xp);
@@ -75,10 +76,8 @@ class LevelStore {
 
   async #transaction(update) {
     const task = this.queue.then(async () => {
-      const previous = this.accounts;
       const result = update();
       if (result.awarded === false) return result;
-      if (this.accounts.size > MAX_LEVEL_ACCOUNTS) { this.accounts = previous; throw new Error('Level account limit reached.'); }
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
       try {
         await fs.mkdir(path.dirname(path.resolve(this.filePath)), { recursive: true });
@@ -87,7 +86,6 @@ class LevelStore {
         return result;
       } catch (error) {
         await fs.rm(tempPath, { force: true }).catch(() => {});
-        this.accounts = previous;
         throw error;
       }
     });

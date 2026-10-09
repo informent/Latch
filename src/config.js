@@ -28,10 +28,11 @@ function loadConfig(env = process.env) {
   if (host !== '127.0.0.1' && host !== '::1' && host !== '0.0.0.0' && host !== '::') {
     throw new Error('HOST must be a loopback address or a wildcard bind address.');
   }
-  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', true);
   const levelingEnabled = boolean(env, 'DISCORD_LEVELING_ENABLED');
+  const memberEventsEnabled = boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS');
+  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled);
   const gatewayIntents = 1 | 512
-    | (boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS') ? 2 : 0)
+    | (memberEventsEnabled ? 2 : 0)
     | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled ? 1 << 15 : 0);
   const raidJoinThreshold = Number(env.DISCORD_RAID_JOIN_THRESHOLD || 0);
   const raidJoinWindowMs = Number(env.DISCORD_RAID_JOIN_WINDOW_MS || 10_000);
@@ -47,6 +48,7 @@ function loadConfig(env = process.env) {
     moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
     economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
     gatewayEnabled,
+    memberEventsEnabled,
     gatewayIntents,
     levelingEnabled,
     levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json',

@@ -36,7 +36,7 @@ test('economy pay rejects invalid transfers and leaves balances unchanged', asyn
   assert.equal(called, false);
 });
 
-test('level and leaderboard commands show guild scoped XP and coin rankings', async () => {
+test('level and unified leaderboard commands show guild scoped XP and coin rankings', async () => {
   const handler = createInteractionHandler({
     config, discord: {},
     levels: { get: () => ({ level: 3, xp: 950, xpToNextLevel: 50 }), leaderboard: () => [{ userId, level: 3, xp: 950 }] },
