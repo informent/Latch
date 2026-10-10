@@ -14,7 +14,14 @@ class GuildEventService {
   async dispatch(type, data) {
     if (type === 'MESSAGE_CREATE') {
       if (this.config.levelingEnabled && data?.guild_id === this.config.guildId && data.channel_id && data.author?.id && !data.author.bot && !data.webhook_id && typeof data.content === 'string' && data.content.trim().length > 0) {
-        try { await this.levels?.awardMessage(data.guild_id, data.author.id); }
+        if (![data.guild_id, data.channel_id, data.author.id, data.id].every((id) => typeof id === 'string' && /^\d{5,25}$/.test(id))) return;
+        if (![0, 19].includes(data.type ?? 0)) return;
+        if (typeof data.timestamp !== 'string') return;
+        {
+          const created = Date.parse(data.timestamp), now = this.now();
+          if (!Number.isFinite(created) || created > now + 5000 || now - created > 300_000) return;
+        }
+        try { await this.levels?.awardMessage(data.guild_id, data.author.id, { channelId: data.channel_id, messageId: data.id }); }
         catch (error) { this.#log('level_award_failed', { guildId: data.guild_id, message: error.message }); }
       }
       return;

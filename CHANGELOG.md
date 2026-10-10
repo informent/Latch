@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.17.0 - 2026-10-10
+
+- Added eight Manage Server leveling commands: show, tune, reset, ignore, unignore, ignored, enable and disable. Catalog now declares 151 paths across 22 suites.
+- Added persistent per-guild awards of 1-100 XP, 15-3600 second cooldowns, pause/resume and up to 100 ignored exact channel IDs with paginated private listings.
+- Added live guild/channel validation on ignore; deleted channel references can be removed without fetching them.
+- Reworked XP/settings writes into isolated queued snapshots that become visible only after atomic replacement. Failed writes preserve committed state and leave the queue usable.
+- Added durable latest-message duplicate suppression, strict IDs/schema/timestamps, 32 MiB file bounds and fresh human Gateway message checks. Message content remains unpersisted.
+- Added 35 regression tests, including signed HTTP settings changes, the wired Gateway and recovery after a lost reply. All 296 tests pass locally: 91.21% lines, 82.46% branches and 85.91% functions.
+
+Successful writes migrate levels.json from version 1 to version 2. Back up all eleven stores before upgrading; older releases reject the new leveling file, so rollback requires a compatible complete backup. Reset clears ignored channels and resumes server awards while preserving XP and last-award cooldowns. The environment XP setting still gates awards. The replay guard retains only the most recently awarded message per account. Live Discord validation, rewards, rank cards, voice XP and full competitor parity remain unfinished.
+
 ## 0.16.0 - 2026-10-10
 
 - Added persistent ticket panels with eight staff commands, unpublished drafts and up to five topic/category buttons. Catalog now declares 143 paths across 21 suites.

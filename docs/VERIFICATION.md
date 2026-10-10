@@ -1,5 +1,13 @@
 # Verification
 
+## Version 0.17.0
+
+All 296 tests pass locally. Coverage is 91.21% lines, 82.46% branches and 85.91% functions, with the existing CI floors enforced. The catalog contains 151 command paths across 22 roots.
+
+Thirty-five new tests cover version 1 migration, settings restart, tuned cooldown boundaries, duplicate message restart, ignored/paused no-write behavior, reset preservation, concurrent configuration/awards, committed reads during replacement, failed-write recovery, channel and guild limits, corrupt data preservation, staff permission checks, all eight command paths, five listing pages and fresh human Gateway filtering.
+
+A signed HTTP test runs settings changes through the actual server runtime and wired Gateway callback, loses a reply and reloads the saved state. Discord delivery and Gateway transport are simulated; these checks do not prove live server behavior. Settings and XP share levels.json version 2; see [migration and operating limits](LEVELING.md).
+
 ## Version 0.16.0
 
 All 261 tests pass locally, with coverage of 91.06% lines, 81.57% branches and 85.51% functions. Existing CI floors remain enforced. The catalog has 143 command paths across 21 roots.
@@ -54,7 +62,7 @@ Failing tests reproduced template input aliasing, concurrent responder guard byp
 
 The suite uses temporary local files, a local HTTP server where applicable and simulated Discord API/Gateway responses. It does not prove live Discord delivery, real permission configuration, platform rate-limit behavior or production hosting. This checkout has no Discord configuration and no available Docker executable. No live server validation was performed for this release.
 
-Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The actual OpenDesk catalog has 115 command paths across 19 slash command roots.
+Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 151 command paths across 22 slash command roots.
 
 ## Repeat the checks
 

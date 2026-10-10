@@ -25,6 +25,7 @@ Only command names and independently authored implementation notes are recorded 
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
 | balance, daily, work, beg, professions | `/economy` actions and profession subcommands | OpenDesk reward amounts/cooldowns, equal-rate professions and work-based ranks; competitor mechanics remain different |
 | transfer | `/economy pay` | Different name and syntax |
+| leveling settings | `/levelconfig show`, `tune`, `reset`, `ignore`, `unignore`, `ignored`, `enable`, `disable` | Free per-guild settings, exact channel ignores and pause/resume; rewards/rank cards/voice XP remain unfinished |
 | leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only OpenDesk coin/XP records |
 | giveaway start | `/giveaway create` | Current channel; limited options |
 | giveaway end, list | `/giveaway end`, `/giveaway list` | OpenDesk IDs instead of message links |

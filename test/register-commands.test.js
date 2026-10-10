@@ -20,7 +20,7 @@ test('registers each feature command without bulk-replacing other app commands',
   assert.equal(close.options[0].name, 'channel');
   assert.equal(close.options[0].required, false);
   assert.deepEqual(close.options[0].channel_types, [0]);
-  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard', 'automod', 'embed', 'fun', 'reminder', 'giveaway', 'shop', 'voice', 'rolemenu', 'autorole', 'template', 'responder', 'timer', 'ticketpanel']);
+  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard', 'automod', 'embed', 'fun', 'reminder', 'giveaway', 'shop', 'voice', 'rolemenu', 'autorole', 'template', 'responder', 'timer', 'levelconfig', 'ticketpanel']);
   const moderation = calls[1][2].options;
   assert.deepEqual(moderation.map((option) => option.name), ['ban', 'unban', 'kick', 'timeout', 'untimeout', 'purge', 'slowmode', 'warn', 'warnings', 'clear-warnings']);
   assert.equal(moderation.find((option) => option.name === 'timeout').options.find((option) => option.name === 'minutes').max_value, 40320);

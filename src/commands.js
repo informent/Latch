@@ -211,6 +211,22 @@ commands.push({
 module.exports = { commands };
 
 commands.push({
+  name: 'levelconfig', description: 'Configure free server XP awards and ignored channels.', type: 1, default_member_permissions: '32',
+  options: [
+    subcommand('show', 'Show current server XP settings and Gateway status.'),
+    subcommand('tune', 'Set XP per message and per-member cooldown.', [
+      option(4, 'xp', 'XP per eligible message.', { required: true, min_value: 1, max_value: 100 }),
+      option(4, 'cooldown', 'Cooldown in seconds.', { required: true, min_value: 15, max_value: 3600 })
+    ]),
+    subcommand('reset', 'Restore defaults, clear ignored channels and resume server awards.'),
+    ...['ignore', 'unignore'].map((action) => subcommand(action, `${action} an exact channel ID for XP awards.`, [option(3, 'channel', 'Channel ID, including threads or deleted references.', { required: true, min_length: 5, max_length: 25 })])),
+    subcommand('ignored', 'List ignored XP channels.', [option(4, 'page', 'Page of 20 ignored channels.', { min_value: 1, max_value: 5 })]),
+    subcommand('enable', 'Resume server XP awards; the environment setting must also be enabled.'),
+    subcommand('disable', 'Pause server XP awards without clearing accounts.')
+  ]
+});
+
+commands.push({
   name: 'ticketpanel', description: 'Build persistent support panels with category buttons.', type: 1, default_member_permissions: '32',
   options: [
     subcommand('create', 'Create an unpublished panel in this text channel.', [option(3, 'title', 'Panel title.', { required: true, min_length: 1, max_length: 200 }), option(3, 'description', 'Explain what members should select.', { max_length: 1000 })]),

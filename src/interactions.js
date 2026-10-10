@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { createLevelHandler } = require('./level-interactions');
 const { createTicketPanelHandler } = require('./ticket-panel-interactions');
 const { createShopHandler } = require('./shop-interactions');
 const { createCommunityHandler } = require('./community-interactions');
@@ -41,6 +42,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
+  const handleLevel = createLevelHandler({ config, levels, discord, logger }, { response, defer, hasPermission, findOption });
   const handleTicketPanel = createTicketPanelHandler({ config, ticketPanels, discord, logger }, { response, defer, hasPermission, findOption, safeText });
   const handleShop = createShopHandler({ config, economy, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
@@ -53,6 +55,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (interaction.type === 2 && commandName === 'levelconfig') return handleLevel(interaction);
     if (interaction.type === 2 && commandName === 'ticketpanel' || interaction.type === 3 && interaction.data?.custom_id?.startsWith('ticketpanel:')) return handleTicketPanel(interaction);
     if (interaction.type === 2 && commandName === 'shop') return handleShop(interaction);
     if (interaction.type === 2 && commandName === 'timer') return handleTimer(interaction);
@@ -414,7 +417,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           }
         } };
       }
-      if (subcommand?.name === 'help') return { immediate: response(`**OpenDesk features**\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
+      if (subcommand?.name === 'help') return { immediate: response(`**OpenDesk features**\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
       if (subcommand?.name === 'ping') return { immediate: response('OpenDesk is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {
         try {

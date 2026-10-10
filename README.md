@@ -31,6 +31,8 @@ Role assignment/removal and nickname changes now verify current actor/bot permis
 
 Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
 
+Version 0.17.0 adds eight staff leveling configuration commands: tune XP and cooldowns, pause/resume awards, manage ignored channels and restore defaults. Settings and XP commit together, and the latest awarded message ID survives restart to suppress immediate replay. See the [leveling guide](docs/LEVELING.md).
+
 Version 0.16.0 adds a complete ticket panel workflow: draft a support panel, connect up to five topic buttons to server categories, publish it with durable retry recovery, and let members open private tickets. Staff can reopen closed tickets with saved recovery state and permission read-back verification. See the [panel guide](docs/TICKET-PANELS.md) and [ticket guide](docs/TICKETS.md).
 
 The suite now passes 261 tests with 91.06% local line coverage, including the signed HTTP panel-to-ticket-to-close-to-reopen flow. CI enforces coverage floors; see [verification evidence and limits](docs/VERIFICATION.md).
@@ -53,7 +55,7 @@ Saved embed templates use `data/templates.json`, an eighth guild-bound store wit
 
 Role menus and join-role configuration use `data/role-menus.json` for guild, menu/channel/message IDs, titles, labels, role IDs, menu states and publication retry metadata. Include this seventh store in backups. Member role assignments remain in Discord; interaction tokens are not stored.
 
-OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores only guild/user IDs, XP, and award timestamps; received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
+OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores guild/user IDs, XP, award timestamps, the latest awarded message ID and per-guild settings (including ignored channel IDs); received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
 
 ## Requirements
 
@@ -82,14 +84,14 @@ For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only
 
    `register` adds or updates all sixteen command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
 4. Configure the Discord application's **Interactions Endpoint URL** to your HTTPS proxy URL ending in `/interactions`. Discord will send a signed ping while validating it; OpenDesk verifies Ed25519 request signatures and answers that ping.
-5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP awards 15 points no more than once per member each minute. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
+5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP defaults to 15 points no more than once per member each minute; staff can tune these settings with `/levelconfig`. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
 6. In the test server, verify `/utility ping`, `/utility server`, `/ticket create`, `/ticket close`, `/level`, `/leaderboard levels`, and `/leaderboard coins`. Use a disposable test member to check moderation and role commands. Confirm unauthorized members are rejected and the bot's role position permits each operation.
 
 The start and register scripts load `.env` with Node's built-in env-file support, so no dotenv package is needed. In production, a process manager or secret store is preferable to a plaintext `.env` file. On PowerShell, you can instead set values for the current session with `$env:NAME = 'value'`.
 
 ## Commands
 
-The catalog currently declares 143 command paths across 21 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
+The catalog currently declares 151 command paths across 22 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
 
 - `/shop` provides coin-priced virtual items, inventories, gifts, consumables and transaction history. Staff configure items with Manage Server; new items start disabled. See the [shop guide](docs/SHOP.md).
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.
@@ -104,7 +106,8 @@ The catalog currently declares 143 command paths across 21 suites. `/voice` adds
 - `/utility ping` and `/utility server` check the bot response and show basic server information.
 - Optional welcome messages and join burst reports use member join events. Both require the Server Members privileged intent; burst detection only logs an alert.
 - `/economy balance`, `/economy daily`, `/economy work`, and `/economy pay` provide a small per-server coin system. Daily rewards are 100 coins; work rewards 25-100 coins with a one-hour cooldown. Transfers are limited to 1,000,000 coins per command.
-- `/level` and `/leaderboard levels` show XP from non-empty human messages when leveling is enabled. Each member can earn 15 XP once per minute; level N starts at N² × 100 XP.
+- `/levelconfig` lets staff tune XP/cooldown, pause/resume, list/ignore/unignore exact channel IDs and reset defaults.
+- `/level` and `/leaderboard levels` show XP from non-empty human messages when leveling is enabled. By default each member can earn 15 XP once per minute; level N starts at N² × 100 XP.
 - `/leaderboard coins` shows the coin economy ranking.
 - Gateway sessions send heartbeats, track event sequence numbers, and resume when Discord allows it. Gateway connection logs never include message content or bot tokens.
 

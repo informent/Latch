@@ -46,14 +46,13 @@ test('member events are ignored unless configured', async () => {
   assert.equal(sent, 0);
 });
 
-test('leveling awards human guild messages without reading or storing their content', async () => {
+test('leveling awards human guild messages without storing their content', async () => {
   const awards = [];
-  const config = { guildId: 'guild', levelingEnabled: true, memberEventsEnabled: false, welcomeChannelId: null };
+  const guild = '123456789012345678', channel = '223456789012345678', user = '323456789012345678', message = '423456789012345678';
+  const config = { guildId: guild, levelingEnabled: true, memberEventsEnabled: false };
   const service = new GuildEventService({ config, discord: {}, levels: { awardMessage: async (...args) => awards.push(args) } });
-  await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, content: 'never persist this text' });
-  await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, content: '   ' });
-  await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'bot', bot: true }, content: 'ignored' });
-  await service.dispatch('MESSAGE_CREATE', { guild_id: 'other', channel_id: 'channel', author: { id: 'member' } });
-  await service.dispatch('MESSAGE_CREATE', { guild_id: 'guild', channel_id: 'channel', author: { id: 'member' }, webhook_id: 'hook' });
-  assert.deepEqual(awards, [['guild', 'member']]);
+  const event = { id: message, guild_id: guild, channel_id: channel, author: { id: user }, timestamp: new Date().toISOString(), content: 'never persist this text' };
+  await service.dispatch('MESSAGE_CREATE', event);
+  for (const change of [{ content: '   ' }, { author: { id: user, bot: true } }, { guild_id: message }, { webhook_id: message }]) await service.dispatch('MESSAGE_CREATE', { ...event, ...change });
+  assert.deepEqual(awards, [[guild, user, { channelId: channel, messageId: message }]]);
 });

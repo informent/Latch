@@ -30,3 +30,4 @@ require('./shop-store.test');
 require('./shop-interactions.test');
 require('./automod-configuration.test');
 require('./ticket-workflow.test');
+require('./level-configuration.test');
