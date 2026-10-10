@@ -28,3 +28,4 @@ require('./new-interactions.test');
 require('./voice-regression.test');
 require('./shop-store.test');
 require('./shop-interactions.test');
+require('./automod-configuration.test');

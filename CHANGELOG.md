@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.15.0 - 2026-10-10
+
+- Added eight AutoMod command paths: info, presets, exempt-role/unexempt-role, exempt-channel/unexempt-channel, allow-words and block-message. Catalog now declares 134 paths across 20 suites.
+- Added disabled-by-default native preset wordsets and private rule/filter/action/exemption inspection.
+- Added serialized exemption updates, live guild target validation, 20-role/50-channel limits, duplicate no-ops and removal of deleted target references. Everyone-role exemptions are refused.
+- Allowed-word replacement preserves other trigger metadata. Block explanations preserve other rule actions; configuration preserves enable state.
+- Strengthened rule ownership checks to require exact rule ID, guild ID, bot creator and OpenDesk prefix before inspection or mutation.
+- Added 26 tests. All 221 pass locally with 90.21% line coverage. Added native AutoMod operating documentation.
+
+Rules reside in Discord and need no new store or migration. Staff and bot require Manage Server. Other clients can race configuration changes; no external edit lock exists. Live filtering behavior and full competitor parity remain unfinished.
+
 ## 0.14.0 - 2026-10-10
 
 - Added 11 shop commands: create/update, enable/disable, list/info, buy, inventory, gift, use and history. Catalog now declares 126 paths across 20 suites.

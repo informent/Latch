@@ -63,6 +63,8 @@ These are concrete gaps from the sources above; the list will expand as further 
 
 ## Suites awaiting a detailed inventory
 
+Native AutoMod now adds preset wordsets, private rule inspection, role/channel exemptions, allowed-word replacement and custom blocking explanations. It manages only rules created by this bot with the OpenDesk prefix. See the [AutoMod guide](AUTOMOD.md).
+
 The new `/shop` suite adds 11 paths for staff catalog management, purchases, inventories, gifts, consumption and private receipts. These virtual items have no Discord role or permission effects. See the [shop guide](SHOP.md); this is independently implemented functionality and does not establish competitor shop parity.
 
 Recurring messages now have eight `/timer` paths with durable deadlines, private previews and bounded scheduled attempts. Activity thresholds, embed integration and advanced scheduling remain absent. See the [timer guide](TIMERS.md).

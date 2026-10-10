@@ -26,7 +26,7 @@ test('AutoMod refuses foreign rules even if their names match and allows owned r
   const removed = [];
   let creator = '423456789012345678';
   const service = new AutoModService({ guildId, botUserId, discord: {
-    getAutoModRule: async () => ({ creator_id: creator, name: 'OpenDesk: Filter' }),
+    getAutoModRule: async () => ({ id: ruleId, guild_id: guildId, creator_id: creator, name: 'OpenDesk: Filter' }),
     editAutoModRule: async (...args) => edited.push(args),
     deleteAutoModRule: async (...args) => removed.push(args)
   } });

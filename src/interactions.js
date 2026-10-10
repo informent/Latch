@@ -206,7 +206,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (!hasPermission(interaction.member?.permissions, 32n)) return { immediate: response('You need Manage Server to manage AutoMod rules.') };
       if (!automod) return { immediate: response('AutoMod is unavailable. Ask an administrator to check the bot setup.') };
       const action = subcommand?.name;
-      if (!['list', 'keywords', 'mentions', 'spam', 'enable', 'disable', 'remove'].includes(action)) return { immediate: response('Choose an AutoMod action.') };
+      if (!['list', 'info', 'presets', 'keywords', 'mentions', 'spam', 'enable', 'disable', 'remove', 'exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel', 'allow-words', 'block-message'].includes(action)) return { immediate: response('Choose an AutoMod action.') };
       return { immediate: defer(), work: async () => {
         try {
           const options = subcommand.options || [];
@@ -214,9 +214,16 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
           if (action === 'list') {
             const rules = await automod.list();
             content = rules.length ? `**Server AutoMod rules**\n${rules.slice(0, 20).map((rule) => `${safeText(rule.name)} | ID: ${rule.id} | ${rule.enabled ? 'enabled' : 'disabled'}`).join('\n')}` : 'No AutoMod rules are configured.';
-          } else if (['keywords', 'mentions', 'spam'].includes(action)) {
-            const rule = await automod.create({ kind: action, name: findOption(options, 'name'), keywords: findOption(options, 'keywords'), limit: findOption(options, 'limit'), actorId: user.id });
+          } else if (['keywords', 'mentions', 'spam', 'presets'].includes(action)) {
+            const rule = await automod.create({ kind: action, name: findOption(options, 'name'), keywords: findOption(options, 'keywords'), limit: findOption(options, 'limit'), preset: findOption(options, 'preset'), actorId: user.id });
             content = `Created disabled AutoMod rule ${rule.id}. Review it in Server Settings > AutoMod, then use /automod enable with that ID.`;
+          } else if (action === 'info') {
+            const rule = await automod.inspect(findOption(options, 'rule'));
+            const metadata = rule.trigger_metadata || {};
+            content = `**${safeText(rule.name)}** | ID: ${rule.id} | ${rule.enabled ? 'enabled' : 'disabled'}\nTrigger: ${rule.trigger_type}\nKeywords: ${safeText((metadata.keyword_filter || []).join(', ')) || 'none'}\nPresets: ${(metadata.presets || []).join(', ') || 'none'}\nAllowed words: ${safeText((metadata.allow_list || []).join(', ')) || 'none'}\nMention limit: ${metadata.mention_total_limit ?? 'not applicable'}\nExempt roles: ${(rule.exempt_roles || []).join(', ') || 'none'}\nExempt channels: ${(rule.exempt_channels || []).join(', ') || 'none'}\nActions: ${(rule.actions || []).map((entry) => entry.type).join(', ')}\nBlock explanation: ${safeText(rule.actions?.find((entry) => entry.type === 1)?.metadata?.custom_message || 'default')}`;
+          } else if (['exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel', 'allow-words', 'block-message'].includes(action)) {
+            const result = await automod.configure({ ruleId: findOption(options, 'rule'), action, targetId: findOption(options, 'target'), words: findOption(options, 'words') ?? '', message: findOption(options, 'message'), actorId: user.id });
+            content = result.changed ? `AutoMod ${action} saved. Enable state was preserved; inspect with /automod info.` : 'The requested exemption is already configured; no change was sent.';
           } else {
             await automod.change({ ruleId: findOption(options, 'rule'), action, actorId: user.id });
             content = `AutoMod rule ${action === 'remove' ? 'removed' : action + 'd'}.`;

@@ -1,5 +1,13 @@
 # Verification
 
+## Version 0.15.0
+
+All 221 tests pass locally. Coverage is 90.21% lines, 80.96% branches and 84.69% functions, with the existing CI floors enforced. The catalog contains 134 command paths across 20 roots.
+
+Twenty-six new tests cover all preset choices, unsupported values, role/channel exemption validation, concurrent additions, exemption caps, deleted-target removal, allowed-word replacement/clearing, block explanation preservation, bot/guild/rule ownership, invalid snapshots, failed-write retry, all eight new staff permission checks and private command replies.
+
+The native AutoMod adapter is simulated in these tests. Discord's filtering behavior, real rule limits and actual permission configuration still require live server validation. Native rules are stored in Discord, with no additional local store or schema migration.
+
 ## Version 0.14.0
 
 The full suite now passes 195 tests with no failures. Local coverage is 89.90% lines, 80.59% branches and 84.28% functions. The existing coverage floors remain enforced.
