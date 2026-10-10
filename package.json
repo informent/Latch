@@ -1,6 +1,6 @@
 {
   "name": "opendesk-discord",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "private": true,
   "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
   "license": "MIT",
@@ -18,6 +18,6 @@
     "register": "node --env-file-if-exists=.env scripts/register-commands.js",
     "test": "node --experimental-test-coverage test/run.js",
     "check": "node --check src/voice-store.js && node --check src/voice-service.js && node --check scripts/command-catalog.js && node --check scripts/setup.js && node --check scripts/doctor.js && node --check scripts/invite.js && node --check src/community-store.js && node --check src/community-service.js && node --check src/community-interactions.js && node --check src/automod-service.js && node --check src/config.js && node --check src/commands.js && node --check src/discord-api.js && node --check src/gateway.js && node --check src/guild-events.js && node --check src/level-store.js && node --check src/ticket-store.js && node --check src/moderation-store.js && node --check src/economy-store.js && node --check src/ticket-service.js && node --check src/interactions.js && node --check src/server.js && node --check scripts/register-commands.js",
-    "check:automation": "node --check src/responder-store.js && node --check src/responder-service.js && node --check src/responder-interactions.js"
+    "check:automation": "node --check src/responder-store.js && node --check src/responder-service.js && node --check src/responder-interactions.js && node --check src/timer-store.js && node --check src/timer-service.js && node --check src/timer-interactions.js"
   }
 }

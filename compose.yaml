@@ -20,6 +20,7 @@ services:
       ROLE_MENU_STORE_PATH: /app/data/role-menus.json
       TEMPLATE_STORE_PATH: /app/data/templates.json
       RESPONDER_STORE_PATH: /app/data/responders.json
+      TIMER_STORE_PATH: /app/data/timers.json
     secrets:
       - discord_bot_token
     ports:

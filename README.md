@@ -31,6 +31,8 @@ Ticket records may include the assigned support member ID. Giveaway records may 
 
 The optional voice suite uses `data/voice.json` for guild/lobby/category IDs, managed room IDs, owners and creation times. Current voice occupancy stays in memory; no audio or voice session IDs are recorded. Include this sixth store in backups. See the [voice guide](docs/VOICE.md) for recovery and access-control limits.
 
+Recurring channel messages use `data/timers.json`, a tenth guild-bound store with up to 25 schedules, saved deadlines and attempt results. Timers start disabled and need no Gateway connection. See the [timer guide](docs/TIMERS.md).
+
 Automatic responders use `data/responders.json`, a ninth guild-bound store containing configured triggers/replies, channel IDs, enable state and durable cooldown/last-message metadata. Incoming message content is not persisted or logged. Responders are opt-in; see the [responder guide](docs/RESPONDERS.md).
 
 Saved embed templates use `data/templates.json`, an eighth guild-bound store with up to 50 named titles, bodies and colors. Back it up with the other stores. See the [template guide](docs/TEMPLATES.md).
@@ -73,7 +75,7 @@ The start and register scripts load `.env` with Node's built-in env-file support
 
 ## Commands
 
-The catalog currently declares 98 command paths across 18 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have not been validated on a live server, and existing CI does not exercise their new workflows.
+The catalog currently declares 106 command paths across 19 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have not been validated on a live server, and existing CI does not exercise their new workflows.
 
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.
 - `/automod list`, `/automod keywords`, `/automod mentions`, and `/automod spam` manage native Discord message filters. Staff and bot need **Manage Server**. New rules are disabled for review; `/automod enable`, `/automod disable`, and `/automod remove` take a rule ID. Only rules created by this bot with the OpenDesk name prefix can be changed. Keyword input supports up to 100 comma-separated terms, with Discord wildcard matching. Mention limits range from 1 to 50. Discord applies its own rule-count limits. Native rules continue running while the bot is offline and do not require OpenDesk to receive chat content. Review exemptions in Server Settings > AutoMod. [Discord AutoMod reference](https://docs.discord.com/developers/resources/auto-moderation).

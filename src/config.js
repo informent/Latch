@@ -59,7 +59,8 @@ function loadConfig(env = process.env) {
     voiceStorePath: env.VOICE_STORE_PATH?.trim() || './data/voice.json',
     roleMenuStorePath: env.ROLE_MENU_STORE_PATH?.trim() || './data/role-menus.json',
     templateStorePath: env.TEMPLATE_STORE_PATH?.trim() || './data/templates.json',
-    responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json'
+    responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json',
+    timerStorePath: env.TIMER_STORE_PATH?.trim() || './data/timers.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);

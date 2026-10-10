@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0 - 2026-10-10
+
+- Added eight recurring-message commands: create, update, list, info, preview, enable, disable and delete. Manage Server checks apply to every command.
+- Added disabled-by-default schedules, private previews, mention suppression, live target-channel validation and a bounded scheduler without Gateway requirements.
+- Added guild-bound atomic storage, durable deadlines and attempt results, no missed-interval replay, offline inspection, tenth-store deployment paths and shutdown draining.
+- Catalog now declares 106 command paths across 19 suites. Updated help, backup guidance and feature coverage.
+
+Existing CI does not exercise the new timer workflows. Live Discord validation remains outstanding. Claims advance schedules before delivery; failures can skip an occurrence. Activity thresholds, embed integration, advanced scheduling and full competitor parity remain unfinished.
+
 ## 0.8.0 - 2026-10-10
 
 - Added eight autoresponder commands: create, update, list, info, preview, enable, disable and delete. Staff Manage Server checks apply to every command.

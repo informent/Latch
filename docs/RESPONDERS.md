@@ -44,4 +44,4 @@ There is no automatic retry or history backfill. A crash after claiming but befo
 
 Run one process per store set. Stop the bot and back up all nine stores together. `npm run doctor` inspects responder data without modifying it. Setting the environment feature to false leaves configuration intact and stops response processing; staff can still inspect, create, update, disable or delete rules.
 
-Existing CI does not exercise the new responder workflows. Live Discord behavior remains unverified. Rich matching policies, embed replies, recurring message timers and full competitor parity remain unfinished.
+Existing CI does not exercise the new responder workflows. Live Discord behavior remains unverified. Recurring messages are a separate [timer suite](TIMERS.md). Rich matching policies, embed replies and full competitor parity remain unfinished.

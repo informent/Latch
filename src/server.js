@@ -21,6 +21,8 @@ const { RoleMenuService } = require('./role-menu-service');
 const { TemplateStore } = require('./template-store');
 const { ResponderStore } = require('./responder-store');
 const { ResponderService } = require('./responder-service');
+const { TimerStore } = require('./timer-store');
+const { TimerService } = require('./timer-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
 const BODY_LIMIT = 64 * 1024;
@@ -96,13 +98,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     void server.community?.stop();
     void server.voice?.stop();
     void server.roleMenus?.stop();
+    void server.timers?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop()])).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop()])).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
@@ -135,15 +138,20 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const responders = new ResponderStore(config.responderStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'responders.json'), config.guildId);
   await responders.load();
   const responderService = new ResponderService({ config, store: responders, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, discord, logger });
+  const timerStore = new TimerStore(config.timerStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'timers.json'), config.guildId);
+  await timerStore.load();
+  const timers = new TimerService({ config, store: timerStore, discord, logger });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;
   server.roleMenus = roleMenus;
-  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); });
+  server.timers = timers;
+  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); });
   community.start();
   voice.start();
   roleMenus.start();
+  timers.start();
   const guildEvents = new GuildEventService({ config, discord, levels, logger });
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;

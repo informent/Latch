@@ -165,4 +165,17 @@ commands.push({
   ]
 });
 
+commands.push({
+  name: 'timer', description: 'Manage persistent recurring channel messages.', type: 1, default_member_permissions: '32',
+  options: [
+    ...['create', 'update'].map((action) => subcommand(action, `${action} a disabled recurring message in this text channel.`, [
+      option(3, 'name', 'Lowercase letters, numbers, underscore or hyphen; 1-32 characters.', { required: true, min_length: 1, max_length: 32 }),
+      option(4, 'minutes', 'Minutes between attempts, from 5 to 30 days.', { required: true, min_value: 5, max_value: 43200 }),
+      option(3, 'text', 'Recurring message text; mentions are suppressed.', { required: true, min_length: 1, max_length: 1800 })
+    ])),
+    subcommand('list', 'List recurring message states, intervals and last results.'),
+    ...['info', 'preview', 'enable', 'disable', 'delete'].map((action) => subcommand(action, `${action} a saved recurring message.`, [option(3, 'name', 'Timer name.', { required: true, max_length: 32 })]))
+  ]
+});
+
 module.exports = { commands };
