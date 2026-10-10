@@ -24,11 +24,13 @@ class TicketStore {
           ? ['channelId', 'ownerId', 'status', 'createdAt', 'closedAt']
           : ['channelId', 'ownerId', 'status', 'createdAt'];
         if (Object.hasOwn(ticket || {}, 'claimedBy')) expectedKeys.push('claimedBy');
+        if (Object.hasOwn(ticket || {}, 'reason')) expectedKeys.push('reason');
         if (!ticket || typeof ticket !== 'object' || Array.isArray(ticket)
           || Object.keys(ticket).sort().join(',') !== expectedKeys.sort().join(',')
           || !/^\d{5,25}$/.test(ticket.channelId) || !/^\d{5,25}$/.test(ticket.ownerId)
           || !['open', 'closing', 'closed'].includes(ticket.status)
           || (Object.hasOwn(ticket, 'claimedBy') && (typeof ticket.claimedBy !== 'string' || !/^\d{5,25}$/.test(ticket.claimedBy) || ticket.claimedBy === ticket.ownerId))
+          || (Object.hasOwn(ticket, 'reason') && (typeof ticket.reason !== 'string' || !ticket.reason.trim() || ticket.reason.length > 400))
           || typeof ticket.createdAt !== 'string' || !Number.isFinite(Date.parse(ticket.createdAt))
           || (ticket.status === 'closed' && (typeof ticket.closedAt !== 'string' || !Number.isFinite(Date.parse(ticket.closedAt))))
           || channelIds.has(ticket.channelId)
@@ -63,6 +65,16 @@ class TicketStore {
   }
   findActiveByOwner(ownerId) {
     return [...this.byChannel.values()].find((ticket) => ticket.ownerId === ownerId && ticket.status !== 'closed') || null;
+  }
+
+  async setReason(channelId, reason) {
+    if (typeof reason !== 'string' || !reason.trim() || reason.length > 400) throw new Error('Invalid ticket reason.');
+    const previous = this.byChannel.get(channelId);
+    if (!previous || previous.status !== 'open') throw new Error('Choose an open ticket.');
+    this.byChannel.set(channelId, Object.freeze({ ...previous, reason: reason.trim() }));
+    try { await this.#save(); }
+    catch (error) { this.byChannel.set(channelId, previous); throw error; }
+    return this.byChannel.get(channelId);
   }
 
   async withUserLock(userId, operation) { return this.#withLock(this.userLocks, userId, operation); }

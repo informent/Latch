@@ -94,12 +94,37 @@ class TicketService {
       claimed: records.filter((ticket) => ticket.status === 'open' && ticket.claimedBy).length };
   }
 
-  async manage({ action, channelId, userId, roles = [], permissions = '0', name }) {
-    if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can manage ticket assignments and names.' };
+  info({ channelId, userId, roles = [], permissions = '0' }) {
+    const ticket = this.store.getByChannel(channelId);
+    if (!ticket || ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Ticket information is available only to its owner or the support team.' };
+    return { ok: true, ticket: { ...ticket } };
+  }
+
+  async manage({ action, channelId, userId, roles = [], permissions = '0', name, categoryId, reason }) {
+    if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can manage this ticket.' };
     if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket channel.' };
     return this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
       if (!ticket || ticket.status !== 'open') return { ok: false, reason: 'Choose an open OpenDesk ticket.' };
+      if (action === 'reason') {
+        await this.store.setReason(channelId, reason);
+        return { ok: true, content: 'Ticket reason saved. It is visible to the owner and support staff through ticket info.' };
+      }
+      if (action === 'move') {
+        if (typeof categoryId !== 'string' || !/^\d{5,25}$/.test(categoryId)) return { ok: false, reason: 'Choose a server category.' };
+        const [channel, category] = await Promise.all([this.discord.request('GET', `/channels/${channelId}`), this.discord.request('GET', `/channels/${categoryId}`)]);
+        if (channel?.id !== channelId || category?.id !== categoryId || channel?.guild_id !== this.config.guildId || channel.type !== 0 || category?.guild_id !== this.config.guildId || category.type !== 4) return { ok: false, reason: 'Choose an existing ticket and category in the configured server.' };
+        const overwrites = channel.permission_overwrites;
+        if (!Array.isArray(overwrites) || overwrites.length > 1000 || overwrites.some((item) => !item || typeof item.id !== 'string' || !/^\d{5,25}$/.test(item.id) || ![0, 1].includes(item.type) || typeof item.allow !== 'string' || typeof item.deny !== 'string' || !/^\d{1,30}$/.test(item.allow) || !/^\d{1,30}$/.test(item.deny))) throw new Error('Invalid ticket permissions.');
+        const everyone = overwrites.find((item) => item.id === this.config.guildId && item.type === 0);
+        if (!everyone || !(BigInt(everyone.deny) & PERMISSIONS.VIEW_CHANNEL) || BigInt(everyone.allow) & PERMISSIONS.VIEW_CHANNEL) return { ok: false, reason: 'Ticket everyone visibility protection is missing. Repair permissions before moving.' };
+        if (channel.parent_id === categoryId) return { ok: true, content: 'Ticket is already in that category.' };
+        await this.discord.editChannel(channelId, { parent_id: categoryId, permission_overwrites: overwrites.map(({ id, type, allow, deny }) => ({ id, type, allow, deny })) });
+        const moved = await this.discord.request('GET', `/channels/${channelId}`);
+        const canonical = (items) => JSON.stringify(items.map(({ id, type, allow, deny }) => [id, type, BigInt(allow).toString(), BigInt(deny).toString()]).sort((a, b) => a[0].localeCompare(b[0]) || a[1] - b[1]));
+        if (moved.guild_id !== this.config.guildId || moved.type !== 0 || moved.parent_id !== categoryId || !Array.isArray(moved.permission_overwrites) || canonical(moved.permission_overwrites) !== canonical(overwrites)) throw new Error('Ticket move could not be confirmed.');
+        return { ok: true, content: 'Ticket moved and channel overwrites verified. Category permissions were not copied.' };
+      }
       if (action === 'claim') {
         if (ticket.ownerId === userId) return { ok: false, reason: 'You cannot claim your own ticket.' };
         if (ticket.claimedBy && ticket.claimedBy !== userId) return { ok: false, reason: 'This ticket is already claimed. Unclaim it before assigning a new handler.' };

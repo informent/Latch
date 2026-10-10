@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0 - 2026-10-10
+
+- Added ticket info, reason and move commands. Owners can inspect their own stored ticket metadata; support staff can save reasons and move open tickets.
+- Moves validate configured guild/channel/category types, retain explicit channel overwrites and verify destination and overwrites after the API update. Missing everyone visibility protection is refused.
+- Added backward-compatible reason metadata in the existing ticket store and ticket operating documentation. Catalog now declares 110 command paths across 19 suites.
+
+Existing CI does not exercise the new ticket workflows. Live Discord validation remains outstanding. Concurrent manual permission changes can race moves; failed confirmation requires staff inspection. Complete competitor parity remains unfinished.
+
 ## 0.10.0 - 2026-10-10
 
 - Extended live actor/bot permission and hierarchy checks to role grants/removals and nickname updates. Blocks protected/self targets, managed/everyone roles and equal or higher role positions.

@@ -252,7 +252,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
         }
       } };
     }
-    if (commandName === 'ticket' && ['list', 'stats', 'claim', 'unclaim', 'rename'].includes(subcommand?.name)) {
+    if (commandName === 'ticket' && ['list', 'stats', 'claim', 'unclaim', 'rename', 'info', 'reason', 'move'].includes(subcommand?.name)) {
       const action = subcommand.name;
       const actor = { userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0' };
       return { immediate: defer(), work: async () => {
@@ -265,8 +265,12 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
           } else if (action === 'stats') {
             result = tickets.stats(actor);
             content = result.ok ? `**Ticket statistics**\nTotal: ${result.total}\nOpen: ${result.open}\nClosing: ${result.closing}\nClosed: ${result.closed}\nOpen and claimed: ${result.claimed}` : result.reason;
+          } else if (action === 'info') {
+            result = tickets.info({ ...actor, channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id });
+            const ticket = result.ticket;
+            content = result.ok ? `**Ticket information**\nChannel: <#${ticket.channelId}>\nOwner: <@${ticket.ownerId}>\nState: ${ticket.status}\nHandler: ${ticket.claimedBy ? `<@${ticket.claimedBy}>` : 'unclaimed'}\nCreated: <t:${Math.floor(Date.parse(ticket.createdAt) / 1000)}:F>\n${ticket.closedAt ? `Closed: <t:${Math.floor(Date.parse(ticket.closedAt) / 1000)}:F>\n` : ''}Reason: ${ticket.reason ? safeText(ticket.reason) : 'not set'}` : result.reason;
           } else {
-            result = await tickets.manage({ ...actor, action, channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, name: findOption(subcommand.options || [], 'name') });
+            result = await tickets.manage({ ...actor, action, channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, name: findOption(subcommand.options || [], 'name'), categoryId: findOption(subcommand.options || [], 'category'), reason: findOption(subcommand.options || [], 'reason') });
             content = result.ok ? result.content : result.reason;
           }
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });

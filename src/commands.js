@@ -15,6 +15,9 @@ const commands = [
     options: [subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
       subcommand('list', 'List open tickets; members see only their own.', [option(4, 'page', 'Results page, ten tickets per page.', { min_value: 1, max_value: 10000 })]),
       subcommand('stats', 'Show support team ticket statistics.'),
+      subcommand('info', 'Privately inspect your ticket or any ticket as support staff.', [option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })]),
+      subcommand('reason', 'Save a ticket reason as support staff.', [option(3, 'reason', 'Reason visible to the owner and support team.', { required: true, min_length: 1, max_length: 400 }), option(7, 'channel', 'Open ticket channel; defaults to this channel.', { channel_types: [0] })]),
+      subcommand('move', 'Move an open ticket while preserving its channel overwrites.', [option(7, 'category', 'Destination category in this server.', { required: true, channel_types: [4] }), option(7, 'channel', 'Open ticket channel; defaults to this channel.', { channel_types: [0] })]),
       ...['claim', 'unclaim'].map((action) => subcommand(action, `${action} an open ticket as support staff.`, [option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })])),
       subcommand('rename', 'Rename an open ticket as support staff.', [option(3, 'name', 'Lowercase letters, digits and hyphens; maximum 90 characters.', { required: true, min_length: 1, max_length: 90 }), option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })])]
   },
