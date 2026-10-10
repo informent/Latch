@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.12.0 - 2026-10-10
+
+- Added economy beg, profile and profession list/choose/status, bringing the catalog to 115 command paths across 19 suites.
+- Beg rewards 0-25 coins with a durable 15-minute cooldown. Three free professions share work-based ranks and bounded 5-25 coin work bonuses.
+- Profession changes have a durable 24-hour cooldown, reset progression and preserve reward cooldowns. Same-profession selection preserves progression.
+- Added strict optional account metadata, immutable loaded profession state, copied leaderboard snapshots, reward bounds and economy operating documentation.
+
+Existing CI does not exercise the new economy workflows. Live Discord validation remains outstanding. Older bot versions reject accounts containing the new optional fields; rollback needs a compatible complete backup. Full competitor parity remains unfinished.
+
 ## 0.11.0 - 2026-10-10
 
 - Added ticket info, reason and move commands. Owners can inspect their own stored ticket metadata; support staff can save reasons and move open tickets.

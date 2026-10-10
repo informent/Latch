@@ -46,6 +46,13 @@ const commands = [
       subcommand('balance', 'Check your balance or another member’s balance.', [option(6, 'user', 'Member to check.', { required: false })]),
       subcommand('daily', 'Claim your daily coin reward.'),
       subcommand('work', 'Earn coins by working. Cooldown applies.'),
+      subcommand('beg', 'Try for 0-25 coins every 15 minutes.'),
+      subcommand('profile', 'Privately inspect coins, profession and reward readiness.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]),
+      { type: 2, name: 'profession', description: 'Choose a profession and progress through work rewards.', options: [
+        subcommand('list', 'List free professions and rank bonuses.'),
+        subcommand('choose', 'Choose a profession; changing resets rank, with a 24-hour cooldown.', [option(3, 'name', 'Profession; all have the same reward progression.', { required: true, choices: ['developer', 'artist', 'builder'].map((value) => ({ name: value, value })) })]),
+        subcommand('status', 'Privately inspect your profession and work progression.')
+      ] },
       subcommand('pay', 'Send coins to another member.', [option(6, 'user', 'Member to pay.', { required: true }), option(4, 'amount', 'Number of coins to send.', { required: true, min_value: 1, max_value: 1_000_000 })])
     ]
   },

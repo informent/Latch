@@ -12,7 +12,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Tickets | Private channels, durable ownership/assignment, list/stats/info, saved reasons, rename, permission-preserving moves and retryable closure | Panels, per-option categories and policies, reopen, transcripts, configurable retention |
 | Roles | Staff roles/nicknames with live delegation checks, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
-| Economy | Durable balances, daily/work, transfers and leaderboard | Shops, professions, inventory, seasonal events, staff controls |
+| Economy | Durable balances, daily/work/beg, transfers, profiles, professions and leaderboard | Shops, inventory, seasonal events, staff controls, richer profession mechanics |
 | Embeds | Custom announcements, persistent templates, private previews and staff publication | Variables, scripting, editing previously published copies, webhook branding |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |

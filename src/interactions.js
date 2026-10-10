@@ -469,8 +469,37 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (commandName === 'economy') {
       if (!economy) return { immediate: response('The economy store is unavailable. Ask an administrator to check the bot setup.') };
       const action = subcommand?.name;
-      if (!['balance', 'daily', 'work', 'pay'].includes(action)) return { immediate: response('Choose an economy action.') };
+      if (!['balance', 'daily', 'work', 'pay', 'beg', 'profession', 'profile'].includes(action)) return { immediate: response('Choose an economy action.') };
       const options = subcommand.options || [];
+      if (action === 'profile' || action === 'profession') {
+        if (user.bot) return { immediate: response('Economy progression is available to human members only.') };
+        const professionAction = options[0]?.name;
+        if (action === 'profession' && professionAction === 'list') return { immediate: response('**Free professions**\nDeveloper, artist and builder have identical reward progression. Choose a name you prefer. Work earns a rank bonus of 5-25 coins; rank rises every ten successful work claims, capped at rank 5. Profession changes reset progression and have a 24-hour cooldown. Work cooldown remains one hour.') };
+        return { immediate: defer(), work: async () => {
+          try {
+            let content;
+            if (action === 'profession' && professionAction === 'choose') {
+              const name = findOption(options[0]?.options || [], 'name');
+              const result = await economy.chooseProfession(config.guildId, user.id, name, now());
+              content = result.unchanged ? 'You already have that profession. Your progression was preserved.' : result.changed ? `Profession set to ${result.name}. Rank starts at 1; previous reward cooldowns remain unchanged.` : `You can change profession again <t:${Math.floor(Date.parse(result.nextAt) / 1000)}:R>.`;
+            } else {
+              if (action === 'profession' && professionAction !== 'status') throw new Error();
+              const selected = action === 'profile' ? findOption(options, 'user') : null;
+              const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+              if (typeof targetId !== 'string' || !/^\d{5,25}$/.test(targetId)) throw new Error();
+              const profile = economy.profile(config.guildId, targetId);
+              const profession = profile.profession;
+              const ready = (last, duration) => last && Date.parse(last) + duration > now().getTime() ? `<t:${Math.floor((Date.parse(last) + duration) / 1000)}:R>` : 'ready';
+              content = `**Economy profile: <@${targetId}>**\nCoins: ${profile.balance}\nProfession: ${profession ? `${profession.name} | rank ${profession.rank}/5 | ${profession.works} work claims | next-work bonus ${profession.rank * 5}` : 'none'}\nDaily: ${ready(profile.lastDaily, 86400000)}\nWork: ${ready(profile.lastWork, 3600000)}\nBeg: ${ready(profile.lastBeg, 900000)}`;
+            }
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
+          } catch {
+            logger('economy_profile_failed', { action });
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the economy profile or profession action. Choose a listed profession and check the economy store.', allowed_mentions: { parse: [] } }).catch(() => {});
+          }
+        } };
+      }
+      if (['daily', 'work', 'beg'].includes(action) && user.bot) return { immediate: response('Economy rewards are available to human members only.') };
       if (action === 'balance') {
         const selected = findOption(options, 'user');
         const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
@@ -489,10 +518,10 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       return { immediate: defer(), work: async () => {
         try {
           let content;
-          if (action === 'daily' || action === 'work') {
+          if (action === 'daily' || action === 'work' || action === 'beg') {
             const result = await economy.claim(interaction.guild_id, user.id, action, now());
             content = result.claimed
-              ? `You earned **${result.reward}** coins. Your balance is **${result.balance}**.`
+              ? `You earned **${result.reward}** coins. Your balance is **${result.balance}**.${action === 'work' && result.profession ? `\nProfession: ${result.profession.name}, rank ${result.profession.rank}/5. This reward includes a ${result.bonus}-coin profession bonus.` : ''}`
               : `You can claim again <t:${Math.floor(Date.parse(result.nextAt) / 1000)}:R>.`;
           } else {
             const selected = findOption(options, 'user');

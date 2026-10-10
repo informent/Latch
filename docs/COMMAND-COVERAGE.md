@@ -23,7 +23,7 @@ Only command names and independently authored implementation notes are recorded 
 | Role inspection | `/utility role` | Private metadata and raw permission bits; does not calculate effective channel/member access |
 | Role/nickname delegation | `/roles` actions | Live actor/bot hierarchy and grant-permission checks; conservative equal-position and protected-target rules |
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
-| balance, daily, work | `/economy` actions | OpenDesk reward amounts and cooldowns |
+| balance, daily, work, beg, professions | `/economy` actions and profession subcommands | OpenDesk reward amounts/cooldowns, equal-rate professions and work-based ranks; competitor mechanics remain different |
 | transfer | `/economy pay` | Different name and syntax |
 | leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only OpenDesk coin/XP records |
 | giveaway start | `/giveaway create` | Current channel; limited options |
@@ -58,7 +58,7 @@ These are concrete gaps from the sources above; the list will expand as further 
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
 - Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.
-- Economy: beg, professions. No profession progression exists yet.
+- Economy: begging and professions now exist with OpenDesk-specific rewards, cooldowns and work progression. Competitor-specific profession policies and broader economy mechanics remain unverified. See the [economy guide](ECONOMY.md).
 - Prefix support: configurable prefix, prefix set, cmds alias, command aliases and competitor command syntax.
 
 ## Suites awaiting a detailed inventory
