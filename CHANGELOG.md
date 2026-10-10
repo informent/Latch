@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 - 2026-10-10
+
+- Added live actor and bot permission/hierarchy checks before ban, kick, timeout and timeout removal. Protects the server owner, invoking member and OpenDesk itself.
+- Rejects equal role positions, missing/invalid role snapshots, and administrator/bot timeout targets. Server ownership bypasses the actor hierarchy check only.
+- Updated existing moderation fixtures for the required live lookup shape and added source syntax checks. Command count remains 106 across 19 suites.
+
+Existing CI does not exercise every new rejection branch. Live Discord validation remains outstanding. Role/nickname delegation and complete competitor parity remain unfinished.
+
 ## 0.9.0 - 2026-10-10
 
 - Added eight recurring-message commands: create, update, list, info, preview, enable, disable and delete. Manage Server checks apply to every command.

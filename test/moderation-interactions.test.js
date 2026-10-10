@@ -12,6 +12,12 @@ const base = (subcommand, permissions = '0', options = []) => ({
   member: { user: { id: userId }, roles: [], permissions },
   data: { name: 'moderation', options: [{ name: subcommand, options }] }
 });
+const hierarchyFixture = {
+  getCurrentUser: async () => ({ id: '523456789012345678' }),
+  getGuild: async () => ({ id: config.guildId, owner_id: '623456789012345678' }),
+  request: async () => [{ id: config.guildId, position: 0, permissions: '0' }, { id: '723456789012345678', position: 10, permissions: String(4n | 2n | (1n << 40n)) }],
+  getGuildMember: async (guildId, id) => ({ user: { id }, roles: id === targetId ? [] : ['723456789012345678'] })
+};
 const targetOption = { name: 'user', value: targetId };
 
 test('moderation rejects members without the required permission before API calls', async () => {
@@ -28,6 +34,7 @@ test('ban action passes the actor reason to the Discord adapter and replies priv
   const bans = [];
   const edited = [];
   const discord = {
+    ...hierarchyFixture,
     banMember: async (...args) => bans.push(args),
     editOriginalResponse: async (...args) => edited.push(args)
   };
@@ -47,6 +54,7 @@ test('timeout and untimeout actions, bounded durations, and warnings persist', a
   const fixedNow = new Date('2026-10-09T00:00:00.000Z');
   const moderation = { addWarning: async (record) => warnings.push(record) };
   const discord = {
+    ...hierarchyFixture,
     timeoutMember: async (...args) => timeouts.push(args),
     editOriginalResponse: async (...args) => edited.push(args)
   };

@@ -23,6 +23,8 @@ You also need a public HTTPS interaction endpoint configured in Discord. The set
 
 All upstream OpenDesk features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required OpenDesk hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
 
+Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
+
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores

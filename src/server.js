@@ -22,6 +22,7 @@ const { TemplateStore } = require('./template-store');
 const { ResponderStore } = require('./responder-store');
 const { ResponderService } = require('./responder-service');
 const { TimerStore } = require('./timer-store');
+const { ModerationGuard } = require('./moderation-guard');
 const { TimerService } = require('./timer-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
@@ -141,7 +142,7 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const timerStore = new TimerStore(config.timerStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'timers.json'), config.guildId);
   await timerStore.load();
   const timers = new TimerService({ config, store: timerStore, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, logger });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;

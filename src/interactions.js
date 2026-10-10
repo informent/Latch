@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const { createCommunityHandler } = require('./community-interactions');
 const { createResponderHandler } = require('./responder-interactions');
 const { createTimerHandler } = require('./timer-interactions');
+const { ModerationGuard, ModerationDenied } = require('./moderation-guard');
 const MAX_CLOCK_SKEW_SECONDS = 300;
 const EPHEMERAL = 64;
 
@@ -37,7 +38,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
   const handleResponder = createResponderHandler({ config, responders, discord, logger }, { response, defer, hasPermission, findOption });
   const handleTimer = createTimerHandler({ config, timers, discord, logger }, { response, defer, hasPermission, findOption });
@@ -291,6 +292,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (action === 'warn' && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for the warning.') };
       return { immediate: defer(), work: async () => {
         try {
+          if (['ban', 'kick', 'timeout', 'untimeout'].includes(action)) await moderationGuard.check(action, user.id, targetId);
           if (action === 'ban') await discord.banMember(interaction.guild_id, targetId, reasonText);
           else if (action === 'unban') await discord.unbanMember(interaction.guild_id, targetId, reasonText);
           else if (action === 'kick') await discord.kickMember(interaction.guild_id, targetId, reasonText);
@@ -335,7 +337,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
         } catch (error) {
           logger('moderation_action_failed', { action, message: error.message });
-          const detail = action === 'unban' ? 'Check Ban Members permission and confirm this user ID has an active server ban.' : ['ban', 'kick', 'timeout', 'untimeout'].includes(action) ? 'Check the bot permissions and role hierarchy, and confirm the target is still in the server.' : 'Check the bot permissions and moderation store.';
+          const detail = error instanceof ModerationDenied ? error.message : action === 'unban' ? 'Check Ban Members permission and confirm this user ID has an active server ban.' : ['ban', 'kick', 'timeout', 'untimeout'].includes(action) ? 'Check the bot permissions and role hierarchy, and confirm the target is still in the server.' : 'Check the bot permissions and moderation store.';
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Could not complete ${action}. ${detail}`, allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
