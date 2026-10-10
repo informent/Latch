@@ -278,7 +278,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
           } else if (action === 'warnings') {
             const records = moderation.listWarnings(interaction.guild_id, targetId).slice(-8);
             const content = records.length
-              ? `Recent warnings for <@${targetId}>:\n${records.map((warning, index) => `${index + 1}. ${safeText(warning.reason)} — <t:${Math.floor(Date.parse(warning.createdAt) / 1000)}:R>`).join('\n')}`
+              ? `Recent warnings for <@${targetId}>:\n${records.map((warning, index) => `${index + 1}. ${safeText(warning.reason)} - <t:${Math.floor(Date.parse(warning.createdAt) / 1000)}:R>`).join('\n')}`
               : `No warnings are recorded for <@${targetId}>.`;
             await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
             return;
@@ -357,13 +357,13 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (action === 'levels') {
         if (!levels) return { immediate: response('The level store is unavailable. Ask an administrator to check the bot setup.') };
         const leaders = levels.leaderboard(interaction.guild_id, 10);
-        const content = leaders.length ? `**Server XP leaderboard**\n${leaders.map((account, index) => `${index + 1}. <@${account.userId}> — level **${account.level}** (${account.xp} XP)`).join('\n')}` : 'No one has earned XP yet.';
+        const content = leaders.length ? `**Server XP leaderboard**\n${leaders.map((account, index) => `${index + 1}. <@${account.userId}> - level **${account.level}** (${account.xp} XP)`).join('\n')}` : 'No one has earned XP yet.';
         return { immediate: response(content) };
       }
       if (action === 'coins') {
         if (!economy) return { immediate: response('The economy store is unavailable. Ask an administrator to check the bot setup.') };
         const leaders = economy.leaderboard(interaction.guild_id, 10);
-        const content = leaders.length ? `**Server coin leaderboard**\n${leaders.map((account, index) => `${index + 1}. <@${account.userId}> — **${account.balance}**`).join('\n')}` : 'No one has earned coins yet.';
+        const content = leaders.length ? `**Server coin leaderboard**\n${leaders.map((account, index) => `${index + 1}. <@${account.userId}> - **${account.balance}**`).join('\n')}` : 'No one has earned coins yet.';
         return { immediate: response(content) };
       }
       return { immediate: response('Choose a leaderboard.') };
