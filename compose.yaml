@@ -16,6 +16,7 @@ services:
       ECONOMY_STORE_PATH: /app/data/economy.json
       LEVEL_STORE_PATH: /app/data/levels.json
       COMMUNITY_STORE_PATH: /app/data/community.json
+      VOICE_STORE_PATH: /app/data/voice.json
     secrets:
       - discord_bot_token
     ports:

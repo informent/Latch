@@ -15,11 +15,12 @@ function gatewayUrl(url) {
 }
 
 class GatewayClient {
-  constructor({ token, intents, getGateway, onDispatch = async () => {}, logger = () => {}, webSocketFactory, timers = globalThis, random = Math.random, reconnectBaseMs = 1000, reconnectMaxMs = 30_000 }) {
+  constructor({ token, intents, getGateway, onDispatch = async () => {}, onObserveDispatch = () => {}, logger = () => {}, webSocketFactory, timers = globalThis, random = Math.random, reconnectBaseMs = 1000, reconnectMaxMs = 30_000 }) {
     this.token = token;
     this.intents = intents;
     this.getGateway = getGateway;
     this.onDispatch = onDispatch;
+    this.onObserveDispatch = onObserveDispatch;
     this.logger = logger;
     this.webSocketFactory = webSocketFactory || ((url) => new WebSocket(url));
     this.timers = timers;
@@ -133,6 +134,7 @@ class GatewayClient {
     if (typeof packet.t !== 'string' || !/^[A-Z_]{1,64}$/.test(packet.t)) throw new Error('Invalid Gateway event type.');
     if (packet.s !== null && packet.s !== undefined && (!Number.isSafeInteger(packet.s) || packet.s < 0)) throw new Error('Invalid Gateway sequence.');
     if (packet.s !== null && packet.s !== undefined) this.sequence = packet.s;
+    try { this.onObserveDispatch(packet.t, packet.d); } catch { this.#log('gateway_observation_failed', {}); }
     if (packet.t === 'READY') {
       this.sessionId = packet.d?.session_id || null;
       this.resumeUrl = packet.d?.resume_gateway_url || null;

@@ -5,12 +5,13 @@ const features = Object.freeze({
   tickets: (1n << 4n) | (1n << 28n),
   moderation: (1n << 1n) | (1n << 2n) | (1n << 4n) | (1n << 13n) | (1n << 16n) | (1n << 40n),
   roles: (1n << 27n) | (1n << 28n),
-  automod: 1n << 5n
+  automod: 1n << 5n,
+  voice: (1n << 4n) | (1n << 10n) | (1n << 20n) | (1n << 24n) | (1n << 28n)
 });
 
 function installLink(applicationId, selected = ['community', 'tickets']) {
   if (typeof applicationId !== 'string' || !/^\d{5,25}$/.test(applicationId)) throw new Error('Set DISCORD_APPLICATION_ID to your application ID.');
-  if (!selected.length || selected.some((name) => !Object.hasOwn(features, name))) throw new Error('Choose features from: community,tickets,moderation,roles,automod (or all).');
+  if (!selected.length || selected.some((name) => !Object.hasOwn(features, name))) throw new Error('Choose features from: community,tickets,moderation,roles,automod,voice (or all).');
   const permissions = selected.reduce((bits, name) => bits | features[name], 0n);
   const url = new URL('https://discord.com/oauth2/authorize');
   url.search = new URLSearchParams({ client_id: applicationId, scope: 'bot applications.commands', permissions: String(permissions), integration_type: '0' }).toString();

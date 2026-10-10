@@ -105,4 +105,17 @@ const commands = [
 ];
 
 
+commands.push({
+  name: 'voice', description: 'Own and manage temporary join-to-create voice channels.', type: 1,
+  options: [
+    subcommand('setup', 'Configure existing lobby and category; requires Manage Server.', [option(7, 'lobby', 'Existing join-to-create voice channel.', { required: true, channel_types: [2] }), option(7, 'category', 'Category for temporary rooms.', { required: true, channel_types: [4] })]),
+    subcommand('status', 'Show voice configuration and occupancy readiness.'),
+    subcommand('disable', 'Stop creating rooms; existing rooms still expire when empty.'),
+    subcommand('rename', 'Rename your temporary voice channel.', [option(3, 'name', 'New voice channel name.', { required: true, min_length: 1, max_length: 100 })]),
+    subcommand('limit', 'Set your voice room member limit.', [option(4, 'members', 'Limit from 0 (unlimited) to 99.', { required: true, min_value: 0, max_value: 99 })]),
+    ...['lock', 'unlock', 'ghost', 'unghost', 'claim', 'info'].map((action) => subcommand(action, `${action} your temporary voice channel.`)),
+    ...['permit', 'reject', 'transfer'].map((action) => subcommand(action, `${action} a member in your temporary voice channel.`, [option(6, 'user', 'Server member.', { required: true })]))
+  ]
+});
+
 module.exports = { commands };

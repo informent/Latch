@@ -6,23 +6,23 @@ All OpenDesk features are intended to be available without subscriptions or prem
 
 | Area | Current implementation | Remaining work |
 | --- | --- | --- |
-| Moderation | Ban, kick, timeout/removal, purge, slowmode, staff warnings | Unban, cases, strikes/expiry, appeals, configurable audit channel, actor hierarchy checks |
+| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, staff warnings | Cases, strikes/expiry, appeals, configurable audit channel, actor hierarchy checks |
 | AutoMod | Native keyword, spam and mention filters; enable/disable/remove | Presets, exclusions through commands, regex validation, management UI |
 | Server security | Join burst detection; native mention-raid filter | Account-age policies, antinuke audit attribution, action budgets, restoration plans |
-| Tickets | Private channels, durable ownership and retryable closure | Panels, categories, assignment, reopen, configurable retention |
+| Tickets | Private channels, durable ownership/assignment, list/stats, rename and retryable closure | Panels, per-option categories and policies, reopen, transcripts, configurable retention |
 | Roles | Staff role assignment/removal and nickname changes | Autoroles, reaction/button roles, booster roles, menus |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
 | Economy | Durable balances, daily/work, transfers and leaderboard | Shops, professions, inventory, seasonal events, staff controls |
 | Embeds | Custom announcements in the invoking channel | Saved templates, variables, preview/edit workflow |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
-| Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved cryptographic draws, cancellation, delivery retries | Role eligibility, departure checks, rerolls |
+| Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved draws/rerolls, prize/duration/winner editing, cancellation, delivery retries | Role eligibility, departure checks, host and embed editing |
 | Community | Native polls; durable personal channel reminders with list/cancel | Starboard, counters, autoresponders, bump reminders |
-| VoiceMaster | Planned | Temporary rooms, ownership, permissions, cleanup |
+| VoiceMaster | Optional temporary rooms, ownership/transfer/claim, rename/limit, access controls and delayed cleanup | Live validation, default settings, generated interface, role grants, bitrate/region and audio |
 | Music and TTS | Planned | Voice transport, queue, source adapters, volume/loop, effects, licensed provider support |
 | Last.fm and Spotify | Planned | Linking, listening stats, artist searches, leaderboards, metadata adapters |
 | Social feeds | Planned | Provider-specific YouTube/Twitch and other feed adapters, deduplication, rate limits |
-| Search and utilities | Help, ping, server information | User/avatar info, image/search adapters, timers and translation |
+| Search and utilities | Help, ping, server/member information and avatars | Image/search adapters, timers and translation |
 | Deleted/edited message tools | Planned, privacy policy undecided | Explicit retention settings and access controls before any message capture |
 | Deployment | Node 22/24 CI, signed interactions, durable scheduler, offline setup doctor, install links, container/service templates and operations guide | Docker/service execution proof, live Discord validation, per-server administration |
 

@@ -35,7 +35,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, discord, logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, discord, logger = () => {}, now = () => new Date() }) {
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
   return async function handle(interaction) {
     if (interaction.type === 1) return { immediate: { type: 1 } };
@@ -44,6 +44,26 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (commandName === 'voice') {
+      const action = subcommand?.name;
+      if (!voice) return { immediate: response('The voice suite is unavailable.') };
+      if (['setup', 'disable'].includes(action) && !hasPermission(interaction.member?.permissions, 32n)) return { immediate: response('You need Manage Server to configure temporary voice channels.') };
+      if (user.bot) return { immediate: response('Voice ownership is available to human members only.') };
+      return { immediate: defer(), work: async () => {
+        try {
+          const options = subcommand?.options || [];
+          let content;
+          if (action === 'setup') content = await voice.configure({ lobbyId: findOption(options, 'lobby'), categoryId: findOption(options, 'category') });
+          else if (action === 'disable') content = await voice.disable();
+          else if (action === 'status') content = voice.status();
+          else content = await voice.manage({ action, userId: user.id, targetId: findOption(options, 'user'), value: findOption(options, action === 'limit' ? 'members' : 'name') });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
+        } catch {
+          logger('voice_command_failed', { action });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete this voice action. Enable the voice suite and wait for its Gateway snapshot, join a managed room, and check ownership, target membership and bot permissions. Claim requires the previous owner to be absent; transfer requires a human in your room who owns no other room.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (interaction.type === 3 || ['reminder', 'giveaway'].includes(commandName)) return handleCommunity(interaction, user);
     if (commandName === 'poll') {
       if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to publish a poll.') };

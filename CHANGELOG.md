@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 - 2026-10-10
+
+- Added an optional temporary voice suite with 14 command paths: setup, status, disable, rename, limit, lock, unlock, ghost, unghost, claim, info, permit, reject and transfer.
+- Added a strict, guild-bound persistent voice store, one room per owner, up to 50 rooms, serialized operations, creation cooldowns and delayed empty-room cleanup.
+- Gateway voice observations update before asynchronous dispatch work. Cleanup pauses without a current connection/snapshot and validates stored channels before deletion. One cleanup attempt per pass rotates across rooms, with confirmed 404 recovery.
+- Added voice opt-in configuration, Gateway intent 128, invite permissions, offline store inspection, persistent deployment paths and shutdown draining.
+- Added detailed voice operation and recovery documentation; updated the roadmap and partial competitor inventory. Catalog now declares 71 command paths across 14 suites.
+
+Existing CI does not exercise new voice workflows. Live voice lifecycle, audio playback and full competitor parity remain unverified or unfinished. Permission changes and ownership saves are separate operations; read the voice guide before enabling this prerelease.
+
 ## 0.4.0 - 2026-10-10
 
 - Added ticket list, stats, claim, unclaim and rename, with private responses and support-team authorization. Listing is paginated and ordinary members see only their own tickets. Assignments persist with rollback on failed saves and channel locks for concurrent claims.

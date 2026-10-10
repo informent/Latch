@@ -46,14 +46,16 @@ function loadConfig(env = process.env) {
   }
   const levelingEnabled = boolean(env, 'DISCORD_LEVELING_ENABLED');
   const memberEventsEnabled = boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS');
-  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled);
-  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling or member events are enabled.');
+  const voiceEnabled = boolean(env, 'DISCORD_VOICE_ENABLED');
+  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled || voiceEnabled);
+  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled || voiceEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling, member events or voice are enabled.');
   const storePaths = {
     storePath: env.TICKET_STORE_PATH?.trim() || './data/tickets.json',
     moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
     economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
     communityStorePath: env.COMMUNITY_STORE_PATH?.trim() || './data/community.json',
-    levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json'
+    levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json',
+    voiceStorePath: env.VOICE_STORE_PATH?.trim() || './data/voice.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);
@@ -67,6 +69,7 @@ function loadConfig(env = process.env) {
   });
   if (normalized.some((file) => protectedFiles.includes(file))) throw new Error('Data stores cannot overwrite configuration or token files.');
   const gatewayIntents = 1 | 512
+    | (voiceEnabled ? 1 << 7 : 0)
     | (memberEventsEnabled ? 2 : 0)
     | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled ? 1 << 15 : 0);
   const raidJoinThreshold = Number(env.DISCORD_RAID_JOIN_THRESHOLD || 0);
@@ -82,6 +85,7 @@ function loadConfig(env = process.env) {
     categoryId: env.DISCORD_CATEGORY_ID?.trim() ? snowflake(env.DISCORD_CATEGORY_ID.trim(), 'DISCORD_CATEGORY_ID') : null,
     ...storePaths,
     gatewayEnabled,
+    voiceEnabled,
     memberEventsEnabled,
     gatewayIntents,
     levelingEnabled,

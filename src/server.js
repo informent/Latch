@@ -14,6 +14,8 @@ const { AutoModService } = require('./automod-service');
 const { CommunityStore } = require('./community-store');
 const { CommunityService } = require('./community-service');
 const { TicketService } = require('./ticket-service');
+const { VoiceStore } = require('./voice-store');
+const { VoiceService } = require('./voice-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
 const BODY_LIMIT = 64 * 1024;
@@ -87,13 +89,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     shuttingDown = true;
     const gatewayDrain = gateway?.stop();
     void server.community?.stop();
+    void server.voice?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void Promise.all([server.drain(), gatewayDrain]).then(() => server.community?.stop()).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop()])).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
@@ -115,15 +118,21 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const tickets = new TicketService({ config, store, discord, botUserId: botUser.id });
   const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
   const community = new CommunityService({ config, store: communityStore, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, discord, logger });
+  const voiceStore = new VoiceStore(config.voiceStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'voice.json'), config.guildId);
+  await voiceStore.load();
+  const voice = new VoiceService({ config, store: voiceStore, discord, botUserId: botUser.id, logger, connection: () => gateway?.running && gateway.socket?.readyState === 1 ? gateway.socket : null });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
-  server.once('close', () => { void community.stop(); });
+  server.voice = voice;
+  server.once('close', () => { void community.stop(); void voice.stop(); });
   community.start();
+  voice.start();
   const guildEvents = new GuildEventService({ config, discord, levels, logger });
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;
-    gateway.onDispatch = (type, data) => guildEvents.dispatch(type, data);
+    gateway.onObserveDispatch = (type, data) => voice.observe(type, data);
+    gateway.onDispatch = async (type, data) => { await guildEvents.dispatch(type, data); await voice.dispatch(type, data); };
     gateway.start();
   }
   server.gateway = gateway || null;

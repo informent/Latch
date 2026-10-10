@@ -8,7 +8,7 @@ OpenDesk is free MIT-licensed source software. The current application serves on
 2. Run `npm run setup`. It creates a blank `.env` and data directory while preserving an existing `.env`.
 3. Edit `.env` locally with your Discord application ID, public key, guild ID, and bot credential. A token can instead be loaded from `DISCORD_BOT_TOKEN_FILE`; leave `DISCORD_BOT_TOKEN` empty when using a file. Do not put secrets in command arguments or Git.
 4. Run `npm run doctor` for offline, read-only configuration and store inspection. `npm run doctor -- --json` returns a report for automation. A failure sets exit code 1. Warnings describe remaining manual steps. No files are repaired or changed, and no Discord requests are made. Filesystem access is advisory; it cannot guarantee a later atomic write will succeed.
-5. Run `npm run invite` for community and ticket permissions, or `npm run invite -- all` for all implemented feature areas. You can choose `community,tickets,moderation,roles,automod` individually. The command prints a Discord installation link without opening a browser. Review the requested permissions and bot role position. Selecting permissions does not disable command suites.
+5. Run `npm run invite` for community and ticket permissions, or `npm run invite -- all` for all implemented feature areas. You can choose `community,tickets,moderation,roles,automod,voice` individually. The command prints a Discord installation link without opening a browser. Review the requested permissions and bot role position. Selecting permissions does not disable command suites.
 6. Run `npm run register` to add/update commands in the configured guild. This makes Discord API changes. Set the Discord application's Interactions Endpoint URL to your public HTTPS `/interactions` endpoint.
 7. Run `npm start` under a process manager that restarts failures and allows at least 45 seconds for shutdown.
 
@@ -32,7 +32,7 @@ The container runs as the Node user, with a read-only root filesystem, dropped L
 
 ## Updates, backups, and rollback
 
-- Before updating, stop the bot and copy **all five** JSON stores together into a private backup. Back up secret/configuration files separately. Keep source commit IDs or image digests with backups. Ticket channels and conversations remain in Discord and are not included in the JSON stores.
+- Before updating, stop the bot and copy **all six** JSON stores together into a private backup, including `voice.json`. Back up secret/configuration files separately. Keep source commit IDs or image digests with backups. Ticket channels and conversations remain in Discord and are not included in the JSON stores.
 - For Compose, stop with `docker compose stop opendesk`. The named volume persists. Find its actual name with `docker volume ls`; it usually includes the Compose project prefix. With the bot stopped, use an administrative backup container or your Docker volume backup tooling to copy the complete volume. Treat archives as private server data.
 - Never use `docker compose down -v` for a routine update: it deletes the data volume. Rebuild deliberately, then start one instance. Run doctor and register new commands as needed.
 - Check the changelog before rolling back. Restore a compatible source/image version and the matching complete store backup while the bot is stopped. Verify permissions and resume only one instance. There is no automatic downgrade or migration guarantee.

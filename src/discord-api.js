@@ -40,7 +40,7 @@ class DiscordApi {
         await this.#waitUntil(retryAt, deadline);
         continue;
       }
-      if (!response.ok) throw new Error(`Discord API request failed (${response.status}).`);
+      if (!response.ok) throw Object.assign(new Error(`Discord API request failed (${response.status}).`), { statusCode: response.status });
       if (response.status === 204) return null;
       try { return await response.json(); }
       catch { throw new Error('Discord API response could not be decoded.'); }

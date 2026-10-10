@@ -34,6 +34,11 @@ Only command names and independently authored implementation notes are recorded 
 | tickets rename | `/ticket rename` | Open OpenDesk tickets only; staff-only; no arbitrary text-channel rename |
 | giveaway edit prize, duration, winners | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline only; lifetime limited to 30 days |
 | giveaway reroll | `/giveaway reroll` | Finished giveaways only; excludes immediately previous winners; same interaction ID reuses saved result |
+| voicemaster setup | `/voice setup` | Configures existing lobby/category; no generated lobby or interface panel |
+| voicemaster rename, limit | `/voice rename`, `/voice limit` | Owner must be in their managed room; slash syntax |
+| voicemaster lock, unlock, ghost, unghost | `/voice` actions | Everyone overwrite controls; member/role overrides and administrators may retain access |
+| voicemaster permit | `/voice permit` | Member access only; no role targets |
+| voicemaster claim, transfer | `/voice claim`, `/voice transfer` | One owned room per member; current presence required; no automatic role assignment |
 
 Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moderation](https://www.greed.sh/docs/moderation/), [Bleed giveaways](https://docs.bleed.bot/miscellaneous/giveaway), [Bleed tickets](https://docs.bleed.bot/configuration/tickets/commands), [Bleed moderation](https://docs.bleed.bot/security/moderation).
 
@@ -44,7 +49,7 @@ These are concrete gaps from the sources above; the list will expand as further 
 - Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
 - Giveaways: edit host, description, thumbnail, image, requiredroles, minlevel, maxlevel.
 - Tickets: resend, panel, form, options, blacklist, profiles, profile, delete, reopen, move, transcript, allow, allow list, deny, reason, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
-- [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): setup; default settings; rename, limit, lock, unlock, ghost, unghost, permit, role, claim, transfer, music. No voice event lifecycle exists yet.
+- [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
 - Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.
 - Economy: beg, professions. No profession progression exists yet.
