@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 - 2026-10-10
+
+- Added permission-checked unban by user ID with an audit reason.
+- Added private member-information and avatar commands using server membership and Discord CDN URLs.
+- Added a command catalog generated from registration declarations and a dated, partial competitor coverage inventory with explicit gaps and source limitations.
+
+Complete competitor parity and live Discord validation remain unfinished.
+
 ## 0.3.1 - 2026-10-10
 
 - Gateway reconnects after transient network/service closures, rejects insecure WebSocket URLs, ignores stale socket messages, and prevents a pending discovery request from reopening after shutdown.

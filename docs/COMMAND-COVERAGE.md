@@ -1,0 +1,61 @@
+# Command coverage
+
+Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus OpenDesk additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-10, not a complete competitor command count.
+
+OpenDesk currently uses slash commands. Competitor prefix commands, aliases, argument syntax, permission policies, and nested settings are separate requirements. A similar slash command is not proof of identical behavior. No placeholders count as implemented commands. Source implementation also does not establish live Discord validation.
+
+## Sources and inventory limits
+
+- [Bleed command directory](https://bleed.bot/commands): the public frontend requires JavaScript; its complete command data was not obtained.
+- [Bleed documentation index](https://docs.bleed.bot/llms.txt): accessible index; individual documentation pages below were read directly.
+- [Greed introduction](https://greed.sh/docs/introduction/) and [moderation](https://www.greed.sh/docs/moderation/): publicly indexed documentation was available through search. Direct requests returned HTTP 403, so freshness and completeness remain unverified.
+- [Greed command directory](https://greed.sh/commands): HTTP 403. A help export or accessible official command list is required before asserting complete coverage.
+
+Only command names and independently authored implementation notes are recorded here. Source links establish where requirements came from; they do not imply endorsement or affiliation.
+
+## Core behaviors present, with different syntax or scope
+
+| Documented command | OpenDesk | Remaining difference |
+| --- | --- | --- |
+| ban, kick, timeout, untimeout | `/moderation` actions | Slash syntax; no competitor-specific message customization |
+| unban | `/moderation unban user-id` | Slash syntax; requires Ban Members |
+| warn | `/moderation warn` | Persistent warning only; no strike punishment policy |
+| ping, help | `/utility ping`, `/utility help` | Slash syntax |
+| balance, daily, work | `/economy` actions | OpenDesk reward amounts and cooldowns |
+| transfer | `/economy pay` | Different name and syntax |
+| leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only OpenDesk coin/XP records |
+| giveaway start | `/giveaway create` | Current channel; limited options |
+| giveaway end, list | `/giveaway end`, `/giveaway list` | OpenDesk IDs instead of message links |
+| giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
+| tickets close | `/ticket close` | Basic private tickets; no panels or claim policies |
+
+Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moderation](https://www.greed.sh/docs/moderation/), [Bleed giveaways](https://docs.bleed.bot/miscellaneous/giveaway), [Bleed tickets](https://docs.bleed.bot/configuration/tickets/commands), [Bleed moderation](https://docs.bleed.bot/security/moderation).
+
+## Documented commands still missing
+
+These are concrete gaps from the sources above; the list will expand as further official pages are inventoried.
+
+- Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
+- Giveaways: reroll; edit host, prize, duration, winners, description, thumbnail, image, requiredroles, minlevel, maxlevel.
+- Tickets: resend, panel, form, options, blacklist, profiles, profile, stats, list, claim, unclaim, delete, reopen, move, transcript, allow, allow list, deny, rename, reason, trainee, trainee grant/revoke/list.
+- [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): setup; default settings; rename, limit, lock, unlock, ghost, unghost, permit, role, claim, transfer, music. No voice event lifecycle exists yet.
+- Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
+- Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.
+- Economy: beg, professions. No profession progression exists yet.
+- Prefix support: configurable prefix, prefix set, cmds alias, command aliases and competitor command syntax.
+
+## Suites awaiting a detailed inventory
+
+Antinuke, antiraid, reaction/button/booster/vanity roles, autoresponders, message timers, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only.
+
+## OpenDesk additions already implemented
+
+Persistent public-channel reminders with private list/cancel, signed interaction handling, native Discord polls, offline configuration diagnostics, permission-based invite generation, token-file configuration, deployment examples, bounded REST retries, and reconnect recovery. `/utility user` and `/utility avatar` provide server member details and Discord CDN avatars. These additions do not offset missing competitor commands when evaluating parity.
+
+## Completion requirements
+
+1. Obtain complete official command inventories and record dated sources.
+2. Map every command, subcommand, alias, setting and permission rule separately.
+3. Implement persistent behavior and recovery for each applicable command.
+4. Verify authorization, failure behavior, restart recovery, and live Discord operation.
+5. Report exact remaining gaps; claim parity only when none remain.

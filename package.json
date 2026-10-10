@@ -1,6 +1,6 @@
 {
   "name": "opendesk-discord",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
   "license": "MIT",
@@ -8,6 +8,7 @@
     "node": ">=22.9.0"
   },
   "scripts": {
+    "commands": "node scripts/command-catalog.js",
     "setup": "node scripts/setup.js",
     "doctor": "node --env-file-if-exists=.env scripts/doctor.js",
     "invite": "node --env-file-if-exists=.env scripts/invite.js",

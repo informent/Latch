@@ -18,6 +18,7 @@ const commands = [
     name: 'moderation', description: 'Moderate members and manage server warnings.', type: 1,
     options: [
       subcommand('ban', 'Ban a member from this server.', [target, reason]),
+      subcommand('unban', 'Remove a server ban by user ID.', [option(3, 'user-id', 'ID of the banned user.', { required: true, min_length: 5, max_length: 25 }), reason]),
       subcommand('kick', 'Remove a member from this server.', [target, reason]),
       subcommand('timeout', 'Temporarily prevent a member from participating.', [target, option(4, 'minutes', 'Timeout length in minutes (1 to 40320).', { required: true, min_value: 1, max_value: 40320 }), reason]),
       subcommand('untimeout', 'Remove a member timeout.', [target, reason]),
@@ -30,7 +31,7 @@ const commands = [
   },
   {
     name: 'utility', description: 'Useful server information and bot health.', type: 1,
-    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('help', 'Show available feature suites and configuration status.')]
+    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('help', 'Show available feature suites and configuration status.')]
   },
   {
     name: 'economy', description: 'Earn, save, and share server coins.', type: 1,

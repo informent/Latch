@@ -33,7 +33,7 @@ function hasPermission(permissions, bit) {
 }
 function safeText(value) { return String(value).replace(/[`@<>]/g, (character) => ({ '`': 'ˋ', '@': '＠', '<': '‹', '>': '›' })[character]); }
 
-const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
+const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, discord, logger = () => {}, now = () => new Date() }) {
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
@@ -156,17 +156,18 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (!requiredPermission) return { immediate: response('Choose a moderation action.') };
       if (!hasPermission(interaction.member?.permissions, requiredPermission)) return { immediate: response('You do not have permission to use this moderation action.') };
       const options = subcommand.options || [];
-      const targetUser = findOption(options, 'user');
+      const targetUser = findOption(options, action === 'unban' ? 'user-id' : 'user');
       const targetId = typeof targetUser === 'object' ? targetUser.id : targetUser;
       const providedReason = findOption(options, 'reason');
       const reasonText = typeof providedReason === 'string' && providedReason.trim() ? providedReason.trim() : 'No reason provided.';
-      const targetActions = ['ban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings'];
+      const targetActions = ['ban', 'unban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings'];
       if (targetActions.includes(action) && !/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
       if (['warn', 'warnings', 'clear-warnings'].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
       if (action === 'warn' && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for the warning.') };
       return { immediate: defer(), work: async () => {
         try {
           if (action === 'ban') await discord.banMember(interaction.guild_id, targetId, reasonText);
+          else if (action === 'unban') await discord.unbanMember(interaction.guild_id, targetId, reasonText);
           else if (action === 'kick') await discord.kickMember(interaction.guild_id, targetId, reasonText);
           else if (action === 'timeout') {
             const minutes = Number(findOption(options, 'minutes'));
@@ -205,16 +206,48 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
             return;
           }
           const label = action === 'timeout' ? `for ${findOption(options, 'minutes')} minute(s)` : '';
-          const content = action === 'warn' ? `Recorded a warning for <@${targetId}>.` : action === 'untimeout' ? `Removed the timeout for <@${targetId}>.` : `<@${targetId}> ${action}${label ? ` ${label}` : ''}.`;
+          const content = action === 'unban' ? `Removed the server ban for user ${targetId}.` : action === 'warn' ? `Recorded a warning for <@${targetId}>.` : action === 'untimeout' ? `Removed the timeout for <@${targetId}>.` : `<@${targetId}> ${action}${label ? ` ${label}` : ''}.`;
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
         } catch (error) {
           logger('moderation_action_failed', { action, message: error.message });
-          const detail = ['ban', 'kick', 'timeout', 'untimeout'].includes(action) ? 'Check the bot permissions and role hierarchy, and confirm the target is still in the server.' : 'Check the bot permissions and moderation store.';
+          const detail = action === 'unban' ? 'Check Ban Members permission and confirm this user ID has an active server ban.' : ['ban', 'kick', 'timeout', 'untimeout'].includes(action) ? 'Check the bot permissions and role hierarchy, and confirm the target is still in the server.' : 'Check the bot permissions and moderation store.';
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Could not complete ${action}. ${detail}`, allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
     }
     if (commandName === 'utility') {
+      if (['user', 'avatar'].includes(subcommand?.name)) {
+        const selected = findOption(subcommand.options || [], 'user');
+        const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+        if (!/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
+        return { immediate: defer(), work: async () => {
+          try {
+            const member = await discord.getGuildMember(interaction.guild_id, targetId);
+            const account = member.user;
+            if (!account || account.id !== targetId) throw new Error('Member unavailable.');
+            const hash = member.avatar || account.avatar;
+            const validHash = typeof hash === 'string' && /^(?:a_)?[a-f0-9]{32}$/.test(hash);
+            const extension = validHash && hash.startsWith('a_') ? 'gif' : 'png';
+            const defaultIndex = account.discriminator && account.discriminator !== '0' ? Number(account.discriminator) % 5 : Number((BigInt(targetId) >> 22n) % 6n);
+            const avatar = validHash ? member.avatar
+              ? `https://cdn.discordapp.com/guilds/${interaction.guild_id}/users/${targetId}/avatars/${hash}.${extension}?size=1024`
+              : `https://cdn.discordapp.com/avatars/${targetId}/${hash}.${extension}?size=1024`
+              : `https://cdn.discordapp.com/embed/avatars/${Number.isInteger(defaultIndex) ? defaultIndex : 0}.png`;
+            const created = Math.floor((1_420_070_400_000 + Number(BigInt(targetId) >> 22n)) / 1000);
+            const joined = Math.floor(Date.parse(member.joined_at) / 1000);
+            const embed = { title: safeText(member.nick || account.global_name || account.username).slice(0, 256), image: { url: avatar } };
+            if (subcommand.name === 'user') {
+              embed.description = `User ID: ${targetId}\nAccount: <t:${created}:D>\nJoined: ${Number.isFinite(joined) ? `<t:${joined}:D>` : 'unavailable'}\nBot: ${account.bot ? 'yes' : 'no'}\nRoles: ${Array.isArray(member.roles) ? member.roles.length : 0}`;
+              embed.thumbnail = embed.image;
+              delete embed.image;
+            }
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: '', embeds: [embed], allowed_mentions: { parse: [] } });
+          } catch {
+            logger('utility_member_failed', { action: subcommand.name });
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not load that server member. Confirm they are still in this server.', allowed_mentions: { parse: [] } }).catch(() => {});
+          }
+        } };
+      }
       if (subcommand?.name === 'help') return { immediate: response(`**OpenDesk features**\n/ticket: private support\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/giveaway: staff giveaways with persistent entry buttons\n/economy and /leaderboard coins: server coins\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
       if (subcommand?.name === 'ping') return { immediate: response('OpenDesk is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {

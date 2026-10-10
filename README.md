@@ -6,6 +6,8 @@ OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature sui
 
 ## Start here
 
+Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered OpenDesk command paths, or `npm run commands -- --json` for a machine-readable catalog.
+
 Install Node 22.9+ or Node 24, then run:
 
 ```powershell
