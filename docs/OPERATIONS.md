@@ -38,6 +38,12 @@ The container runs as the Node user, with a read-only root filesystem, dropped L
 - Check the changelog before rolling back. Restore a compatible source/image version and the matching complete store backup while the bot is stopped. Verify permissions and resume only one instance. There is no automatic downgrade or migration guarantee.
 - Giveaways save their selected winners before updating Discord. Reminder delivery is at least once; an interrupted delivery can duplicate outside Discord's short nonce window. Review pending job IDs after permissions or connectivity failures.
 
+## Connection recovery
+
+Gateway sessions reconnect with capped backoff after transient network/service closures and resume when the session remains valid. Fatal Discord authentication or intent failures stop reconnecting; correct the configuration and restart. Shutdown prevents unfinished Gateway discovery from opening a new socket, ignores messages from superseded sockets, and waits for accepted event handlers alongside interaction work.
+
+Discord REST calls use a 12-second total budget. A valid 429 response can be retried up to twice after its reported delay; longer delays fail safely so scheduled jobs can use their durable retry policy. Observed bot-global cooldowns also delay later bot-authenticated calls. Interaction webhook calls remain outside that bot-global cooldown. There is not yet a complete shared rate-limit bucket tracker. Network failures and other HTTP errors do not automatically retry potentially completed writes. Transport errors contain no response payloads or credentials. See the [Discord rate-limit reference](https://docs.discord.com/developers/topics/rate-limits) and [Gateway reference](https://docs.discord.com/developers/events/gateway).
+
 ## Support and product readiness
 
 Report the source version/commit, Node version, affected command, whether doctor passes, and sanitized failure event names. Include no credentials, interaction tokens, private reminder text, entrant lists, or store files. Full competitor parity, music, comprehensive antinuke, and multi-guild administration remain on the roadmap. Deployment templates and offline diagnostics improve delivery quality; they do not establish production readiness without live Discord and host validation.

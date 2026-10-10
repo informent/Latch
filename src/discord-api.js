@@ -1,34 +1,59 @@
 'use strict';
 
 const API = 'https://discord.com/api/v10';
+const REQUEST_BUDGET_MS = 12_000;
+const MAX_RATE_LIMIT_RETRIES = 2;
 
 class DiscordApi {
   constructor(token, fetchImpl = fetch) {
     this.token = token;
     this.fetch = fetchImpl;
+    this.globalRetryAt = 0;
   }
 
   async request(method, path, body, { botAuth = true, auditReason } = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (botAuth) headers.Authorization = `Bot ${this.token}`;
     if (auditReason) headers['X-Audit-Log-Reason'] = encodeURIComponent(auditReason);
-    let response;
-    try {
-      response = await this.fetch(`${API}${path}`, {
-        method,
-        headers,
-        body: body === undefined ? undefined : JSON.stringify(body),
-        signal: AbortSignal.timeout(12_000)
-      });
-    } catch {
-      // Never surface fetch errors: webhook URLs contain interaction tokens.
-      throw new Error('Discord API request failed before receiving a response.');
+    const deadline = Date.now() + REQUEST_BUDGET_MS;
+    const signal = AbortSignal.timeout(REQUEST_BUDGET_MS);
+    const serializedBody = body === undefined ? undefined : JSON.stringify(body);
+    for (let attempt = 0; ; attempt++) {
+      if (botAuth) await this.#waitUntil(this.globalRetryAt, deadline);
+      let response;
+      try {
+        response = await this.fetch(`${API}${path}`, { method, headers, body: serializedBody, signal });
+      } catch {
+        // A write may already have succeeded; do not retry ambiguous network failures.
+        throw new Error('Discord API request failed before receiving a response.');
+      }
+      if (response.status === 429) {
+        let limit;
+        try { limit = await response.json(); } catch { limit = null; }
+        const header = response.headers?.get('retry-after');
+        const seconds = typeof limit?.retry_after === 'number' ? limit.retry_after : header ? Number(header) : NaN;
+        if (!Number.isFinite(seconds) || seconds < 0) throw new Error('Discord API request failed (429).');
+        const retryAt = Date.now() + Math.max(50, Math.ceil(seconds * 1000));
+        if (!Number.isFinite(retryAt) || !Number.isSafeInteger(retryAt)) throw new Error('Discord API request failed (429).');
+        if (botAuth && (limit?.global === true || response.headers?.get('x-ratelimit-global') === 'true')) this.globalRetryAt = Math.max(this.globalRetryAt, retryAt);
+        if (attempt >= MAX_RATE_LIMIT_RETRIES) throw new Error('Discord API request failed (429).');
+        await this.#waitUntil(retryAt, deadline);
+        continue;
+      }
+      if (!response.ok) throw new Error(`Discord API request failed (${response.status}).`);
+      if (response.status === 204) return null;
+      try { return await response.json(); }
+      catch { throw new Error('Discord API response could not be decoded.'); }
     }
-    if (!response.ok) {
-      throw new Error(`Discord API request failed (${response.status}).`);
+  }
+
+  async #waitUntil(retryAt, deadline) {
+    while (Date.now() < retryAt) {
+      const delay = retryAt - Date.now();
+      if (retryAt >= deadline || Date.now() >= deadline) throw new Error('Discord API rate limit exceeds the request time budget.');
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
-    if (response.status === 204) return null;
-    return response.json();
+    if (Date.now() >= deadline) throw new Error('Discord API request time budget exceeded.');
   }
 
   getCurrentUser() { return this.request('GET', '/users/@me'); }
@@ -60,4 +85,4 @@ class DiscordApi {
   }
 }
 
-module.exports = { DiscordApi };
+module.exports = { DiscordApi, REQUEST_BUDGET_MS, MAX_RATE_LIMIT_RETRIES };

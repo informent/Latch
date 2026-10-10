@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 - 2026-10-10
+
+- Gateway reconnects after transient network/service closures, rejects insecure WebSocket URLs, ignores stale socket messages, and prevents a pending discovery request from reopening after shutdown.
+- Gateway shutdown drains accepted event work; socket send/close failures enter bounded reconnect handling.
+- REST requests honor valid Discord 429 retry delays with at most two retries inside a shared 12-second request budget. Observed bot-global cooldowns delay later bot-authenticated requests; interaction webhooks remain separate.
+- Transport and malformed-response errors exclude packet contents, response bodies, and credentials. Ambiguous network failures and other HTTP failures do not automatically repeat writes.
+
+Live outage recovery and complete per-bucket rate-limit management remain unverified/unfinished. Existing CI coverage does not exercise every new failure path.
+
 ## 0.3.0 - 2026-10-10
 
 - Added non-destructive local setup, an offline configuration/store doctor with JSON output, and feature-based Discord installation links.

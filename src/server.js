@@ -85,7 +85,7 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
   const beginShutdown = () => {
     if (shuttingDown) return;
     shuttingDown = true;
-    gateway?.stop();
+    const gatewayDrain = gateway?.stop();
     void server.community?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
@@ -93,7 +93,7 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void server.drain().then(() => server.community?.stop()).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => server.community?.stop()).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
