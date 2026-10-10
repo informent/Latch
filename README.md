@@ -31,13 +31,15 @@ Role assignment/removal and nickname changes now verify current actor/bot permis
 
 Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
 
-Version 0.15.0 expands native AutoMod with preset wordsets, private rule inspection, role/channel exemptions, allowed words and custom block explanations. Existing filter metadata and enable state are preserved during configuration. See the [AutoMod guide](docs/AUTOMOD.md).
+Version 0.16.0 adds a complete ticket panel workflow: draft a support panel, connect up to five topic buttons to server categories, publish it with durable retry recovery, and let members open private tickets. Staff can reopen closed tickets with saved recovery state and permission read-back verification. See the [panel guide](docs/TICKET-PANELS.md) and [ticket guide](docs/TICKETS.md).
 
-The suite now passes 221 tests with 90.21% local line coverage. The [shop guide](docs/SHOP.md) covers atomic purchases, inventory and economy version 2 migration. CI enforces coverage floors; see [verification evidence and limits](docs/VERIFICATION.md).
+The suite now passes 261 tests with 91.06% local line coverage, including the signed HTTP panel-to-ticket-to-close-to-reopen flow. CI enforces coverage floors; see [verification evidence and limits](docs/VERIFICATION.md).
 
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, Gateway reconnect/event handling, role menus, temporary voice recovery, templates, responders and timers. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores
+
+Ticket panels use `data/ticket-panels.json`, an eleventh guild-bound store for panel/message IDs, topic categories and publication retries. Include it in every complete backup. Reopening tickets can retain a durable `reopening` status until staff retry the command successfully. The everyone role is refused as a support role.
 
 Ticket records may include the assigned support member ID. Giveaway records may include the last reroll interaction ID for duplicate-request handling. These fields contain no interaction token. Back up stores before upgrading; older releases can reject records containing these new fields.
 
@@ -87,7 +89,7 @@ The start and register scripts load `.env` with Node's built-in env-file support
 
 ## Commands
 
-The catalog currently declares 134 command paths across 20 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
+The catalog currently declares 143 command paths across 21 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
 
 - `/shop` provides coin-priced virtual items, inventories, gifts, consumables and transaction history. Staff configure items with Manage Server; new items start disabled. See the [shop guide](docs/SHOP.md).
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.

@@ -6,12 +6,12 @@ const MAX_TICKETS = 50000;
 const MAX_BYTES = 32 * 1024 * 1024;
 function validTicket(ticket) {
   if (!ticket || typeof ticket !== 'object' || Array.isArray(ticket)) return false;
-  const keys = ['channelId', 'ownerId', 'status', 'createdAt', ...(ticket.status === 'closed' ? ['closedAt'] : []), ...['claimedBy', 'reason'].filter((key) => Object.hasOwn(ticket, key))];
+  const keys = ['channelId', 'ownerId', 'status', 'createdAt', ...(['closed', 'reopening'].includes(ticket.status) ? ['closedAt'] : []), ...['claimedBy', 'reason'].filter((key) => Object.hasOwn(ticket, key))];
   return Object.keys(ticket).sort().join(',') === keys.sort().join(',')
     && [ticket.channelId, ticket.ownerId].every((id) => typeof id === 'string' && /^\d{5,25}$/.test(id))
-    && ['open', 'closing', 'closed'].includes(ticket.status)
+    && ['open', 'closing', 'closed', 'reopening'].includes(ticket.status)
     && typeof ticket.createdAt === 'string' && Number.isFinite(Date.parse(ticket.createdAt))
-    && (ticket.status !== 'closed' || typeof ticket.closedAt === 'string' && Number.isFinite(Date.parse(ticket.closedAt)))
+    && (!['closed', 'reopening'].includes(ticket.status) || typeof ticket.closedAt === 'string' && Number.isFinite(Date.parse(ticket.closedAt)))
     && (!Object.hasOwn(ticket, 'claimedBy') || typeof ticket.claimedBy === 'string' && /^\d{5,25}$/.test(ticket.claimedBy) && ticket.claimedBy !== ticket.ownerId)
     && (!Object.hasOwn(ticket, 'reason') || typeof ticket.reason === 'string' && ticket.reason.trim().length > 0 && ticket.reason.length <= 400);
 }
@@ -108,6 +108,22 @@ class TicketStore {
       const updated = Object.freeze({ ...previous, status: 'closed', closedAt });
       next.set(channelId, updated);
       return updated;
+    });
+  }
+
+  markReopening(channelId) {
+    return this.#transaction((next) => {
+      const ticket = next.get(channelId);
+      if (!ticket || !['closed', 'reopening'].includes(ticket.status)) throw new Error('Choose a closed ticket.');
+      next.set(channelId, Object.freeze({ ...ticket, status: 'reopening' }));
+    });
+  }
+  markReopened(channelId) {
+    return this.#transaction((next) => {
+      const ticket = next.get(channelId);
+      if (!ticket || ticket.status !== 'reopening') throw new Error('Ticket is not reopening.');
+      const updated = { ...ticket, status: 'open' }; delete updated.closedAt; delete updated.claimedBy;
+      next.set(channelId, Object.freeze(updated));
     });
   }
 

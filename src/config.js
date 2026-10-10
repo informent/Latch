@@ -60,7 +60,8 @@ function loadConfig(env = process.env) {
     roleMenuStorePath: env.ROLE_MENU_STORE_PATH?.trim() || './data/role-menus.json',
     templateStorePath: env.TEMPLATE_STORE_PATH?.trim() || './data/templates.json',
     responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json',
-    timerStorePath: env.TIMER_STORE_PATH?.trim() || './data/timers.json'
+    timerStorePath: env.TIMER_STORE_PATH?.trim() || './data/timers.json',
+    ticketPanelStorePath: env.TICKET_PANEL_STORE_PATH?.trim() || './data/ticket-panels.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);
@@ -81,6 +82,7 @@ function loadConfig(env = process.env) {
   const raidJoinWindowMs = Number(env.DISCORD_RAID_JOIN_WINDOW_MS || 10_000);
   if (!Number.isInteger(raidJoinThreshold) || raidJoinThreshold < 0 || raidJoinThreshold > 10_000) throw new Error('DISCORD_RAID_JOIN_THRESHOLD must be an integer from 0 to 10000.');
   if (!Number.isInteger(raidJoinWindowMs) || raidJoinWindowMs < 1000 || raidJoinWindowMs > 300_000) throw new Error('DISCORD_RAID_JOIN_WINDOW_MS must be an integer from 1000 to 300000.');
+  if (env.DISCORD_SUPPORT_ROLE_ID?.trim() && env.DISCORD_SUPPORT_ROLE_ID.trim() === env.DISCORD_GUILD_ID?.trim()) throw new Error('The everyone role cannot be the ticket support role.');
   return Object.freeze({
     applicationId: snowflake(required(env, 'DISCORD_APPLICATION_ID'), 'DISCORD_APPLICATION_ID'),
     publicKey,

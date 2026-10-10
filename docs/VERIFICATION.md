@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.16.0
+
+All 261 tests pass locally, with coverage of 91.06% lines, 81.57% branches and 85.51% functions. Existing CI floors remain enforced. The catalog has 143 command paths across 21 roots.
+
+Forty new tests exercise the support workflow: panel draft/topic configuration, publication/retry/restart, missing message recreation, stale/copy/guild/channel/author bindings, screening/member identity, duplicate clicks, store limits/corruption, staff authorization and permissions. Reopening tests cover concurrent creation, owner access preservation, missing privacy, recovery after REST/final-write failures and durable intent before any permission change. Configuration refuses everyone support roles and colliding panel store paths.
+
+The signed HTTP runtime test registers a draft, adds/publishes its category button, opens a ticket, loses response delivery, retries the click, closes and reopens the ticket, then reloads saved panel and ticket records. It verifies one ticket and persistent bindings. Discord API/Gateway responses are simulated; actual live server operation and Docker/service execution remain unverified.
+
+Ticket panels introduce an eleventh local store. Backups must include it. Old versions reject tickets in the new reopening state. See [panel operations](TICKET-PANELS.md) and [reopen recovery](TICKETS.md).
+
 ## Version 0.15.0
 
 All 221 tests pass locally. Coverage is 90.21% lines, 80.96% branches and 84.69% functions, with the existing CI floors enforced. The catalog contains 134 command paths across 20 roots.

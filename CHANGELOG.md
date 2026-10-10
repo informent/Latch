@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.16.0 - 2026-10-10
+
+- Added persistent ticket panels with eight staff commands, unpublished drafts and up to five topic/category buttons. Catalog now declares 143 paths across 21 suites.
+- Added guild-bound atomic panel storage, durable publication retries, missing-message recovery, copied/stale-button rejection, current screened-human checks and private ticket links.
+- Panel tickets retain their selected topic as a reason and route to the chosen validated category. Duplicate clicks reuse the owner's active ticket.
+- Added staff-only ticket reopening with owner/channel locks, duplicate-active protection, durable reopening intent, owner overwrite preservation, permission read-back and retry recovery after REST or disk failure.
+- Rejected the everyone role as a support role before startup/channel creation to prevent accidental ticket visibility exposure.
+- Added panel store configuration, doctor inspection, backup guidance, Docker/service paths and shutdown draining.
+- Added 40 tests, including the complete signed HTTP support workflow. All 261 tests pass locally with 91.06% line coverage.
+
+Back up all eleven stores before upgrading. Older releases reject the reopening state; rollback requires a compatible complete backup. Panel retries use Discord nonce protection but do not provide permanent exactly-once publication. Live Discord validation, transcripts, intake forms and complete competitor parity remain unfinished.
+
 ## 0.15.0 - 2026-10-10
 
 - Added eight AutoMod command paths: info, presets, exempt-role/unexempt-role, exempt-channel/unexempt-channel, allow-words and block-message. Catalog now declares 134 paths across 20 suites.

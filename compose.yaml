@@ -21,6 +21,7 @@ services:
       TEMPLATE_STORE_PATH: /app/data/templates.json
       RESPONDER_STORE_PATH: /app/data/responders.json
       TIMER_STORE_PATH: /app/data/timers.json
+      TICKET_PANEL_STORE_PATH: /app/data/ticket-panels.json
     secrets:
       - discord_bot_token
     ports:

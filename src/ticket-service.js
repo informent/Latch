@@ -25,10 +25,19 @@ class TicketService {
     this.now = now;
   }
 
-  async create(user) {
+  async create(user, options = {}) {
+    const settings = structuredClone(options);
+    if (this.config.supportRoleId === this.config.guildId) throw new Error('The everyone role cannot be the ticket support role.');
+    if (!user || typeof user.id !== 'string' || !/^\d{5,25}$/.test(user.id) || user.bot) throw new Error('Tickets require a human server member.');
+    if (settings.reason !== undefined && (typeof settings.reason !== 'string' || !settings.reason.trim() || settings.reason.length > 400)) throw new Error('Invalid ticket reason.');
     return this.store.withUserLock(user.id, async () => {
       const existing = this.store.findActiveByOwner(user.id);
       if (existing) return { created: false, channelId: existing.channelId };
+      if (settings.categoryId !== undefined) {
+        if (typeof settings.categoryId !== 'string' || !/^\d{5,25}$/.test(settings.categoryId)) throw new Error('Invalid ticket category.');
+        const category = await this.discord.request('GET', `/channels/${settings.categoryId}`);
+        if (category?.id !== settings.categoryId || category.guild_id !== this.config.guildId || category.type !== 4) throw new Error('Ticket category is unavailable.');
+      }
       const overwrites = [
         { id: this.config.guildId, type: 0, deny: asString(PERMISSIONS.VIEW_CHANNEL) },
         { id: user.id, type: 1, allow: asString(CHAT) },
@@ -37,11 +46,11 @@ class TicketService {
       if (this.config.supportRoleId) overwrites.push({ id: this.config.supportRoleId, type: 0, allow: asString(CHAT) });
       const channel = await this.discord.createChannel(this.config.guildId, {
         name: channelName(user), type: 0,
-        ...(this.config.categoryId ? { parent_id: this.config.categoryId } : {}),
+        ...((settings.categoryId || this.config.categoryId) ? { parent_id: settings.categoryId || this.config.categoryId } : {}),
         permission_overwrites: overwrites
       });
       if (!channel?.id) throw new Error('Discord created a channel without returning its ID.');
-      const ticket = { channelId: channel.id, ownerId: user.id, status: 'open', createdAt: this.now().toISOString() };
+      const ticket = { channelId: channel.id, ownerId: user.id, status: 'open', createdAt: this.now().toISOString(), ...(settings.reason ? { reason: settings.reason.trim() } : {}) };
       try { await this.store.add(ticket); }
       catch (error) {
         try { await this.discord.request('DELETE', `/channels/${channel.id}`); }
@@ -62,6 +71,7 @@ class TicketService {
       const isSupport = this.config.supportRoleId && roles.includes(this.config.supportRoleId);
       if (ticket.ownerId !== userId && !isSupport && !isAdmin) return { ok: false, reason: 'Only the ticket owner or server support team can close this ticket.' };
       if (ticket.status === 'closed') return { ok: true, alreadyClosed: true };
+      if (ticket.status === 'reopening') return { ok: false, reason: 'Support staff must finish reopening this ticket before closing it.' };
 
       if (ticket.status === 'open') await this.store.markClosing(channelId);
       const canRead = asString(PERMISSIONS.VIEW_CHANNEL | PERMISSIONS.READ_MESSAGE_HISTORY);
@@ -78,6 +88,38 @@ class TicketService {
     return administrator || Boolean(this.config.supportRoleId && roles.includes(this.config.supportRoleId));
   }
 
+  async reopen({ channelId, userId, roles = [], permissions = '0' }) {
+    if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can reopen tickets.' };
+    const original = this.store.getByChannel(channelId);
+    if (!original) return { ok: false, reason: 'Choose a closed OpenDesk ticket.' };
+    return this.store.withUserLock(original.ownerId, () => this.store.withChannelLock(channelId, async () => {
+      const ticket = this.store.getByChannel(channelId);
+      if (ticket.status === 'open') return { ok: true, content: 'This ticket is already open.' };
+      if (!['closed', 'reopening'].includes(ticket.status)) return { ok: false, reason: 'Finish closing this ticket first.' };
+      const active = this.store.findActiveByOwner(ticket.ownerId);
+      if (active && active.channelId !== channelId) return { ok: false, reason: 'The owner already has another active ticket.' };
+      const channel = await this.discord.request('GET', `/channels/${channelId}`);
+      if (channel?.id !== channelId || channel.guild_id !== this.config.guildId || channel.type !== 0) throw new Error('Ticket channel is unavailable.');
+      const everyone = channel.permission_overwrites?.find((entry) => entry.id === this.config.guildId && entry.type === 0);
+      if (!everyone || !/^\d{1,30}$/.test(everyone.allow || '0') || !/^\d{1,30}$/.test(everyone.deny || '') || !(BigInt(everyone.deny) & PERMISSIONS.VIEW_CHANNEL) || BigInt(everyone.allow || '0') & PERMISSIONS.VIEW_CHANNEL) return { ok: false, reason: 'Repair ticket everyone visibility protection before reopening.' };
+      const member = await this.discord.getGuildMember(this.config.guildId, ticket.ownerId);
+      if (member?.user?.id !== ticket.ownerId || member.user.bot || member.pending) return { ok: false, reason: 'The owner must be a current human member who completed screening.' };
+      const owner = channel.permission_overwrites.find((entry) => entry.id === ticket.ownerId && entry.type === 1);
+      if (owner && (!/^\d{1,30}$/.test(owner.allow || '0') || !/^\d{1,30}$/.test(owner.deny || '0'))) throw new Error('Invalid owner permissions.');
+      await this.store.markReopening(channelId);
+      await this.discord.setMemberOverwrite(channelId, ticket.ownerId, { type: 1, allow: asString(BigInt(owner?.allow || '0') | CHAT), deny: asString(BigInt(owner?.deny || '0') & ~CHAT) });
+      await this.discord.editChannel(channelId, { name: `ticket-${channelId.slice(-8)}` });
+      const restored = await this.discord.request('GET', `/channels/${channelId}`);
+      const restoredOwner = restored.permission_overwrites?.find((entry) => entry.id === ticket.ownerId && entry.type === 1);
+      const restoredEveryone = restored.permission_overwrites?.find((entry) => entry.id === this.config.guildId && entry.type === 0);
+      if (restored.id !== channelId || restored.guild_id !== this.config.guildId || restored.type !== 0 || restored.name !== `ticket-${channelId.slice(-8)}`
+        || !restoredOwner || (BigInt(restoredOwner.allow || '0') & CHAT) !== CHAT || BigInt(restoredOwner.deny || '0') & CHAT
+        || !restoredEveryone || !(BigInt(restoredEveryone.deny || '0') & PERMISSIONS.VIEW_CHANNEL) || BigInt(restoredEveryone.allow || '0') & PERMISSIONS.VIEW_CHANNEL) throw new Error('Reopened ticket permissions could not be confirmed.');
+      await this.store.markReopened(channelId);
+      return { ok: true, content: 'Ticket reopened. Owner access restored and previous assignment cleared.' };
+    }));
+  }
+
   list({ userId, roles = [], permissions = '0', page = 1 }) {
     if (!Number.isInteger(page) || page < 1 || page > 10000) return { ok: false, reason: 'Choose a valid page.' };
     const staff = this.isStaff({ roles, permissions });
@@ -90,7 +132,7 @@ class TicketService {
     if (!this.isStaff(actor)) return { ok: false, reason: 'Only the server support team can view ticket statistics.' };
     const records = this.store.list();
     return { ok: true, total: records.length, open: records.filter((ticket) => ticket.status === 'open').length,
-      closing: records.filter((ticket) => ticket.status === 'closing').length, closed: records.filter((ticket) => ticket.status === 'closed').length,
+      closing: records.filter((ticket) => ticket.status === 'closing').length, reopening: records.filter((ticket) => ticket.status === 'reopening').length, closed: records.filter((ticket) => ticket.status === 'closed').length,
       claimed: records.filter((ticket) => ticket.status === 'open' && ticket.claimedBy).length };
   }
 

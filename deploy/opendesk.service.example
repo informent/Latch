@@ -23,6 +23,7 @@ Environment=ROLE_MENU_STORE_PATH=/var/lib/opendesk/role-menus.json
 Environment=TEMPLATE_STORE_PATH=/var/lib/opendesk/templates.json
 Environment=RESPONDER_STORE_PATH=/var/lib/opendesk/responders.json
 Environment=TIMER_STORE_PATH=/var/lib/opendesk/timers.json
+Environment=TICKET_PANEL_STORE_PATH=/var/lib/opendesk/ticket-panels.json
 ExecStart=/usr/bin/node /opt/opendesk/src/server.js
 Restart=on-failure
 RestartSec=5

@@ -32,11 +32,13 @@ The container runs as the Node user, with a read-only root filesystem, dropped L
 
 ## Updates, backups, and rollback
 
-- Before updating, stop the bot and copy **all ten** JSON stores together into a private backup, including `voice.json`, `role-menus.json`, `templates.json`, `responders.json` and `timers.json`. Back up secret/configuration files separately. Keep source commit IDs or image digests with backups. Ticket channels and conversations remain in Discord and are not included in the JSON stores.
+- Before updating, stop the bot and copy **all eleven** JSON stores together into a private backup, including `voice.json`, `role-menus.json`, `templates.json`, `responders.json`, `timers.json` and `ticket-panels.json`. Back up secret/configuration files separately. Keep source commit IDs or image digests with backups. Ticket channels and conversations remain in Discord and are not included in the JSON stores.
 - For Compose, stop with `docker compose stop opendesk`. The named volume persists. Find its actual name with `docker volume ls`; it usually includes the Compose project prefix. With the bot stopped, use an administrative backup container or your Docker volume backup tooling to copy the complete volume. Treat archives as private server data.
 - Never use `docker compose down -v` for a routine update: it deletes the data volume. Rebuild deliberately, then start one instance. Run doctor and register new commands as needed.
 - Check the changelog before rolling back. Restore a compatible source/image version and the matching complete store backup while the bot is stopped. Verify permissions and resume only one instance. There is no automatic downgrade or migration guarantee.
 - Giveaways save their selected winners before updating Discord. Reminder delivery is at least once; an interrupted delivery can duplicate outside Discord's short nonce window. Review pending job IDs after permissions or connectivity failures.
+
+Ticket panels have a separate guild-bound store at `TICKET_PANEL_STORE_PATH` (default `./data/ticket-panels.json`). Configuration rejects overlapping store paths and an everyone support role. Include the new file in backups; Docker and service templates specify its persistent path. Inspect panel retry state after startup, and retry `/ticket reopen` for any ticket left in `reopening` after a failed operation.
 
 ## Connection recovery
 

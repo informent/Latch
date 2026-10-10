@@ -29,7 +29,7 @@ Only command names and independently authored implementation notes are recorded 
 | giveaway start | `/giveaway create` | Current channel; limited options |
 | giveaway end, list | `/giveaway end`, `/giveaway list` | OpenDesk IDs instead of message links |
 | giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
-| tickets close | `/ticket close` | Basic private tickets; no panels or per-option claim policies |
+| tickets close | `/ticket close` | Private tickets with persistent category panels and staff reopening; per-option claim policies remain missing |
 | tickets list | `/ticket list` | Staff see all active tickets; others see only their own; ten per page |
 | tickets stats | `/ticket stats` | Staff-only lifetime counts; no time-window or per-staff workload reporting |
 | tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
@@ -54,7 +54,7 @@ These are concrete gaps from the sources above; the list will expand as further 
 
 - Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
 - Giveaways: edit host, description, thumbnail, image, requiredroles, minlevel, maxlevel.
-- Tickets: resend, panel, form, options, blacklist, profiles, profile, delete, reopen, transcript, allow, allow list, deny, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
+- Tickets: resend, form, advanced options, blacklist, profiles, profile, delete, transcript, allow, allow list, deny, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
 - Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.
@@ -62,6 +62,8 @@ These are concrete gaps from the sources above; the list will expand as further 
 - Prefix support: configurable prefix, prefix set, cmds alias, command aliases and competitor command syntax.
 
 ## Suites awaiting a detailed inventory
+
+Ticket panels now have eight `/ticketpanel` paths, durable publication retries, saved server/channel/message bindings and up to five topic/category buttons. `/ticket reopen` supports staff recovery with persisted intent and permission read-back checks. Intake forms, transcripts and competitor-specific panel policies remain missing; see the [panel guide](TICKET-PANELS.md).
 
 Native AutoMod now adds preset wordsets, private rule inspection, role/channel exemptions, allowed-word replacement and custom blocking explanations. It manages only rules created by this bot with the OpenDesk prefix. See the [AutoMod guide](AUTOMOD.md).
 

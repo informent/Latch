@@ -12,7 +12,7 @@ const commands = [
   },
   {
     name: 'ticket', description: 'Create or close a private support ticket.', type: 1,
-    options: [subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
+    options: [subcommand('reopen', 'Reopen a closed ticket as support staff.', [option(7, 'channel', 'Closed ticket channel; defaults to this channel.', { channel_types: [0] })]), subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
       subcommand('list', 'List open tickets; members see only their own.', [option(4, 'page', 'Results page, ten tickets per page.', { min_value: 1, max_value: 10000 })]),
       subcommand('stats', 'Show support team ticket statistics.'),
       subcommand('info', 'Privately inspect your ticket or any ticket as support staff.', [option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })]),
@@ -209,3 +209,14 @@ commands.push({
 });
 
 module.exports = { commands };
+
+commands.push({
+  name: 'ticketpanel', description: 'Build persistent support panels with category buttons.', type: 1, default_member_permissions: '32',
+  options: [
+    subcommand('create', 'Create an unpublished panel in this text channel.', [option(3, 'title', 'Panel title.', { required: true, min_length: 1, max_length: 200 }), option(3, 'description', 'Explain what members should select.', { max_length: 1000 })]),
+    subcommand('add', 'Add one of five topic/category buttons.', [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 }), option(3, 'topic', 'Lowercase topic ID: letters, digits, hyphens; up to 20.', { required: true, min_length: 1, max_length: 20 }), option(3, 'label', 'Button label.', { required: true, min_length: 1, max_length: 60 }), option(7, 'category', 'Category for private tickets.', { required: true, channel_types: [4] })]),
+    subcommand('remove', 'Remove a topic button.', [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 }), option(3, 'topic', 'Topic ID.', { required: true, max_length: 20 })]),
+    subcommand('list', 'List stored panels and publication state.'),
+    ...['info', 'publish', 'disable', 'delete'].map((action) => subcommand(action, `${action} a ticket panel.`, [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 })]))
+  ]
+});

@@ -14,6 +14,8 @@ const { AutoModService } = require('./automod-service');
 const { CommunityStore } = require('./community-store');
 const { CommunityService } = require('./community-service');
 const { TicketService } = require('./ticket-service');
+const { TicketPanelStore } = require('./ticket-panel-store');
+const { TicketPanelService } = require('./ticket-panel-service');
 const { VoiceStore } = require('./voice-store');
 const { VoiceService } = require('./voice-service');
 const { RoleMenuStore } = require('./role-menu-store');
@@ -100,13 +102,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     void server.voice?.stop();
     void server.roleMenus?.stop();
     void server.timers?.stop();
+    void server.ticketPanels?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop()])).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop()])).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
@@ -126,6 +129,9 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   await communityStore.load();
   const botUser = await discord.getCurrentUser();
   const tickets = new TicketService({ config, store, discord, botUserId: botUser.id });
+  const ticketPanelStore = new TicketPanelStore(config.ticketPanelStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'ticket-panels.json'), config.guildId);
+  await ticketPanelStore.load();
+  const ticketPanels = new TicketPanelService({ config, store: ticketPanelStore, tickets, discord, botUserId: botUser.id, logger });
   const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
   const community = new CommunityService({ config, store: communityStore, discord, logger });
   const voiceStore = new VoiceStore(config.voiceStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'voice.json'), config.guildId);
@@ -142,17 +148,19 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const timerStore = new TimerStore(config.timerStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'timers.json'), config.guildId);
   await timerStore.load();
   const timers = new TimerService({ config, store: timerStore, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
+  const handle = createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;
   server.roleMenus = roleMenus;
   server.timers = timers;
-  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); });
+  server.ticketPanels = ticketPanels;
+  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); void ticketPanels.stop(); });
   community.start();
   voice.start();
   roleMenus.start();
   timers.start();
+  ticketPanels.start();
   const guildEvents = new GuildEventService({ config, discord, levels, logger });
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;

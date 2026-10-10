@@ -22,6 +22,19 @@ Bot operations on the same ticket use a channel lock. Manual Discord edits and o
 
 `create`, `close`, `list`, `stats`, `claim`, `unclaim` and `rename` retain their existing policies. Members list their own active tickets; support staff list all. Stats, assignment and rename require support staff. The owner or support staff may close. Closing enters durable `closing` state before revoking owner write access and renaming the channel; retry close after failure to finish it. Closing leaves channel history readable and does not delete the channel. It does not manage arbitrary guest/member or role overwrites manually added in Discord.
 
-Run `npm run register` after upgrading. Stop the bot and back up all stores together. Reasons live in the existing `tickets.json`; no additional store is introduced. Private command confirmations suppress mentions. Run one bot process per store set.
+Run `npm run register` after upgrading. Stop the bot and back up all stores together. Reasons and reopening state live in the existing `tickets.json`; persistent panels add `ticket-panels.json` to the complete backup set. Private command confirmations suppress mentions. Run one bot process per store set.
 
-Existing CI does not exercise new info/reason/move workflows. Live Discord validation remains outstanding. Panels, per-option policies, reopen, transcripts, guest management and full competitor parity remain unfinished.
+Dedicated regression tests cover info/reason/move and the panel-to-create-to-close-to-reopen flow. Live Discord validation remains outstanding. Intake forms, advanced per-option policies, transcripts, guest management and full competitor parity remain unfinished.
+
+
+## Staff reopening
+
+`/ticket reopen channel:...` requires the support role or Administrator; ticket ownership alone does not authorize it. The channel must be a stored closed/reopening ticket in the configured guild with explicit everyone View Channel denial. Its owner must still be a current human member who completed screening. Another active ticket for that owner blocks reopening.
+
+Reopening serializes with creation under the owner lock and with other operations under the channel lock. It saves `reopening` intent before restoring owner chat access, preserves other owner permission bits, renames the channel and reads back guild/type/name, everyone denial and owner chat bits. Only successful confirmation commits the open status, clearing the previous close timestamp and handler assignment. The creation time and reason remain unchanged; this is not a historical event log.
+
+A failure can leave the channel partially restored while its saved state remains `reopening`. Inspect permissions and retry reopen as staff to finish. Close is refused until reopening completes. Earlier releases reject the new transient status; stop the bot and restore a compatible complete backup before rolling back. Other clients can race permission updates; read-back checks do not establish every member's effective access. Administrator and other manually added allows can still grant visibility.
+
+## Self-service panels
+
+See the [panel guide](TICKET-PANELS.md) for persistent topic buttons and category routing. Staff create drafts before publication; member clicks receive private links to their ticket. Panel topics are saved as ticket reasons. The configured support role applies to every topic. Setting it to the everyone role is rejected before startup or channel creation.
