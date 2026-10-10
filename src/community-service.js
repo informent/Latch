@@ -78,6 +78,22 @@ class CommunityService {
 
   list(kind, userId) { return this.store.list(this.config.guildId, { kind, userId }); }
 
+  editGiveaway(id, field, value) {
+    return this.#serialize(async () => {
+      const job = await this.store.editGiveaway({ id, guildId: this.config.guildId, field, value }, this.now());
+      await this.#attempt(job);
+      return this.store.get(id);
+    });
+  }
+
+  rerollGiveaway(id, requestId) {
+    return this.#serialize(async () => {
+      const job = await this.store.reroll({ id, guildId: this.config.guildId, requestId });
+      if (!job.deliveredAt) await this.#attempt(job);
+      return this.store.get(id);
+    });
+  }
+
   getGiveaway(id) {
     const job = this.store.get(id);
     return job?.guildId === this.config.guildId && job.kind === 'giveaway' ? job : null;
@@ -89,7 +105,7 @@ class CommunityService {
     const task = this.#serialize(async () => {
       await this.store.prune(this.now());
       const now = this.now().getTime();
-      const ready = this.store.list(this.config.guildId).filter((job) => (!job.retryAt || Date.parse(job.retryAt) <= now) && (['draft', 'drawn', 'cancelled'].includes(job.state) || Date.parse(job.dueAt) <= now)).slice(0, 20);
+      const ready = this.store.list(this.config.guildId).filter((job) => (!job.retryAt || Date.parse(job.retryAt) <= now) && (['draft', 'drawn', 'cancelled'].includes(job.state) || (job.state === 'open' && Boolean(job.retryAt)) || Date.parse(job.dueAt) <= now)).slice(0, 20);
       for (const job of ready) {
         if (this.stopping) break;
         await this.#attempt(job);
@@ -109,6 +125,11 @@ class CommunityService {
           const message = await this.discord.createMessage(job.channelId, { ...giveawayMessage(job), nonce: job.id, enforce_nonce: true });
           job = await this.store.activate(job.id, message.id);
           if (Date.parse(job.dueAt) > this.now().getTime()) return;
+        }
+        if (job.state === 'open' && Date.parse(job.dueAt) > this.now().getTime()) {
+          await this.discord.editMessage(job.channelId, job.messageId, giveawayMessage(job));
+          await this.store.acknowledgeRefresh(job.id);
+          return;
         }
         if (job.state === 'open') job = await this.store.draw(job.id, this.now());
         await this.discord.editMessage(job.channelId, job.messageId, giveawayMessage(job));

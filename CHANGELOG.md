@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 - 2026-10-10
+
+- Added ticket list, stats, claim, unclaim and rename, with private responses and support-team authorization. Listing is paginated and ordinary members see only their own tickets. Assignments persist with rollback on failed saves and channel locks for concurrent claims.
+- Added giveaway edit prize, duration and winners. Edits save before updating the public message, with durable refresh retries after restart. Duration is measured from now, within a maximum total lifetime of 30 days.
+- Added giveaway reroll. Replacement winners exclude the immediately previous winners; fewer replacements may be selected if the remaining pool is small. Results persist before delivery, and duplicate interaction IDs reuse the saved draw.
+- Increased registered command paths from 48 to 57. Updated the coverage inventory with explicit differences from competitor behavior.
+
+Back up stores before upgrading. New claim and reroll records remain readable by this version but older releases may reject them. Existing CI does not establish coverage for each new command or live Discord operation. Complete competitor parity remains unfinished.
+
 ## 0.3.2 - 2026-10-10
 
 - Added permission-checked unban by user ID with an audit reason.

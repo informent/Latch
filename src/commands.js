@@ -12,7 +12,11 @@ const commands = [
   },
   {
     name: 'ticket', description: 'Create or close a private support ticket.', type: 1,
-    options: [subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })])]
+    options: [subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
+      subcommand('list', 'List open tickets; members see only their own.', [option(4, 'page', 'Results page, ten tickets per page.', { min_value: 1, max_value: 10000 })]),
+      subcommand('stats', 'Show support team ticket statistics.'),
+      ...['claim', 'unclaim'].map((action) => subcommand(action, `${action} an open ticket as support staff.`, [option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })])),
+      subcommand('rename', 'Rename an open ticket as support staff.', [option(3, 'name', 'Lowercase letters, digits and hyphens; maximum 90 characters.', { required: true, min_length: 1, max_length: 90 }), option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })])]
   },
   {
     name: 'moderation', description: 'Moderate members and manage server warnings.', type: 1,
@@ -90,7 +94,12 @@ const commands = [
     options: [
       subcommand('create', 'Create a giveaway in this channel.', [option(3, 'prize', 'Prize supplied by the giveaway host.', { required: true, max_length: 200 }), option(4, 'minutes', 'Entry period in minutes (up to 30 days).', { required: true, min_value: 1, max_value: 43200 }), option(4, 'winners', 'Number of winners (default 1).', { min_value: 1, max_value: 20 })]),
       subcommand('list', 'List active giveaways in this server.'),
-      ...['end', 'cancel', 'info'].map((action) => subcommand(action, `${action} a giveaway by ID.`, [option(3, 'id', 'Giveaway ID shown in its message footer.', { required: true, max_length: 25 })]))
+      { type: 2, name: 'edit', description: 'Edit an active giveaway; staff permission required.', options: [
+        subcommand('prize', 'Change the prize of an active giveaway.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(3, 'prize', 'New prize.', { required: true, min_length: 1, max_length: 200 })]),
+        subcommand('winners', 'Change how many winners will be selected.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'winners', 'Number of winners.', { required: true, min_value: 1, max_value: 20 })]),
+        subcommand('duration', 'Set time remaining, within a total lifetime of 30 days.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'minutes', 'Minutes remaining from now.', { required: true, min_value: 1, max_value: 43200 })])
+      ] },
+      ...['end', 'cancel', 'info', 'reroll'].map((action) => subcommand(action, `${action} a giveaway by ID.`, [option(3, 'id', 'Giveaway ID shown in its message footer.', { required: true, max_length: 25 })]))
     ]
   }
 ];

@@ -117,6 +117,63 @@ class CommunityStore {
     });
   }
 
+  editGiveaway({ id, guildId, field, value }, now = new Date()) {
+    return this.#mutate(() => {
+      const job = this.jobs.get(id);
+      if (!job || job.kind !== 'giveaway' || job.guildId !== guildId || !['draft', 'open'].includes(job.state) || Date.parse(job.dueAt) <= now.getTime()) throw new Error('Only active giveaways can be edited.');
+      const updated = { ...job };
+      if (field === 'prize') {
+        if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Invalid prize.');
+        updated.text = value.trim();
+      } else if (field === 'winners') {
+        if (!Number.isInteger(value) || value < 1 || value > 20) throw new Error('Invalid winner count.');
+        updated.winnerCount = value;
+      } else if (field === 'duration') {
+        if (!Number.isInteger(value) || value < 1 || value > 43_200) throw new Error('Invalid duration.');
+        const dueAt = now.getTime() + value * 60_000;
+        if (!Number.isFinite(dueAt) || dueAt - Date.parse(job.createdAt) > 43_200 * 60_000) throw new Error('Total giveaway lifetime cannot exceed 30 days.');
+        updated.dueAt = new Date(dueAt).toISOString();
+      } else throw new Error('Unknown giveaway field.');
+      // An open job with retryAt is also a durable pending message refresh.
+      // Saving happens before Discord is updated, so a restart cannot lose the edit.
+      updated.retryAt = now.toISOString();
+      updated.attempts = 0;
+      this.jobs.set(id, updated);
+      return { value: structuredClone(updated) };
+    });
+  }
+
+  acknowledgeRefresh(id) {
+    return this.#mutate(() => {
+      const job = this.jobs.get(id);
+      if (!job || job.kind !== 'giveaway' || job.state !== 'open') throw new Error('Giveaway is not open.');
+      this.jobs.set(id, { ...job, retryAt: null, attempts: 0 });
+      return { value: null };
+    });
+  }
+
+  reroll({ id, guildId, requestId }) {
+    if (typeof requestId !== 'string' || !ID.test(requestId)) throw new Error('Invalid reroll request.');
+    return this.#mutate(() => {
+      const job = this.jobs.get(id);
+      if (!job || job.kind !== 'giveaway' || job.guildId !== guildId) throw new Error('Giveaway not found.');
+      if (job.rerollRequestId === requestId) return { changed: false, value: structuredClone(job) };
+      if (job.rerollRequestId && BigInt(requestId) < BigInt(job.rerollRequestId)) throw new Error('This reroll request has been superseded.');
+      if (job.state !== 'finished') throw new Error('Publish the current result before rerolling.');
+      const pool = job.entrants.filter((entrant) => !job.winners.includes(entrant));
+      if (!pool.length) throw new Error('No replacement entrants remain.');
+      const winners = [];
+      while (pool.length && winners.length < job.winnerCount) {
+        const index = this.pick(pool.length);
+        if (!Number.isInteger(index) || index < 0 || index >= pool.length) throw new Error('Invalid random selection.');
+        winners.push(pool.splice(index, 1)[0]);
+      }
+      const updated = { ...job, winners, rerollRequestId: requestId, state: 'drawn', deliveredAt: null, attempts: 0, retryAt: null };
+      this.jobs.set(id, updated);
+      return { value: structuredClone(updated) };
+    });
+  }
+
   cancel({ id, guildId, userId, kind }, now = new Date()) {
     return this.#mutate(() => {
       const job = this.jobs.get(id);
@@ -151,7 +208,8 @@ class CommunityStore {
   }
 
   #valid(job) {
-    if (!job || typeof job !== 'object' || Array.isArray(job) || Object.keys(job).sort().join(',') !== keys
+    if (!job || typeof job !== 'object' || Array.isArray(job) || Object.keys(job).filter((key) => key !== 'rerollRequestId').sort().join(',') !== keys
+      || (Object.hasOwn(job, 'rerollRequestId') && (job.kind !== 'giveaway' || typeof job.rerollRequestId !== 'string' || !ID.test(job.rerollRequestId) || !['drawn', 'finished'].includes(job.state)))
       || !['id', 'guildId', 'channelId', 'userId'].every((key) => typeof job[key] === 'string' && ID.test(job[key]))
       || !['reminder', 'giveaway'].includes(job.kind) || typeof job.text !== 'string' || !job.text.trim() || job.text.length > (job.kind === 'reminder' ? 500 : 200)
       || !timestamp(job.createdAt) || !timestamp(job.dueAt) || Date.parse(job.dueAt) <= Date.parse(job.createdAt) || Date.parse(job.dueAt) - Date.parse(job.createdAt) > 43_200 * 60_000

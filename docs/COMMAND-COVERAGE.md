@@ -27,7 +27,13 @@ Only command names and independently authored implementation notes are recorded 
 | giveaway start | `/giveaway create` | Current channel; limited options |
 | giveaway end, list | `/giveaway end`, `/giveaway list` | OpenDesk IDs instead of message links |
 | giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
-| tickets close | `/ticket close` | Basic private tickets; no panels or claim policies |
+| tickets close | `/ticket close` | Basic private tickets; no panels or per-option claim policies |
+| tickets list | `/ticket list` | Staff see all active tickets; others see only their own; ten per page |
+| tickets stats | `/ticket stats` | Staff-only lifetime counts; no time-window or per-staff workload reporting |
+| tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
+| tickets rename | `/ticket rename` | Open OpenDesk tickets only; staff-only; no arbitrary text-channel rename |
+| giveaway edit prize, duration, winners | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline only; lifetime limited to 30 days |
+| giveaway reroll | `/giveaway reroll` | Finished giveaways only; excludes immediately previous winners; same interaction ID reuses saved result |
 
 Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moderation](https://www.greed.sh/docs/moderation/), [Bleed giveaways](https://docs.bleed.bot/miscellaneous/giveaway), [Bleed tickets](https://docs.bleed.bot/configuration/tickets/commands), [Bleed moderation](https://docs.bleed.bot/security/moderation).
 
@@ -36,8 +42,8 @@ Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moder
 These are concrete gaps from the sources above; the list will expand as further official pages are inventoried.
 
 - Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
-- Giveaways: reroll; edit host, prize, duration, winners, description, thumbnail, image, requiredroles, minlevel, maxlevel.
-- Tickets: resend, panel, form, options, blacklist, profiles, profile, stats, list, claim, unclaim, delete, reopen, move, transcript, allow, allow list, deny, rename, reason, trainee, trainee grant/revoke/list.
+- Giveaways: edit host, description, thumbnail, image, requiredroles, minlevel, maxlevel.
+- Tickets: resend, panel, form, options, blacklist, profiles, profile, delete, reopen, move, transcript, allow, allow list, deny, reason, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): setup; default settings; rename, limit, lock, unlock, ghost, unghost, permit, role, claim, transfer, music. No voice event lifecycle exists yet.
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
 - Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.

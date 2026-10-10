@@ -150,6 +150,30 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
         }
       } };
     }
+    if (commandName === 'ticket' && ['list', 'stats', 'claim', 'unclaim', 'rename'].includes(subcommand?.name)) {
+      const action = subcommand.name;
+      const actor = { userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0' };
+      return { immediate: defer(), work: async () => {
+        try {
+          let result;
+          let content;
+          if (action === 'list') {
+            result = tickets.list({ ...actor, page: findOption(subcommand.options || [], 'page') ?? 1 });
+            content = result.ok ? `**Open tickets: ${result.total} (page ${result.page}/${result.pages})**\n${result.tickets.map((ticket) => `<#${ticket.channelId}> | owner <@${ticket.ownerId}> | ${ticket.status} | ${ticket.claimedBy ? `handler <@${ticket.claimedBy}>` : 'unclaimed'}`).join('\n') || 'No tickets on this page.'}` : result.reason;
+          } else if (action === 'stats') {
+            result = tickets.stats(actor);
+            content = result.ok ? `**Ticket statistics**\nTotal: ${result.total}\nOpen: ${result.open}\nClosing: ${result.closing}\nClosed: ${result.closed}\nOpen and claimed: ${result.claimed}` : result.reason;
+          } else {
+            result = await tickets.manage({ ...actor, action, channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, name: findOption(subcommand.options || [], 'name') });
+            content = result.ok ? result.content : result.reason;
+          }
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+        } catch {
+          logger('ticket_management_failed', { action });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not manage this ticket. Check the ticket ID, support role, bot permissions and writable ticket store.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'moderation') {
       const action = subcommand?.name;
       const requiredPermission = MODERATION_PERMISSIONS[action];

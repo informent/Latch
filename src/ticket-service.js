@@ -71,6 +71,56 @@ class TicketService {
       return { ok: true, ticket: closed };
     });
   }
+
+  isStaff({ roles = [], permissions = '0' }) {
+    let administrator = false;
+    try { administrator = (BigInt(permissions) & 8n) === 8n; } catch {}
+    return administrator || Boolean(this.config.supportRoleId && roles.includes(this.config.supportRoleId));
+  }
+
+  list({ userId, roles = [], permissions = '0', page = 1 }) {
+    if (!Number.isInteger(page) || page < 1 || page > 10000) return { ok: false, reason: 'Choose a valid page.' };
+    const staff = this.isStaff({ roles, permissions });
+    const records = this.store.list().filter((ticket) => ticket.status !== 'closed' && (staff || ticket.ownerId === userId))
+      .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+    return { ok: true, tickets: records.slice((page - 1) * 10, page * 10), total: records.length, page, pages: Math.max(1, Math.ceil(records.length / 10)) };
+  }
+
+  stats(actor) {
+    if (!this.isStaff(actor)) return { ok: false, reason: 'Only the server support team can view ticket statistics.' };
+    const records = this.store.list();
+    return { ok: true, total: records.length, open: records.filter((ticket) => ticket.status === 'open').length,
+      closing: records.filter((ticket) => ticket.status === 'closing').length, closed: records.filter((ticket) => ticket.status === 'closed').length,
+      claimed: records.filter((ticket) => ticket.status === 'open' && ticket.claimedBy).length };
+  }
+
+  async manage({ action, channelId, userId, roles = [], permissions = '0', name }) {
+    if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can manage ticket assignments and names.' };
+    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket channel.' };
+    return this.store.withChannelLock(channelId, async () => {
+      const ticket = this.store.getByChannel(channelId);
+      if (!ticket || ticket.status !== 'open') return { ok: false, reason: 'Choose an open OpenDesk ticket.' };
+      if (action === 'claim') {
+        if (ticket.ownerId === userId) return { ok: false, reason: 'You cannot claim your own ticket.' };
+        if (ticket.claimedBy && ticket.claimedBy !== userId) return { ok: false, reason: 'This ticket is already claimed. Unclaim it before assigning a new handler.' };
+        await this.store.setClaim(channelId, userId);
+        return { ok: true, content: 'Ticket claimed by you.' };
+      }
+      if (action === 'unclaim') {
+        await this.store.setClaim(channelId, null);
+        return { ok: true, content: 'Ticket assignment cleared.' };
+      }
+      if (action === 'rename') {
+        if (typeof name !== 'string' || !/^[a-z0-9][a-z0-9-]{0,89}$/.test(name)) return { ok: false, reason: 'Use 1 to 90 lowercase letters, digits or hyphens, starting with a letter or digit.' };
+        // The durable store restricts changes to channels created by this service.
+        const channel = await this.discord.request('GET', `/channels/${channelId}`);
+        if (channel?.guild_id !== this.config.guildId || channel.type !== 0) return { ok: false, reason: 'This ticket channel is unavailable in the configured server.' };
+        await this.discord.editChannel(channelId, { name });
+        return { ok: true, content: 'Ticket renamed.' };
+      }
+      return { ok: false, reason: 'Choose a ticket management action.' };
+    });
+  }
 }
 
 module.exports = { TicketService, PERMISSIONS, CHAT, BOT, channelName };

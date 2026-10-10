@@ -9,10 +9,12 @@ function createCommunityHandler({ config, community, discord, logger }, { respon
     if (user.bot) return { immediate: response('These features are available to human members only.') };
     const subcommand = interaction.data?.options?.[0];
     const action = component ? component[1] : subcommand?.name;
-    const options = subcommand?.options || [];
+    const edit = !component && name === 'giveaway' && action === 'edit' ? subcommand?.options?.[0] : null;
+    const options = edit ? edit.options || [] : subcommand?.options || [];
     if (name === 'reminder' && action === 'create' && !hasPermission(interaction.member?.permissions, 2048n)) return { immediate: response('You need Send Messages in this channel to schedule a public reminder.') };
     if (name === 'giveaway' && !hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to manage giveaways. Members can enter with the giveaway buttons.') };
-    if (!component && !['create', 'list', 'cancel', ...(name === 'giveaway' ? ['end', 'info'] : [])].includes(action)) return { immediate: response('Choose a community action.') };
+    if (!component && !['create', 'list', 'cancel', ...(name === 'giveaway' ? ['end', 'info', 'edit', 'reroll'] : [])].includes(action)) return { immediate: response('Choose a community action.') };
+    if (action === 'edit' && !['prize', 'duration', 'winners'].includes(edit?.name)) return { immediate: response('Choose a giveaway edit action.') };
     const id = component ? component[2] : action === 'create' ? interaction.id : findOption(options, 'id');
     if (action !== 'list' && (typeof id !== 'string' || !/^\d{5,25}$/.test(id))) return { immediate: response('Provide a valid reminder or giveaway ID.') };
     return { immediate: defer(), work: async () => {
@@ -35,6 +37,14 @@ function createCommunityHandler({ config, community, discord, logger }, { respon
         } else if (action === 'create') {
           const job = await community.createGiveaway({ id, channelId: interaction.channel_id, userId: user.id, text: findOption(options, 'prize'), minutes: findOption(options, 'minutes'), winnerCount: findOption(options, 'winners') ?? 1 });
           content = job.state === 'draft' ? `Giveaway ${job.id} is saved; publication will retry automatically. Check the bot Send Messages and Embed Links permissions.` : `Giveaway ${job.id} is ${job.state}. Members can enter using its buttons.`;
+        } else if (action === 'reroll') {
+          const job = await community.rerollGiveaway(id, interaction.id);
+          content = job.deliveredAt ? `Giveaway ${id} replacement winners published.` : `Giveaway ${id} replacement winners saved. Result delivery will retry automatically.`;
+        } else if (action === 'edit') {
+          const field = edit.name;
+          const value = findOption(options, field === 'duration' ? 'minutes' : field);
+          const job = await community.editGiveaway(id, field, value);
+          content = job.retryAt ? `Giveaway ${id} edit saved. Its public message update will retry automatically.` : `Giveaway ${id} ${field} updated.`;
         } else if (action === 'end') {
           const job = await community.endGiveaway(id);
           content = job.deliveredAt ? `Giveaway ${id} ended; its result is published.` : `Giveaway ${id} ended. Winners are saved; result delivery will retry automatically.`;
@@ -52,6 +62,8 @@ function createCommunityHandler({ config, community, discord, logger }, { respon
       } catch {
         try { logger('community_action_failed', { action, kind: component ? 'giveaway' : name }); } catch {}
         content = component ? 'Could not update your entry. This giveaway may be closed, unavailable, or at its entry limit.' : name === 'reminder' ? 'Could not complete the reminder action. Check the ID and ownership; use 1–43200 minutes, up to 500 characters, and at most 10 pending reminders.' : 'Could not complete the giveaway action. Check the ID; use 1–43200 minutes, a prize up to 200 characters, 1–20 winners, and at most 20 active giveaways.';
+        if (!component && name === 'giveaway' && action === 'reroll') content = 'Could not reroll. The giveaway must have a published completed result and entrants other than its current winners. Previous winners are excluded from this draw.';
+        if (!component && name === 'giveaway' && action === 'edit') content = 'Could not edit. Choose an active giveaway that has not reached its deadline. Prize: up to 200 characters; winners: 1–20; duration: minutes remaining, with total lifetime at most 30 days.';
       }
       await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } }).catch(() => { try { logger('community_response_failed', { action }); } catch {} });
     } };

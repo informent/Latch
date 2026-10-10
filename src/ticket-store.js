@@ -23,10 +23,12 @@ class TicketStore {
         const expectedKeys = ticket?.status === 'closed'
           ? ['channelId', 'ownerId', 'status', 'createdAt', 'closedAt']
           : ['channelId', 'ownerId', 'status', 'createdAt'];
+        if (Object.hasOwn(ticket || {}, 'claimedBy')) expectedKeys.push('claimedBy');
         if (!ticket || typeof ticket !== 'object' || Array.isArray(ticket)
           || Object.keys(ticket).sort().join(',') !== expectedKeys.sort().join(',')
           || !/^\d{5,25}$/.test(ticket.channelId) || !/^\d{5,25}$/.test(ticket.ownerId)
           || !['open', 'closing', 'closed'].includes(ticket.status)
+          || (Object.hasOwn(ticket, 'claimedBy') && (typeof ticket.claimedBy !== 'string' || !/^\d{5,25}$/.test(ticket.claimedBy) || ticket.claimedBy === ticket.ownerId))
           || typeof ticket.createdAt !== 'string' || !Number.isFinite(Date.parse(ticket.createdAt))
           || (ticket.status === 'closed' && (typeof ticket.closedAt !== 'string' || !Number.isFinite(Date.parse(ticket.closedAt))))
           || channelIds.has(ticket.channelId)
@@ -45,6 +47,20 @@ class TicketStore {
   }
 
   getByChannel(channelId) { return this.byChannel.get(channelId) || null; }
+  list() { return [...this.byChannel.values()].map((ticket) => ({ ...ticket })); }
+
+  async setClaim(channelId, userId) {
+    if (userId !== null && (typeof userId !== 'string' || !/^\d{5,25}$/.test(userId))) throw new Error('Invalid ticket claimer.');
+    const previous = this.byChannel.get(channelId);
+    if (!previous || previous.status !== 'open' || userId === previous.ownerId) throw new Error('Ticket cannot be claimed.');
+    const updated = { ...previous };
+    if (userId === null) delete updated.claimedBy;
+    else updated.claimedBy = userId;
+    this.byChannel.set(channelId, Object.freeze(updated));
+    try { await this.#save(); }
+    catch (error) { this.byChannel.set(channelId, previous); throw error; }
+    return this.byChannel.get(channelId);
+  }
   findActiveByOwner(ownerId) {
     return [...this.byChannel.values()].find((ticket) => ticket.ownerId === ownerId && ticket.status !== 'closed') || null;
   }
