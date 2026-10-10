@@ -16,15 +16,15 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Embeds | Custom announcements in the invoking channel | Saved templates, variables, preview/edit workflow |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
-| Giveaways | Planned | Entry controls, restart-safe timers, fair draws, rerolls |
-| Community | Native polls with multiple choices and Discord-managed expiration | Starboard, counters, reminders, autoresponders, bump reminders |
+| Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved cryptographic draws, cancellation, delivery retries | Role eligibility, departure checks, rerolls |
+| Community | Native polls; durable personal channel reminders with list/cancel | Starboard, counters, autoresponders, bump reminders |
 | VoiceMaster | Planned | Temporary rooms, ownership, permissions, cleanup |
 | Music and TTS | Planned | Voice transport, queue, source adapters, volume/loop, effects, licensed provider support |
 | Last.fm and Spotify | Planned | Linking, listening stats, artist searches, leaderboards, metadata adapters |
 | Social feeds | Planned | Provider-specific YouTube/Twitch and other feed adapters, deduplication, rate limits |
 | Search and utilities | Help, ping, server information | User/avatar info, image/search adapters, timers and translation |
 | Deleted/edited message tools | Planned, privacy policy undecided | Explicit retention settings and access controls before any message capture |
-| Deployment | Node 22/24 CI, self-hosted source, signed interactions | Container/service instructions, setup validation, per-server settings, durable scheduling |
+| Deployment | Node 22/24 CI, self-hosted source, signed interactions, durable community scheduler | Container/service instructions, setup validation, per-server settings |
 
 ## Delivery order
 

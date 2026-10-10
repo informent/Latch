@@ -18,6 +18,7 @@ test('loads required config and safe loopback defaults', () => {
   assert.equal(config.supportRoleId, null);
   assert.equal(config.moderationStorePath, './data/moderation.json');
   assert.equal(config.economyStorePath, './data/economy.json');
+  assert.equal(config.communityStorePath, './data/community.json');
   assert.equal(config.gatewayEnabled, false);
   assert.equal(config.gatewayIntents, 513);
   assert.equal(config.levelingEnabled, false);

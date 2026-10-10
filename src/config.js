@@ -47,6 +47,7 @@ function loadConfig(env = process.env) {
     categoryId: env.DISCORD_CATEGORY_ID?.trim() ? snowflake(env.DISCORD_CATEGORY_ID.trim(), 'DISCORD_CATEGORY_ID') : null,
     moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
     economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
+    communityStorePath: env.COMMUNITY_STORE_PATH?.trim() || './data/community.json',
     gatewayEnabled,
     memberEventsEnabled,
     gatewayIntents,

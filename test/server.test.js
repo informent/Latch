@@ -8,6 +8,7 @@ const { once } = require('node:events');
 const { startServer, createServerRuntime, installShutdownHandlers } = require('../src/server');
 const { publicKeyFromHex } = require('../src/interactions');
 const { TicketStore } = require('../src/ticket-store');
+const { CommunityStore } = require('../src/community-store');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -215,4 +216,40 @@ test('signed HTTP create and close flow reaches Discord adapter and persists pri
   assert.equal(store.getByChannel(channelId).status, 'closed');
   assert.equal(calls.find(([name]) => name === 'overwrite')[3].deny, '2048');
   assert.match(calls.find(([name]) => name === 'editChannel')[2].name, /^closed-/);
+});
+
+test('signed HTTP giveaway buttons record durable human entries and server close stops scheduling', async (t) => {
+  const pair = crypto.generateKeyPairSync('ed25519');
+  const publicRaw = pair.publicKey.export({ format: 'der', type: 'spki' }).subarray(-32);
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-giveaway-http-'));
+  t.after(() => fs.rm(dir, { recursive: true, force: true }));
+  const config = { applicationId: '123456789012345678', guildId: '223456789012345678', port: 0, host: '127.0.0.1', storePath: path.join(dir, 'tickets.json'), moderationStorePath: path.join(dir, 'moderation.json'), economyStorePath: path.join(dir, 'economy.json'), levelStorePath: path.join(dir, 'levels.json'), communityStorePath: path.join(dir, 'community.json'), gatewayEnabled: false };
+  const communityStore = new CommunityStore(config.communityStorePath);
+  const id = '323456789012345678';
+  const channelId = '423456789012345678';
+  const userId = '523456789012345678';
+  const messageId = '623456789012345678';
+  const edits = [];
+  const discord = { getCurrentUser: async () => ({ id: '723456789012345678' }), createMessage: async () => ({ id: messageId }), editMessage: async () => {}, editOriginalResponse: async (...args) => edits.push(args) };
+  const server = await createServerRuntime({ config, publicKey: publicKeyFromHex(publicRaw.toString('hex')), discord, store: new TicketStore(config.storePath), communityStore });
+  t.after(async () => { await server.community.stop(); if (server.listening) await new Promise((resolve) => server.close(resolve)); });
+  await once(server, 'listening');
+  const send = async (payload) => {
+    const raw = Buffer.from(JSON.stringify(payload));
+    const timestamp = String(Math.floor(Date.now() / 1000));
+    const signature = crypto.sign(null, Buffer.concat([Buffer.from(timestamp), raw]), pair.privateKey).toString('hex');
+    const result = await fetch(`http://127.0.0.1:${server.address().port}/interactions`, { method: 'POST', headers: { 'x-signature-timestamp': timestamp, 'x-signature-ed25519': signature }, body: raw });
+    assert.equal(result.status, 200);
+    assert.deepEqual(await result.json(), { type: 5, data: { flags: 64 } });
+    await server.drain();
+  };
+  const base = { id, guild_id: config.guildId, channel_id: channelId, token: 'temporary-token', member: { user: { id: userId }, permissions: '8192' } };
+  await send({ ...base, type: 2, data: { name: 'giveaway', options: [{ name: 'create', options: [{ name: 'prize', value: 'Community prize' }, { name: 'minutes', value: 10 }] }] } });
+  await send({ ...base, type: 3, member: { user: { id: userId }, permissions: '0' }, message: { id: messageId }, data: { custom_id: `giveaway:enter:${id}` } });
+  assert.match(edits.at(-1)[2].content, /entered/);
+  const reloaded = new CommunityStore(config.communityStorePath);
+  await reloaded.load();
+  assert.deepEqual(reloaded.get(id).entrants, [userId]);
+  await new Promise((resolve) => server.close(resolve));
+  assert.equal(server.community.timer, null);
 });

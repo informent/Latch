@@ -13,14 +13,14 @@ test('registers each feature command without bulk-replacing other app commands',
   assert.equal(calls.length, commands.length);
   assert.equal(calls[0][0], 'POST');
   assert.equal(calls[0][1], `/applications/${config.applicationId}/guilds/${config.guildId}/commands`);
-  calls.shift();
+  assert.equal(calls.shift()[2].name, 'poll');
   assert.equal(calls[0][2].name, 'ticket');
   assert.equal(Array.isArray(calls[0][2]), false);
   const close = calls[0][2].options.find((option) => option.name === 'close');
   assert.equal(close.options[0].name, 'channel');
   assert.equal(close.options[0].required, false);
   assert.deepEqual(close.options[0].channel_types, [0]);
-  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard', 'automod', 'embed', 'fun']);
+  assert.deepEqual(calls.map((call) => call[2].name), ['ticket', 'moderation', 'utility', 'economy', 'roles', 'level', 'leaderboard', 'automod', 'embed', 'fun', 'reminder', 'giveaway']);
   const moderation = calls[1][2].options;
   assert.deepEqual(moderation.map((option) => option.name), ['ban', 'kick', 'timeout', 'untimeout', 'purge', 'slowmode', 'warn', 'warnings', 'clear-warnings']);
   assert.equal(moderation.find((option) => option.name === 'timeout').options.find((option) => option.name === 'minutes').max_value, 40320);

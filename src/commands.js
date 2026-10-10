@@ -75,6 +75,22 @@ const commands = [
   {
     name: 'fun', description: 'Free random games and utilities.', type: 1,
     options: [subcommand('coin', 'Flip a coin.'), subcommand('roll', 'Roll a die.', [option(4, 'sides', 'Number of sides.', { required: false, min_value: 2, max_value: 1000 })]), subcommand('eightball', 'Ask the magic eight ball.', [option(3, 'question', 'Your question.', { required: true, max_length: 300 })])]
+  },
+  {
+    name: 'reminder', description: 'Schedule reminders posted in the current channel.', type: 1,
+    options: [
+      subcommand('create', 'Schedule a reminder posted publicly in this channel.', [option(4, 'minutes', 'Minutes from now (up to 30 days).', { required: true, min_value: 1, max_value: 43200 }), option(3, 'text', 'Reminder text visible to this channel.', { required: true, max_length: 500 })]),
+      subcommand('list', 'List your pending reminders privately.'),
+      subcommand('cancel', 'Cancel one of your pending reminders.', [option(3, 'id', 'Reminder ID from /reminder list.', { required: true, max_length: 25 })])
+    ]
+  },
+  {
+    name: 'giveaway', description: 'Host free community giveaways with persistent entry buttons.', type: 1, default_member_permissions: '8192',
+    options: [
+      subcommand('create', 'Create a giveaway in this channel.', [option(3, 'prize', 'Prize supplied by the giveaway host.', { required: true, max_length: 200 }), option(4, 'minutes', 'Entry period in minutes (up to 30 days).', { required: true, min_value: 1, max_value: 43200 }), option(4, 'winners', 'Number of winners (default 1).', { min_value: 1, max_value: 20 })]),
+      subcommand('list', 'List active giveaways in this server.'),
+      ...['end', 'cancel', 'info'].map((action) => subcommand(action, `${action} a giveaway by ID.`, [option(3, 'id', 'Giveaway ID shown in its message footer.', { required: true, max_length: 25 })]))
+    ]
   }
 ];
 

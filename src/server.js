@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('node:http');
+const path = require('node:path');
 const { loadConfig } = require('./config');
 const { DiscordApi } = require('./discord-api');
 const { TicketStore } = require('./ticket-store');
@@ -10,6 +11,8 @@ const { GatewayClient } = require('./gateway');
 const { GuildEventService } = require('./guild-events');
 const { LevelStore } = require('./level-store');
 const { AutoModService } = require('./automod-service');
+const { CommunityStore } = require('./community-store');
+const { CommunityService } = require('./community-service');
 const { TicketService } = require('./ticket-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
@@ -83,13 +86,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     if (shuttingDown) return;
     shuttingDown = true;
     gateway?.stop();
+    void server.community?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void server.drain().then(
+    void server.drain().then(() => server.community?.stop()).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
@@ -101,16 +105,21 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
   for (const signal of ['SIGINT', 'SIGTERM']) processRef.once(signal, beginShutdown);
 }
 
-async function createServerRuntime({ config, publicKey, discord, store, moderation = new ModerationStore(config.moderationStorePath || './data/moderation.json'), economy = new EconomyStore(config.economyStorePath || './data/economy.json'), levels = new LevelStore(config.levelStorePath || './data/levels.json'), gateway, logger = () => {} }) {
+async function createServerRuntime({ config, publicKey, discord, store, moderation = new ModerationStore(config.moderationStorePath || './data/moderation.json'), economy = new EconomyStore(config.economyStorePath || './data/economy.json'), levels = new LevelStore(config.levelStorePath || './data/levels.json'), communityStore = new CommunityStore(config.communityStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'community.json')), gateway, logger = () => {} }) {
   await store.load();
   await moderation.load();
   await economy.load();
   await levels.load();
+  await communityStore.load();
   const botUser = await discord.getCurrentUser();
   const tickets = new TicketService({ config, store, discord, botUserId: botUser.id });
   const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, discord, logger });
+  const community = new CommunityService({ config, store: communityStore, discord, logger });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
+  server.community = community;
+  server.once('close', () => { void community.stop(); });
+  community.start();
   const guildEvents = new GuildEventService({ config, discord, levels, logger });
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;

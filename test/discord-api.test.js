@@ -62,10 +62,14 @@ test('message moderation endpoints use the expected channel routes', async () =>
   await api.getChannelMessages('123456789012345678', 20);
   await api.deleteChannelMessage('123456789012345678', '223456789012345678', 'cleanup');
   await api.bulkDeleteChannelMessages('123456789012345678', ['223456789012345678', '323456789012345678'], 'cleanup');
+  await api.editMessage('123456789012345678', '223456789012345678', { components: [] });
   assert.match(calls[0].url, /\/channels\/123456789012345678\/messages\?limit=20$/);
   assert.match(calls[1].url, /\/channels\/123456789012345678\/messages\/223456789012345678$/);
   assert.equal(calls[2].options.method, 'POST');
   assert.deepEqual(JSON.parse(calls[2].options.body), { messages: ['223456789012345678', '323456789012345678'] });
+  assert.equal(calls[3].options.method, 'PATCH');
+  assert.match(calls[3].url, /\/channels\/123456789012345678\/messages\/223456789012345678$/);
+  assert.deepEqual(JSON.parse(calls[3].options.body), { components: [] });
 });
 
 test('role and nickname endpoints retain audit reasons', async () => {

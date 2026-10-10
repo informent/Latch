@@ -3,6 +3,7 @@ data/tickets.json
 data/moderation.json
 data/economy.json
 data/levels.json
+data/community.json
 data/*.tmp
 node_modules/
 npm-debug.log*

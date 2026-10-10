@@ -40,6 +40,7 @@ class DiscordApi {
   getGatewayBot() { return this.request('GET', '/gateway/bot'); }
   getGuild(guildId) { return this.request('GET', `/guilds/${guildId}?with_counts=true`); }
   createMessage(channelId, data) { return this.request('POST', `/channels/${channelId}/messages`, data); }
+  editMessage(channelId, messageId, data) { return this.request('PATCH', `/channels/${channelId}/messages/${messageId}`, data); }
   banMember(guildId, userId, reason) { return this.request('PUT', `/guilds/${guildId}/bans/${userId}`, { delete_message_seconds: 0 }, { auditReason: reason }); }
   kickMember(guildId, userId, reason) { return this.request('DELETE', `/guilds/${guildId}/members/${userId}`, undefined, { auditReason: reason }); }
   timeoutMember(guildId, userId, until, reason) { return this.request('PATCH', `/guilds/${guildId}/members/${userId}`, { communication_disabled_until: until }, { auditReason: reason }); }

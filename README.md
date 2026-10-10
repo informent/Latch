@@ -1,16 +1,12 @@
 # OpenDesk
 
-### Community polls
-
-Use `/poll question:"Next event?" answers:"Games | Movie | Trivia" hours:24 multiple:false` to publish a native Discord poll in the current channel. Staff need Manage Messages; the bot needs Send Messages and Send Polls. Questions allow 300 characters, with 2–10 distinct choices of up to 55 characters each. Voting lasts 1–768 hours and continues while OpenDesk is offline. Discord handles votes and expiration; OpenDesk does not store voter records. Re-run `npm run register` after updating to register the new command. Native poll constraints follow the [Discord API documentation](https://docs.discord.com/developers/resources/poll).
-
-OpenDesk is a free, open-source, self-hosted Discord server bot. Its current feature suites cover moderation, role management, persistent staff warnings, server utilities, private support tickets, and a per-server coin economy. It requires no SaaS account, paid tier, database server, or third-party runtime package.
+OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature suites cover moderation, AutoMod, roles, staff warnings, utilities, tickets, coins, XP, embeds, polls, reminders, giveaways, and games. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores
 
-OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, and per-server XP in `data/levels.json`. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores only guild/user IDs, XP, and award timestamps; message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
+OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores only guild/user IDs, XP, and award timestamps; received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
 
 ## Requirements
 
@@ -22,7 +18,7 @@ OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `d
 
 The app handles slash commands over Discord's HTTP interaction endpoint. It opens a Gateway connection only when member events or leveling are enabled. Configure the public HTTPS interaction URL in the Discord Developer Portal. Do not expose the local HTTP listener directly to the internet; terminate HTTPS at a trusted reverse proxy and restrict the forwarded route to this service.
 
-For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only that the HTTP process is responding; it does not check Discord API connectivity or ticket-store health. On `SIGINT` or `SIGTERM`, OpenDesk stops accepting new requests and drains acknowledged ticket work. If work remains after 30 seconds, it logs the pending count and marks the process for a non-zero exit; configure your process manager with a stop grace period of at least 30 seconds.
+For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only that the HTTP process is responding; it does not check Discord API connectivity or store health. On `SIGINT` or `SIGTERM`, OpenDesk stops accepting new requests, stops scheduling jobs, and drains acknowledged interaction work and current scheduled delivery. If work remains after 30 seconds, it logs the pending interaction count and marks the process for a non-zero exit; configure your process manager with a stop grace period of at least 30 seconds.
 
 ## Setup
 
@@ -37,7 +33,7 @@ For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only
    npm start
    ```
 
-   `register` adds or updates all ten command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
+   `register` adds or updates all thirteen command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
 4. Configure the Discord application's **Interactions Endpoint URL** to your HTTPS proxy URL ending in `/interactions`. Discord will send a signed ping while validating it; OpenDesk verifies Ed25519 request signatures and answers that ping.
 5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP awards 15 points no more than once per member each minute. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
 6. In the test server, verify `/utility ping`, `/utility server`, `/ticket create`, `/ticket close`, `/level`, `/leaderboard levels`, and `/leaderboard coins`. Use a disposable test member to check moderation and role commands. Confirm unauthorized members are rejected and the bot's role position permits each operation.
@@ -66,6 +62,16 @@ The start and register scripts load `.env` with Node's built-in env-file support
 - `/ticket close` — close the ticket in the current ticket channel, or choose a ticket channel with the optional `channel` field. The owner, configured support role, or a server administrator may close it. The owner retains read access but cannot send more messages; the optional channel field also lets the owner retry a partially completed close from another channel.
 
 The bot keeps no transcript. Deleting a ticket channel manually does not delete its small state record; remove that record while the bot is stopped if you need to clean up stale entries. Never edit the JSON file while the bot is running, and run only one OpenDesk process against a given store file.
+
+## Community scheduling
+
+- `/poll question:"Next event?" answers:"Games | Movie | Trivia" hours:24 multiple:false` publishes a native Discord poll. Staff need Manage Messages; the bot needs Send Messages and Send Polls. Questions allow 300 characters, with 2–10 distinct choices of up to 55 characters each. Voting lasts 1–768 hours and continues while OpenDesk is offline. Discord manages votes and expiration; OpenDesk does not store voter records. See the [Discord poll API](https://docs.discord.com/developers/resources/poll).
+- `/reminder create minutes:30 text:"Community event"` saves a reminder for the current channel. It is posted **publicly in that channel**, mentioning only its owner; it is not a DM. `/reminder list` and `/reminder cancel id:...` privately manage your pending reminders. Limits: 10 pending per member, 500 text characters, 1–43200 minutes. Both the requesting member and the bot need Send Messages in the channel.
+- `/giveaway create prize:"Community prize" minutes:60 winners:2` publishes persistent Enter/Leave buttons in the current channel. Staff need Manage Messages; the bot needs Send Messages and Embed Links. `/giveaway list`, `/giveaway info id:...`, `/giveaway end id:...`, and `/giveaway cancel id:...` manage giveaways. Limits: 20 active per server, 10000 entries each, 1–20 winners, 200 prize characters, and 1–43200 minutes. Each human member gets one entry and may leave before the deadline. Winners are drawn uniformly without replacement using cryptographic randomness and saved before the original message is updated. A retry preserves the same draw. The host supplies and distributes the prize; role eligibility, departure checks, and rerolls remain planned.
+
+Reminders and giveaways use a durable queue checked every 15 seconds, with up to 20 ready jobs processed per pass. The bot must be running to deliver reminders or end giveaways; overdue jobs resume after restart. Delivery failures retry with exponential backoff up to 15 minutes. Cancelled giveaways reject entries immediately even if their public message update is pending. Runtime data is limited to 5000 total retained jobs and a 32 MiB store; use only one bot process per store.
+
+Reminder delivery is **at least once**: Discord message nonces suppress repeats only within its short deduplication window. A crash after Discord accepts a message but before the disk write can cause a duplicate later. Giveaway results edit the saved message, so result retries do not create new announcements or select new winners. A crash during initial giveaway publication can leave an extra message; only the message ID saved in the store accepts entries. Review `/giveaway info` and pending reminders when correcting bot permissions. Interaction tokens and reminder/prize text are never included in scheduler logs.
 
 ## Security notes
 
