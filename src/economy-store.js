@@ -3,6 +3,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomInt } = require('node:crypto');
+const { ShopError, LIMITS, exact, validId, validSlug, integer, validItem, validInventory, validReceipt } = require('./shop-schema');
 
 const MAX_ACCOUNTS = 50_000;
 const MAX_BALANCE = 9_000_000_000_000_000;
@@ -17,6 +18,8 @@ class EconomyStore {
   constructor(filePath, { rollWork = () => randomInt(25, 101), rollBeg = () => randomInt(0, 26) } = {}) {
     this.filePath = filePath;
     this.accounts = new Map();
+    this.items = new Map();
+    this.receipts = new Map();
     this.queue = Promise.resolve();
     this.rollWork = rollWork;
     this.rollBeg = rollBeg;
@@ -24,8 +27,9 @@ class EconomyStore {
 
   async load() {
     try {
+      if ((await fs.stat(this.filePath)).size > LIMITS.bytes) throw new Error('Economy store exceeds its size limit.');
       const parsed = JSON.parse(await fs.readFile(this.filePath, 'utf8'));
-      if (parsed.version !== 1 || !Array.isArray(parsed.accounts) || parsed.accounts.length > MAX_ACCOUNTS
+      if (!(exact(parsed, 'version,accounts') && parsed.version === 1 || exact(parsed, 'version,accounts,items,receipts') && parsed.version === 2) || !Array.isArray(parsed.accounts) || parsed.accounts.length > MAX_ACCOUNTS
         || parsed.accounts.some((account) => !this.#valid(account))) {
         throw new Error('Economy store contains invalid records; refusing to modify it.');
       }
@@ -33,9 +37,23 @@ class EconomyStore {
       for (const account of parsed.accounts) {
         const key = this.#key(account.guildId, account.userId);
         if (accounts.has(key)) throw new Error('Economy store contains duplicate accounts; refusing to modify it.');
-        accounts.set(key, Object.freeze({ ...account, ...(account.profession ? { profession: Object.freeze({ ...account.profession }) } : {}) }));
+        accounts.set(key, Object.freeze({ ...account, ...(account.profession ? { profession: Object.freeze({ ...account.profession }) } : {}), ...(account.inventory ? { inventory: Object.freeze(account.inventory.map((entry) => Object.freeze({ ...entry }))) } : {}) }));
       }
-      this.accounts = accounts;
+      const items = new Map(); const receipts = new Map();
+      if (parsed.version === 2) {
+        if (!Array.isArray(parsed.items) || !Array.isArray(parsed.receipts) || parsed.items.length > MAX_ACCOUNTS || parsed.receipts.length > LIMITS.receipts) throw new Error('Invalid shop records.');
+        for (const item of parsed.items) {
+          const key = this.#key(item?.guildId, item?.id);
+          if (!validItem(item) || items.has(key)) throw new Error('Invalid or duplicate shop item.');
+          items.set(key, Object.freeze({ ...item }));
+        }
+        for (const receipt of parsed.receipts) {
+          if (!validReceipt(receipt) || receipts.has(receipt.id)) throw new Error('Invalid or duplicate shop receipt.');
+          receipts.set(receipt.id, Object.freeze({ ...receipt }));
+        }
+      }
+      this.#validateShop(accounts, items, receipts);
+      this.accounts = accounts; this.items = items; this.receipts = receipts;
     } catch (error) {
       if (error.code === 'ENOENT') return;
       throw error;
@@ -107,13 +125,101 @@ class EconomyStore {
     });
   }
 
+  shop(guildId, { includeDisabled = false } = {}) {
+    return [...this.items.values()].filter((item) => item.guildId === guildId && (includeDisabled || item.enabled))
+      .sort((a, b) => a.id.localeCompare(b.id)).map((item) => ({ ...item }));
+  }
+  item(guildId, id) { const item = this.items.get(this.#key(guildId, id)); return item ? { ...item } : null; }
+  inventory(guildId, userId) {
+    return (this.accounts.get(this.#key(guildId, userId))?.inventory || []).map((entry) => ({ ...entry, title: this.item(guildId, entry.itemId)?.title || entry.itemId }));
+  }
+  history(guildId, userId) {
+    return [...this.receipts.values()].filter((entry) => entry.guildId === guildId && (entry.userId === userId || entry.targetId === userId))
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id.localeCompare(a.id)).slice(0, 20).map((entry) => ({ ...entry }));
+  }
+  saveItem(action, input) {
+    const item = structuredClone(input);
+    if (!['create', 'update'].includes(action) || !validItem(item)) throw new ShopError('Invalid shop item.');
+    return this.#transaction((accounts, items) => {
+      const key = this.#key(item.guildId, item.id); const old = items.get(key);
+      if (action === 'create' ? !!old : !old) throw new ShopError('Create needs a new item ID; update needs an existing item.');
+      if (action === 'create' && [...items.values()].filter((entry) => entry.guildId === item.guildId).length >= LIMITS.items) throw new ShopError('Shop item limit reached.');
+      // Updates preserve enable state. Disabled items can still be gifted or used.
+      const saved = Object.freeze({ ...item, enabled: old ? old.enabled : false });
+      items.set(key, saved); return { ...saved };
+    });
+  }
+  enableItem(guildId, id, enabled) {
+    if (typeof enabled !== 'boolean') throw new ShopError('Invalid enable state.');
+    return this.#transaction((accounts, items) => {
+      const key = this.#key(guildId, id); const item = items.get(key);
+      if (!item) throw new ShopError('Shop item not found.');
+      const saved = Object.freeze({ ...item, enabled }); items.set(key, saved); return { ...saved };
+    });
+  }
+  transactItem(input, now = new Date()) {
+    const request = structuredClone(input); const at = now.getTime();
+    const { id, guildId, userId, kind, itemId, quantity, targetId = null } = request;
+    if (![id, guildId, userId].every(validId) || !validSlug(itemId) || !integer(quantity, 1, 100) || !Number.isFinite(at)
+      || !['buy', 'gift', 'use'].includes(kind) || (kind === 'gift' ? !validId(targetId) || targetId === userId : targetId !== null)) throw new ShopError('Invalid inventory transaction.');
+    return this.#transaction((accounts, items, receipts) => {
+      const previous = receipts.get(id);
+      if (previous) {
+        if (!['guildId', 'userId', 'kind', 'itemId', 'quantity', 'targetId'].every((key) => previous[key] === ({ guildId, userId, kind, itemId, quantity, targetId })[key])) throw new ShopError('Transaction ID conflict.');
+        return { ...previous, claimed: false, duplicate: true };
+      }
+      for (const [key, receipt] of receipts) if (at - Date.parse(receipt.createdAt) > LIMITS.retention) receipts.delete(key);
+      if (receipts.size >= LIMITS.receipts) throw new ShopError('Transaction history limit reached.');
+      const key = this.#key(guildId, userId); const account = accounts.get(key) || this.#empty(guildId, userId);
+      const itemKey = this.#key(guildId, itemId); const item = items.get(itemKey);
+      if (!item) throw new ShopError('Shop item not found.');
+      const owned = (account.inventory || []).find((entry) => entry.itemId === itemId)?.quantity || 0;
+      let total = 0; let balance = account.balance;
+      if (kind === 'buy') {
+        if (!item.enabled) throw new ShopError('This item is disabled.');
+        total = item.price * quantity;
+        if (account.balance < total) throw new ShopError('You do not have enough coins.');
+        if (item.stock !== null && item.stock < quantity) throw new ShopError('Not enough stock remains.');
+        balance -= total;
+        accounts.set(key, this.#inventoryAccount(account, itemId, owned + quantity, balance));
+        if (item.stock !== null) items.set(itemKey, Object.freeze({ ...item, stock: item.stock - quantity }));
+      } else {
+        if (owned < quantity) throw new ShopError('You do not own enough of this item.');
+        accounts.set(key, this.#inventoryAccount(account, itemId, owned - quantity, balance));
+        if (kind === 'gift') {
+          const recipientKey = this.#key(guildId, targetId); const recipient = accounts.get(recipientKey) || this.#empty(guildId, targetId);
+          const received = (recipient.inventory || []).find((entry) => entry.itemId === itemId)?.quantity || 0;
+          accounts.set(recipientKey, this.#inventoryAccount(recipient, itemId, received + quantity, recipient.balance));
+        }
+      }
+      const receipt = Object.freeze({ id, guildId, userId, targetId, kind, itemId, quantity, total, balance, createdAt: new Date(at).toISOString() });
+      receipts.set(id, receipt); return { ...receipt, duplicate: false };
+    });
+  }
+  #inventoryAccount(account, itemId, quantity, balance) {
+    if (!integer(quantity, 0, LIMITS.quantity)) throw new ShopError('Inventory quantity limit reached.');
+    const inventory = (account.inventory || []).filter((entry) => entry.itemId !== itemId).map((entry) => Object.freeze({ ...entry }));
+    if (quantity) inventory.push(Object.freeze({ itemId, quantity }));
+    return Object.freeze({ ...account, balance, inventory: Object.freeze(inventory) });
+  }
+  #validateShop(accounts, items, receipts) {
+    const counts = new Map();
+    if (items.size > MAX_ACCOUNTS || receipts.size > LIMITS.receipts) throw new ShopError('Shop store limit reached.');
+    for (const item of items.values()) {
+      counts.set(item.guildId, (counts.get(item.guildId) || 0) + 1);
+      if (!validItem(item) || counts.get(item.guildId) > LIMITS.items) throw new ShopError('Invalid shop catalog.');
+    }
+    for (const account of accounts.values()) for (const entry of account.inventory || []) if (!items.has(this.#key(account.guildId, entry.itemId))) throw new ShopError('Inventory references an unknown item.');
+    for (const receipt of receipts.values()) if (!validReceipt(receipt) || !items.has(this.#key(receipt.guildId, receipt.itemId))) throw new ShopError('Invalid shop receipt.');
+  }
   #key(guildId, userId) { return `${guildId}:${userId}`; }
   #empty(guildId, userId) { return { guildId, userId, balance: 0, lastDaily: null, lastWork: null }; }
 
   #valid(account) {
     return account && typeof account === 'object' && !Array.isArray(account)
-      && Object.keys(account).sort().join(',') === ['balance', 'guildId', 'lastDaily', 'lastWork', 'userId', ...['lastBeg', 'profession'].filter((key) => Object.hasOwn(account, key))].sort().join(',')
-      && /^\d{5,25}$/.test(account.guildId) && /^\d{5,25}$/.test(account.userId)
+      && Object.keys(account).sort().join(',') === ['balance', 'guildId', 'lastDaily', 'lastWork', 'userId', ...['lastBeg', 'profession', 'inventory'].filter((key) => Object.hasOwn(account, key))].sort().join(',')
+      && validId(account.guildId) && validId(account.userId)
+      && (!Object.hasOwn(account, 'inventory') || validInventory(account.inventory))
       && Number.isSafeInteger(account.balance) && account.balance >= 0 && account.balance <= MAX_BALANCE
       && (!Object.hasOwn(account, 'lastBeg') || account.lastBeg === null || typeof account.lastBeg === 'string' && Number.isFinite(Date.parse(account.lastBeg)))
       && (!Object.hasOwn(account, 'profession') || account.profession && Object.keys(account.profession).sort().join(',') === 'changedAt,name,works' && PROFESSIONS.includes(account.profession.name)
@@ -124,15 +230,19 @@ class EconomyStore {
   async #transaction(update) {
     const task = this.queue.then(async () => {
       const accounts = new Map(this.accounts);
-      const result = update(accounts);
+      const items = new Map(this.items); const receipts = new Map(this.receipts);
+      const result = update(accounts, items, receipts);
       if (result.claimed === false) return result;
       if (accounts.size > MAX_ACCOUNTS || [...accounts.values()].some((account) => !this.#valid(account))) throw new Error('Invalid economy account update.');
+      this.#validateShop(accounts, items, receipts);
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
       try {
         await fs.mkdir(path.dirname(path.resolve(this.filePath)), { recursive: true });
-        await fs.writeFile(tempPath, `${JSON.stringify({ version: 1, accounts: [...accounts.values()] }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+        const contents = `${JSON.stringify({ version: 2, accounts: [...accounts.values()], items: [...items.values()], receipts: [...receipts.values()] }, null, 2)}\n`;
+        if (Buffer.byteLength(contents) > LIMITS.bytes) throw new Error('Economy store exceeds its size limit.');
+        await fs.writeFile(tempPath, contents, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
         await fs.rename(tempPath, this.filePath);
-        this.accounts = accounts;
+        this.accounts = accounts; this.items = items; this.receipts = receipts;
         return result;
       } catch (error) {
         await fs.rm(tempPath, { force: true }).catch(() => {});

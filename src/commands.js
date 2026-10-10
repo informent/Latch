@@ -111,6 +111,21 @@ const commands = [
       ] },
       ...['end', 'cancel', 'info', 'reroll'].map((action) => subcommand(action, `${action} a giveaway by ID.`, [option(3, 'id', 'Giveaway ID shown in its message footer.', { required: true, max_length: 25 })]))
     ]
+  },
+  {
+    name: 'shop', description: 'Server coin shop, inventory, gifts and transaction history.', type: 1,
+    options: [
+      ...['create', 'update'].map((action) => subcommand(action, `${action} a shop item as staff. New items start disabled.`, [
+        option(3, 'item', 'Stable lowercase item ID: letters, digits and hyphens.', { required: true, min_length: 1, max_length: 32 }),
+        option(3, 'title', 'Item display name.', { required: true, min_length: 1, max_length: 80 }),
+        option(4, 'price', 'Coin price per unit.', { required: true, min_value: 1, max_value: 1000000 }),
+        option(3, 'description', 'Item description.', { max_length: 300 }),
+        option(4, 'stock', 'Available units; -1 means unlimited (default).', { min_value: -1, max_value: 1000000 })
+      ])),
+      ...['enable', 'disable', 'info'].map((action) => subcommand(action, `${action} a server shop item.`, [option(3, 'item', 'Item ID.', { required: true, min_length: 1, max_length: 32 })])),
+      ...['list', 'inventory', 'history'].map((action) => subcommand(action, `${action} entries with private pagination.`, [option(4, 'page', 'Results page, ten entries per page.', { min_value: 1, max_value: 5000 })])),
+      ...['buy', 'use', 'gift'].map((action) => subcommand(action, `${action} inventory items using server coins.`, [option(3, 'item', 'Item ID.', { required: true, min_length: 1, max_length: 32 }), ...(action === 'gift' ? [target] : []), option(4, 'quantity', 'Units (default 1); consuming an item is permanent.', { min_value: 1, max_value: 100 })]))
+    ]
   }
 ];
 

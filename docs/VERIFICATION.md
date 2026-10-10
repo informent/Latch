@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.14.0
+
+The full suite now passes 195 tests with no failures. Local coverage is 89.90% lines, 80.59% branches and 84.28% functions. The existing coverage floors remain enforced.
+
+New shop coverage checks legacy migration and migration failure, atomic purchase/gift rollback, concurrent duplicate requests, limited stock, overspending, disabled items, quantity limits, copied snapshots, guild isolation, receipt retention, corrupt records, staff permission checks, screening and member identity, pagination, safe error replies and all 11 command paths.
+
+A signed HTTP test runs a purchase through the actual interaction endpoint, loses response delivery, retries the same interaction and reloads the saved store. It confirms only one debit, stock decrement, inventory addition and receipt. This uses a simulated Discord response adapter, so real Discord delivery remains unverified.
+
+The catalog now declares 126 command paths across 20 roots. Shops are virtual inventory only. Migration to economy version 2 requires a version 1 backup for rollback; see [shop operations](SHOP.md).
+
 ## Version 0.13.0
 
 The local Node test runner passes 164 tests with no failures. Before this release, the same runner passed 87 tests with 66.33% line coverage. The expanded suite reports 89.33% lines, 79.67% branches and 83.90% functions. Coverage describes files loaded by the suite; setup, doctor and invite scripts are not part of this measurement.

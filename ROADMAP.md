@@ -12,7 +12,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Tickets | Private channels, durable ownership/assignment, list/stats/info, saved reasons, rename, permission-preserving moves and retryable closure | Panels, per-option categories and policies, reopen, transcripts, configurable retention |
 | Roles | Staff roles/nicknames with live delegation checks, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
-| Economy | Durable balances, daily/work/beg, transfers, profiles, professions and leaderboard | Shops, inventory, seasonal events, staff controls, richer profession mechanics |
+| Economy | Durable balances, daily/work/beg, transfers, profiles, professions, leaderboard, staff-managed shops, stock, inventories, gifts and receipt history | Seasonal events, richer profession mechanics, item effects, role rewards and staff balance controls |
 | Embeds | Custom announcements, persistent templates, private previews and staff publication | Variables, scripting, editing previously published copies, webhook branding |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
@@ -36,4 +36,4 @@ All OpenDesk features are intended to be available without subscriptions or prem
 
 ## Verification boundary
 
-Existing automated tests and GitHub CI cover earlier workflows and source syntax. New voice, role, template, responder and timer workflows do not yet have dedicated regression coverage or live-server proof. Published implementation does not establish production readiness. Music, full antinuke, and complete competitor parity remain unfinished.
+The expanded automated suite covers voice, role menus, templates, responders, timers, shops, economy and ticket workflows, including persistence, authorization and failure recovery. Local coverage is measured and CI enforces coverage floors on Node 22 and 24. These tests simulate Discord responses; live-server proof remains unfinished. Published implementation does not establish production readiness. Music, full antinuke, and complete competitor parity remain unfinished.

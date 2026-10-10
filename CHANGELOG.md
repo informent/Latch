@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.14.0 - 2026-10-10
+
+- Added 11 shop commands: create/update, enable/disable, list/info, buy, inventory, gift, use and history. Catalog now declares 126 paths across 20 suites.
+- Staff Manage Server checks protect catalog changes. New items start disabled; catalog and inventory listings are paginated, and all confirmations remain private with mentions suppressed.
+- Added atomic coin purchases, limited/unlimited stock, inventory caps, human/screened gift recipients, consumables and durable duplicate-request receipts. Coins, items and receipts commit in one file replacement.
+- Added strict bounded economy version 2 storage with version 1 migration preserving existing balances, cooldowns and professions. Failed migration leaves the original file intact.
+- Added 31 tests, including signed HTTP purchase retries after lost response delivery, restart recovery, concurrency, authorization and invalid-store rejection. All 195 tests pass locally with 89.90% line coverage.
+- Updated roadmap and economy coverage statements to reflect dedicated regression tests.
+
+Virtual items have no Discord role or permission effects. Receipt history is pruned after seven days during new transactions. Back up version 1 stores before upgrading; older releases refuse version 2. Live Discord validation and complete competitor parity remain unfinished.
+
 ## 0.13.0 - 2026-10-10
 
 - Expanded the regression suite from 87 to 164 tests across new stores, automation, authorization, role menus, ticket workflows, economy progression, interactions and temporary voice recovery.

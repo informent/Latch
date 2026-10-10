@@ -26,3 +26,5 @@ require('./ticket-regression.test');
 require('./economy-progression.test');
 require('./new-interactions.test');
 require('./voice-regression.test');
+require('./shop-store.test');
+require('./shop-interactions.test');
