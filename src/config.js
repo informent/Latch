@@ -47,8 +47,9 @@ function loadConfig(env = process.env) {
   const levelingEnabled = boolean(env, 'DISCORD_LEVELING_ENABLED');
   const memberEventsEnabled = boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS');
   const voiceEnabled = boolean(env, 'DISCORD_VOICE_ENABLED');
-  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled || voiceEnabled);
-  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled || voiceEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling, member events or voice are enabled.');
+  const respondersEnabled = boolean(env, 'DISCORD_RESPONDERS_ENABLED');
+  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled);
+  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling, member events, voice or responders are enabled.');
   const storePaths = {
     storePath: env.TICKET_STORE_PATH?.trim() || './data/tickets.json',
     moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
@@ -57,7 +58,8 @@ function loadConfig(env = process.env) {
     levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json',
     voiceStorePath: env.VOICE_STORE_PATH?.trim() || './data/voice.json',
     roleMenuStorePath: env.ROLE_MENU_STORE_PATH?.trim() || './data/role-menus.json',
-    templateStorePath: env.TEMPLATE_STORE_PATH?.trim() || './data/templates.json'
+    templateStorePath: env.TEMPLATE_STORE_PATH?.trim() || './data/templates.json',
+    responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);
@@ -73,7 +75,7 @@ function loadConfig(env = process.env) {
   const gatewayIntents = 1 | 512
     | (voiceEnabled ? 1 << 7 : 0)
     | (memberEventsEnabled ? 2 : 0)
-    | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled ? 1 << 15 : 0);
+    | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled || respondersEnabled ? 1 << 15 : 0);
   const raidJoinThreshold = Number(env.DISCORD_RAID_JOIN_THRESHOLD || 0);
   const raidJoinWindowMs = Number(env.DISCORD_RAID_JOIN_WINDOW_MS || 10_000);
   if (!Number.isInteger(raidJoinThreshold) || raidJoinThreshold < 0 || raidJoinThreshold > 10_000) throw new Error('DISCORD_RAID_JOIN_THRESHOLD must be an integer from 0 to 10000.');
@@ -88,6 +90,7 @@ function loadConfig(env = process.env) {
     ...storePaths,
     gatewayEnabled,
     voiceEnabled,
+    respondersEnabled,
     memberEventsEnabled,
     gatewayIntents,
     levelingEnabled,

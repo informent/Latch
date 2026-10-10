@@ -19,6 +19,7 @@ services:
       VOICE_STORE_PATH: /app/data/voice.json
       ROLE_MENU_STORE_PATH: /app/data/role-menus.json
       TEMPLATE_STORE_PATH: /app/data/templates.json
+      RESPONDER_STORE_PATH: /app/data/responders.json
     secrets:
       - discord_bot_token
     ports:

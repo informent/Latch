@@ -19,6 +19,8 @@ const { VoiceService } = require('./voice-service');
 const { RoleMenuStore } = require('./role-menu-store');
 const { RoleMenuService } = require('./role-menu-service');
 const { TemplateStore } = require('./template-store');
+const { ResponderStore } = require('./responder-store');
+const { ResponderService } = require('./responder-service');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
 const BODY_LIMIT = 64 * 1024;
@@ -130,7 +132,10 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const roleMenus = new RoleMenuService({ config, store: roleMenuStore, discord, botUserId: botUser.id, logger });
   const templates = new TemplateStore(config.templateStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'templates.json'), config.guildId);
   await templates.load();
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, discord, logger });
+  const responders = new ResponderStore(config.responderStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'responders.json'), config.guildId);
+  await responders.load();
+  const responderService = new ResponderService({ config, store: responders, discord, logger });
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;
@@ -143,7 +148,7 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;
     gateway.onObserveDispatch = (type, data) => voice.observe(type, data);
-    gateway.onDispatch = async (type, data) => { await guildEvents.dispatch(type, data); await voice.dispatch(type, data); await roleMenus.dispatch(type, data); };
+    gateway.onDispatch = async (type, data) => { await guildEvents.dispatch(type, data); await voice.dispatch(type, data); await roleMenus.dispatch(type, data); await responderService.dispatch(type, data); };
     gateway.start();
   }
   server.gateway = gateway || null;

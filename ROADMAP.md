@@ -13,11 +13,11 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Roles | Staff roles/nicknames, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
 | Economy | Durable balances, daily/work, transfers and leaderboard | Shops, professions, inventory, seasonal events, staff controls |
-| Embeds | Custom announcements in the invoking channel | Saved templates, variables, preview/edit workflow |
+| Embeds | Custom announcements, persistent templates, private previews and staff publication | Variables, scripting, editing previously published copies, webhook branding |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
 | Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved draws/rerolls, prize/duration/winner editing, cancellation, delivery retries | Role eligibility, departure checks, host and embed editing |
-| Community | Native polls; durable personal channel reminders with list/cancel | Starboard, counters, autoresponders, bump reminders |
+| Community | Native polls; durable personal reminders; opt-in channel-specific exact-match autoresponders | Starboard, counters, recurring timers, richer responder policies, bump reminders |
 | VoiceMaster | Optional temporary rooms, ownership/transfer/claim, rename/limit, access controls and delayed cleanup | Live validation, default settings, generated interface, role grants, bitrate/region and audio |
 | Music and TTS | Planned | Voice transport, queue, source adapters, volume/loop, effects, licensed provider support |
 | Last.fm and Spotify | Planned | Linking, listening stats, artist searches, leaderboards, metadata adapters |
@@ -36,4 +36,4 @@ All OpenDesk features are intended to be available without subscriptions or prem
 
 ## Verification boundary
 
-Implemented features have local automated tests and GitHub CI coverage. There is currently no live-server proof. A feature advances from planned to implemented only when its code, permission checks, persistence where needed, documentation, and regression tests are published. Music, full antinuke, and complete competitor parity remain unfinished.
+Existing automated tests and GitHub CI cover earlier workflows and source syntax. New voice, role, template and responder workflows do not yet have dedicated regression coverage or live-server proof. Published implementation does not establish production readiness. Music, full antinuke, and complete competitor parity remain unfinished.

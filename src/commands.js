@@ -151,4 +151,18 @@ commands.push({
   ]
 });
 
+commands.push({
+  name: 'responder', description: 'Manage channel-specific automatic message replies.', type: 1, default_member_permissions: '32',
+  options: [
+    ...['create', 'update'].map((action) => subcommand(action, `${action} a disabled responder in this text channel.`, [
+      option(3, 'name', 'Lowercase letters, numbers, underscore or hyphen; 1-32 characters.', { required: true, min_length: 1, max_length: 32 }),
+      option(3, 'trigger', 'Exact text, ignoring case and surrounding whitespace.', { required: true, min_length: 1, max_length: 200 }),
+      option(3, 'reply', 'Reply text; mentions are suppressed.', { required: true, min_length: 1, max_length: 1800 }),
+      option(4, 'cooldown', 'Seconds between attempts for this rule; defaults to 30.', { min_value: 15, max_value: 3600 })
+    ])),
+    subcommand('list', 'List responder states, channels and automation status.'),
+    ...['info', 'preview', 'enable', 'disable', 'delete'].map((action) => subcommand(action, `${action} a configured responder.`, [option(3, 'name', 'Responder name.', { required: true, max_length: 32 })]))
+  ]
+});
+
 module.exports = { commands };

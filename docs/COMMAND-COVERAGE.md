@@ -59,9 +59,11 @@ These are concrete gaps from the sources above; the list will expand as further 
 
 ## Suites awaiting a detailed inventory
 
+Autoresponders now have eight `/responder` paths with persistent, disabled-by-default channel rules and exact case-insensitive matching. Regex, substring matching, embed replies, variables and broader competitor policies remain absent. See the [responder guide](RESPONDERS.md).
+
 Saved embeds now have seven `/template` command paths with durable storage, private previews and staff publication; see the [template guide](TEMPLATES.md). This is partial embed functionality: scripting, variables and webhook branding remain absent.
 
-Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, autoresponders, message timers, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
+Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, message timers, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
 
 ## OpenDesk additions already implemented
 

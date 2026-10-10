@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 - 2026-10-10
+
+- Added eight autoresponder commands: create, update, list, info, preview, enable, disable and delete. Staff Manage Server checks apply to every command.
+- Added opt-in Gateway message automation, disabled-by-default channel rules, exact normalized matching, mention suppression and bot/webhook/reply/stale-event exclusions.
+- Added guild-bound atomic storage, durable per-rule cooldown claims and last-message deduplication, in-memory channel/global rate guards, offline inspection and ninth-store deployment paths.
+- Catalog now declares 98 command paths across 18 suites. Updated backup and feature coverage documentation.
+
+Existing CI does not exercise the new responder workflows. Live Discord validation remains outstanding. Durable claims can suppress delivery after an outage; no automatic retry or history backfill exists. Recurring timers, advanced responder policies and full competitor parity remain unfinished.
+
 ## 0.7.0 - 2026-10-10
 
 - Added seven saved embed template commands: create, update, list, info, preview, send and delete.
