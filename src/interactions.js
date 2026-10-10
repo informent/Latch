@@ -35,7 +35,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, discord, logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, discord, logger = () => {}, now = () => new Date() }) {
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
   return async function handle(interaction) {
     if (interaction.type === 1) return { immediate: { type: 1 } };
@@ -44,6 +44,43 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (interaction.type === 2 && commandName === 'template') {
+      if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to use templates.') };
+      if (!templates) return { immediate: response('Templates are unavailable.') };
+      const action = subcommand?.name;
+      const options = subcommand?.options || [];
+      const name = findOption(options, 'name');
+      return { immediate: defer(), work: async () => {
+        try {
+          let content;
+          let embeds = [];
+          if (action === 'create' || action === 'update') {
+            const color = String(findOption(options, 'color') || '5865f2').replace(/^#/, '');
+            if (!/^[0-9a-f]{6}$/i.test(color)) throw new Error();
+            await templates.change(action, { name, title: findOption(options, 'title'), description: findOption(options, 'description'), color: parseInt(color, 16) });
+            content = `Template ${safeText(name)} saved.`;
+          } else if (action === 'list') content = templates.list().map((item) => item.name).join('\n') || 'No saved templates.';
+          else {
+            const item = templates.get(name);
+            if (!item) throw new Error();
+            const embed = { title: item.title, description: item.description, color: item.color };
+            if (action === 'delete') { await templates.change('delete', { name }); content = 'Template deleted. Previously published messages remain in Discord.'; }
+            else if (action === 'info') content = `Name: ${item.name}\nTitle: ${safeText(item.title)}\nBody length: ${item.description.length}\nColor: #${item.color.toString(16).padStart(6, '0')}`;
+            else if (action === 'preview') { content = `Private preview: ${item.name}`; embeds = [embed]; }
+            else if (action === 'send') {
+              const channel = await discord.request('GET', `/channels/${interaction.channel_id}`);
+              if (channel.guild_id !== config.guildId || ![0, 5].includes(channel.type)) throw new Error();
+              await discord.createMessage(interaction.channel_id, { embeds: [embed], allowed_mentions: { parse: [] }, nonce: interaction.id, enforce_nonce: true });
+              content = `Template ${item.name} published in this channel.`;
+            } else throw new Error();
+          }
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), embeds, allowed_mentions: { parse: [] } });
+        } catch {
+          logger('template_action_failed', { action });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Template action failed. Check the name, title/body, color, 50-template limit and channel permissions. Create needs a new name; update needs an existing name. Delivery failures require checking the channel before sending again.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     const roleButton = interaction.type === 3 ? /^rolemenu:(grant|revoke):(\d{5,25}):(\d{5,25})$/.exec(interaction.data?.custom_id || '') : null;
     if (roleButton || ['rolemenu', 'autorole'].includes(commandName)) {
       if (!roleMenus) return { immediate: response('Role automation is unavailable.') };

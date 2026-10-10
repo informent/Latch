@@ -1,6 +1,6 @@
 {
   "name": "opendesk-discord",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "node": ">=22.9.0"
   },
   "scripts": {
-    "check:roles": "node --check src/role-menu-store.js && node --check src/role-menu-service.js && node --check scripts/check-publication-text.js",
+    "check:roles": "node --check src/role-menu-store.js && node --check src/role-menu-service.js && node --check scripts/check-publication-text.js && node --check src/template-store.js",
     "publication-check": "node scripts/check-publication-text.js",
     "commands": "node scripts/command-catalog.js",
     "setup": "node scripts/setup.js",

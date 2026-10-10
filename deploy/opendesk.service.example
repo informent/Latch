@@ -20,6 +20,7 @@ Environment=LEVEL_STORE_PATH=/var/lib/opendesk/levels.json
 Environment=COMMUNITY_STORE_PATH=/var/lib/opendesk/community.json
 Environment=VOICE_STORE_PATH=/var/lib/opendesk/voice.json
 Environment=ROLE_MENU_STORE_PATH=/var/lib/opendesk/role-menus.json
+Environment=TEMPLATE_STORE_PATH=/var/lib/opendesk/templates.json
 ExecStart=/usr/bin/node /opt/opendesk/src/server.js
 Restart=on-failure
 RestartSec=5

@@ -137,4 +137,18 @@ commands.push({
   ]
 });
 
+commands.push({
+  name: 'template', description: 'Save, preview and publish reusable embeds.', type: 1, default_member_permissions: '8192',
+  options: [
+    ...['create', 'update'].map((action) => subcommand(action, `${action} a saved embed template.`, [
+      option(3, 'name', 'Lowercase letters, numbers, underscore or hyphen; 1-32 characters.', { required: true, min_length: 1, max_length: 32 }),
+      option(3, 'title', 'Embed title.', { required: true, min_length: 1, max_length: 256 }),
+      option(3, 'description', 'Embed body.', { required: true, min_length: 1, max_length: 4000 }),
+      option(3, 'color', 'Six-digit hex color; defaults to 5865f2.', { max_length: 7 })
+    ])),
+    subcommand('list', 'List saved embed names.'),
+    ...['info', 'preview', 'send', 'delete'].map((action) => subcommand(action, `${action} a saved embed; send publishes in this channel.`, [option(3, 'name', 'Saved template name.', { required: true, max_length: 32 })]))
+  ]
+});
+
 module.exports = { commands };

@@ -18,6 +18,7 @@ const { VoiceStore } = require('./voice-store');
 const { VoiceService } = require('./voice-service');
 const { RoleMenuStore } = require('./role-menu-store');
 const { RoleMenuService } = require('./role-menu-service');
+const { TemplateStore } = require('./template-store');
 const { publicKeyFromHex, verifySignature, createInteractionHandler } = require('./interactions');
 
 const BODY_LIMIT = 64 * 1024;
@@ -127,7 +128,9 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const roleMenuStore = new RoleMenuStore(config.roleMenuStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'role-menus.json'), config.guildId);
   await roleMenuStore.load();
   const roleMenus = new RoleMenuService({ config, store: roleMenuStore, discord, botUserId: botUser.id, logger });
-  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, discord, logger });
+  const templates = new TemplateStore(config.templateStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'templates.json'), config.guildId);
+  await templates.load();
+  const handle = createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, templates, discord, logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;

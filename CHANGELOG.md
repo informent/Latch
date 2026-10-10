@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 - 2026-10-10
+
+- Added seven saved embed template commands: create, update, list, info, preview, send and delete.
+- Added bounded guild-bound atomic storage, Manage Messages checks, private previews, mention suppression and channel validation before publishing.
+- Added offline store inspection and deployment paths. Catalog now declares 90 command paths across 17 suites.
+
+Existing CI does not exercise the new template workflows. Live Discord validation remains outstanding. Automatic responders, timers and full competitor parity remain unfinished.
+
 ## 0.6.0 - 2026-10-10
 
 - Added eight persistent role-menu commands and separate Get/Remove buttons with signed message/guild/channel binding and live role eligibility checks.
