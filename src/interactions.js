@@ -368,7 +368,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       }
       if (['user', 'avatar'].includes(subcommand?.name)) {
         const selected = findOption(subcommand.options || [], 'user');
-        const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+        const targetId = selected && typeof selected === 'object' ? selected.id : selected || user.id;
         if (!/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
         return { immediate: defer(), work: async () => {
           try {
@@ -415,7 +415,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (commandName === 'level') {
       if (!levels) return { immediate: response('The level store is unavailable. Ask an administrator to check the bot setup.') };
       const selected = findOption(optionsOf(interaction), 'user');
-      const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+      const targetId = selected && typeof selected === 'object' ? selected.id : selected || user.id;
       if (!/^\d{5,25}$/.test(targetId)) return { immediate: response('Choose a valid server member.') };
       const account = levels.get(interaction.guild_id, targetId);
       return { immediate: response(`<@${targetId}> is level **${account.level}** with **${account.xp} XP** (${account.xpToNextLevel} XP to next level).`) };
@@ -485,7 +485,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
             } else {
               if (action === 'profession' && professionAction !== 'status') throw new Error();
               const selected = action === 'profile' ? findOption(options, 'user') : null;
-              const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+              const targetId = selected && typeof selected === 'object' ? selected.id : selected || user.id;
               if (typeof targetId !== 'string' || !/^\d{5,25}$/.test(targetId)) throw new Error();
               const profile = economy.profile(config.guildId, targetId);
               const profession = profile.profession;
@@ -502,13 +502,13 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (['daily', 'work', 'beg'].includes(action) && user.bot) return { immediate: response('Economy rewards are available to human members only.') };
       if (action === 'balance') {
         const selected = findOption(options, 'user');
-        const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
+        const targetId = selected && typeof selected === 'object' ? selected.id : selected || user.id;
         if (!/^\d{5,25}$/.test(targetId)) return { immediate: response('Choose a valid server member.') };
         return { immediate: response(`<@${targetId}> has **${economy.balance(interaction.guild_id, targetId)}** coins.`) };
       }
       if (action === 'pay') {
         const selected = findOption(options, 'user');
-        const targetId = typeof selected === 'object' ? selected.id : selected;
+        const targetId = selected && typeof selected === 'object' ? selected.id : selected;
         const amount = Number(findOption(options, 'amount'));
         if (!/^\d{5,25}$/.test(targetId || '') || !Number.isSafeInteger(amount) || amount < 1 || amount > 1_000_000) {
           return { immediate: response('Choose a valid member and an amount from 1 to 1000000.') };
@@ -525,7 +525,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
               : `You can claim again <t:${Math.floor(Date.parse(result.nextAt) / 1000)}:R>.`;
           } else {
             const selected = findOption(options, 'user');
-            const targetId = typeof selected === 'object' ? selected.id : selected;
+            const targetId = selected && typeof selected === 'object' ? selected.id : selected;
             const amount = Number(findOption(options, 'amount'));
             if (!/^\d{5,25}$/.test(targetId || '') || !Number.isSafeInteger(amount)) throw new Error('Choose a valid member and transfer amount.');
             const result = await economy.transfer(interaction.guild_id, user.id, targetId, amount);

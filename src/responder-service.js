@@ -7,8 +7,15 @@ class ResponderService {
     this.config = config; this.store = store; this.discord = discord; this.logger = logger; this.now = now;
     this.channelCooldowns = new Map();
     this.lastAttempt = 0;
+    this.queue = Promise.resolve();
   }
-  async dispatch(type, message) {
+  dispatch(type, message) {
+    const payload = structuredClone(message);
+    const task = this.queue.then(() => this.#dispatch(type, payload));
+    this.queue = task.catch(() => {});
+    return task;
+  }
+  async #dispatch(type, message) {
     if (!this.config.respondersEnabled || type !== 'MESSAGE_CREATE' || message?.guild_id !== this.config.guildId
       || !ID.test(message.id) || !ID.test(message.channel_id) || !ID.test(message.author?.id)
       || message.author.bot || message.webhook_id || message.type !== 0
@@ -25,7 +32,7 @@ class ResponderService {
       this.lastAttempt = now;
       if (this.channelCooldowns.size > 50) this.channelCooldowns.delete(this.channelCooldowns.keys().next().value);
       await this.discord.createMessage(message.channel_id, { content: claimed.reply, allowed_mentions: { parse: [] }, nonce: message.id, enforce_nonce: true });
-    } catch { this.logger('responder_delivery_failed', { name: rule.name }); }
+    } catch { try { this.logger('responder_delivery_failed', { name: rule.name }); } catch {} }
   }
 }
 module.exports = { ResponderService };

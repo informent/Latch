@@ -17,3 +17,12 @@ require('./register-commands.test');
 require('./server.test');
 require('./ticket-service.test');
 require('./ticket-store.test');
+
+require('./new-stores.test');
+require('./automation-regression.test');
+require('./authorization-regression.test');
+require('./role-menu-regression.test');
+require('./ticket-regression.test');
+require('./economy-progression.test');
+require('./new-interactions.test');
+require('./voice-regression.test');

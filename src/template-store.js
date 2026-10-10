@@ -32,7 +32,8 @@ class TemplateStore {
   }
   list() { return structuredClone(this.state.templates); }
   get(name) { return this.list().find((item) => item.name === name) || null; }
-  change(action, item) {
+  change(action, input) {
+    const item = structuredClone(input);
     const operation = this.queue.then(async () => {
       const state = structuredClone(this.state);
       const index = state.templates.findIndex((entry) => entry.name === item.name);

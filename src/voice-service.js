@@ -67,7 +67,7 @@ class VoiceService {
       if (!this.#live() || this.members.get(data.user_id) !== this.store.get().lobbyId) return;
       try {
         const member = data.member?.user ? data.member : await this.discord.getGuildMember(this.config.guildId, data.user_id);
-        if (!member.user || member.user.bot) return;
+        if (!member.user || member.user.id !== data.user_id || member.user.bot) return;
         await this.#create(data.user_id, member.user.username || 'Member');
       }
       catch { this.#log('voice_creation_failed'); }
@@ -118,7 +118,7 @@ class VoiceService {
         if (typeof targetId !== 'string' || !ID.test(targetId) || this.members.get(targetId) !== channelId || targetId === this.botUserId) throw new Error('Choose a member currently in your room.');
         if (this.store.get().channels.some((room) => room.channelId !== channelId && room.ownerId === targetId)) throw new Error('This member already owns another room.');
         const member = await this.discord.getGuildMember(this.config.guildId, targetId);
-        if (member.user?.bot || !this.#live() || this.connection() !== socket || this.members.get(targetId) !== channelId) throw new Error('Choose a human member currently in your room.');
+        if (!member.user || member.user.id !== targetId || member.user.bot || !this.#live() || this.connection() !== socket || this.members.get(targetId) !== channelId) throw new Error('Choose a human member currently in your room.');
         await this.#overwrite(channel, targetId, 1, VIEW | CONNECT, false);
         if (!this.#live() || this.connection() !== socket || this.members.get(userId) !== channelId || this.members.get(targetId) !== channelId) throw new Error('Voice state changed; retry.');
         await this.store.transfer(channelId, targetId);
@@ -138,7 +138,8 @@ class VoiceService {
         await this.#overwrite(await this.#channel(channelId), userId, 1, VIEW | CONNECT, false);
       } else if (['permit', 'reject'].includes(action)) {
         if (typeof targetId !== 'string' || !ID.test(targetId) || [userId, this.botUserId].includes(targetId)) throw new Error('Choose another server member.');
-        await this.discord.getGuildMember(this.config.guildId, targetId);
+        const member = await this.discord.getGuildMember(this.config.guildId, targetId);
+        if (member.user?.id !== targetId) throw new Error('Choose an available server member.');
         if (!this.#live() || this.connection() !== socket) throw new Error('Voice state changed; retry.');
         await this.#overwrite(channel, targetId, 1, VIEW | CONNECT, action === 'reject');
       } else if (action === 'info') {

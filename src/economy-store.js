@@ -52,13 +52,13 @@ class EconomyStore {
 
   async chooseProfession(guildId, userId, name, now = new Date()) {
     if (!PROFESSIONS.includes(name) || !Number.isFinite(now.getTime())) throw new Error('Choose a valid profession.');
-    return this.#transaction(() => {
+    return this.#transaction((accounts) => {
       const key = this.#key(guildId, userId);
-      const account = this.accounts.get(key) || this.#empty(guildId, userId);
+      const account = accounts.get(key) || this.#empty(guildId, userId);
       if (account.profession?.name === name) return { claimed: false, unchanged: true };
       const changed = account.profession ? Date.parse(account.profession.changedAt) : 0;
       if (changed && now.getTime() - changed < PROFESSION_COOLDOWN_MS) return { claimed: false, nextAt: new Date(changed + PROFESSION_COOLDOWN_MS).toISOString() };
-      this.accounts.set(key, Object.freeze({ ...account, profession: Object.freeze({ name, works: 0, changedAt: now.toISOString() }) }));
+      accounts.set(key, Object.freeze({ ...account, profession: Object.freeze({ name, works: 0, changedAt: now.toISOString() }) }));
       return { changed: true, name };
     });
   }
@@ -73,9 +73,9 @@ class EconomyStore {
     const cooldown = kind === 'daily' ? DAILY_COOLDOWN_MS : kind === 'work' ? WORK_COOLDOWN_MS : kind === 'beg' ? BEG_COOLDOWN_MS : 0;
     if (!cooldown) throw new Error('Unknown reward type.');
     if (!Number.isFinite(now.getTime())) throw new Error('Invalid reward time.');
-    return this.#transaction(() => {
+    return this.#transaction((accounts) => {
       const key = this.#key(guildId, userId);
-      const existing = this.accounts.get(key) || this.#empty(guildId, userId);
+      const existing = accounts.get(key) || this.#empty(guildId, userId);
       const lastKey = kind === 'daily' ? 'lastDaily' : kind === 'beg' ? 'lastBeg' : 'lastWork';
       const last = existing[lastKey] ? Date.parse(existing[lastKey]) : 0;
       if (last && now.getTime() - last < cooldown) return { claimed: false, nextAt: new Date(last + cooldown).toISOString() };
@@ -86,7 +86,7 @@ class EconomyStore {
       const profession = kind === 'work' && existing.profession ? { profession: Object.freeze({ ...existing.profession, works: Math.min(1000, existing.profession.works + 1) }) } : {};
       const updated = Object.freeze({ ...existing, ...profession, balance: existing.balance + reward, [lastKey]: now.toISOString() });
       if (!Number.isSafeInteger(updated.balance) || updated.balance > MAX_BALANCE) throw new Error('Balance limit reached.');
-      this.accounts.set(key, updated);
+      accounts.set(key, updated);
       return { claimed: true, reward, balance: updated.balance, ...(updated.profession ? { bonus, profession: { ...updated.profession, rank: rankOf(updated.profession.works) } } : {}) };
     });
   }
@@ -94,15 +94,15 @@ class EconomyStore {
   async transfer(guildId, fromUserId, toUserId, amount) {
     if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1_000_000) throw new Error('Transfer amount must be from 1 to 1000000.');
     if (fromUserId === toUserId) throw new Error('You cannot transfer coins to yourself.');
-    return this.#transaction(() => {
+    return this.#transaction((accounts) => {
       const fromKey = this.#key(guildId, fromUserId);
       const toKey = this.#key(guildId, toUserId);
-      const from = this.accounts.get(fromKey) || this.#empty(guildId, fromUserId);
-      const to = this.accounts.get(toKey) || this.#empty(guildId, toUserId);
+      const from = accounts.get(fromKey) || this.#empty(guildId, fromUserId);
+      const to = accounts.get(toKey) || this.#empty(guildId, toUserId);
       if (from.balance < amount) throw new Error('You do not have enough coins for that transfer.');
       if (to.balance + amount > MAX_BALANCE) throw new Error('The recipient balance limit would be exceeded.');
-      this.accounts.set(fromKey, Object.freeze({ ...from, balance: from.balance - amount }));
-      this.accounts.set(toKey, Object.freeze({ ...to, balance: to.balance + amount }));
+      accounts.set(fromKey, Object.freeze({ ...from, balance: from.balance - amount }));
+      accounts.set(toKey, Object.freeze({ ...to, balance: to.balance + amount }));
       return { fromBalance: from.balance - amount, toBalance: to.balance + amount };
     });
   }
@@ -123,21 +123,19 @@ class EconomyStore {
 
   async #transaction(update) {
     const task = this.queue.then(async () => {
-      const previous = new Map(this.accounts);
-      let result;
-      try { result = update(); }
-      catch (error) { this.accounts = previous; throw error; }
+      const accounts = new Map(this.accounts);
+      const result = update(accounts);
       if (result.claimed === false) return result;
-      if (this.accounts.size > MAX_ACCOUNTS) { this.accounts = previous; throw new Error('Economy account limit reached.'); }
+      if (accounts.size > MAX_ACCOUNTS || [...accounts.values()].some((account) => !this.#valid(account))) throw new Error('Invalid economy account update.');
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
       try {
         await fs.mkdir(path.dirname(path.resolve(this.filePath)), { recursive: true });
-        await fs.writeFile(tempPath, `${JSON.stringify({ version: 1, accounts: [...this.accounts.values()] }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+        await fs.writeFile(tempPath, `${JSON.stringify({ version: 1, accounts: [...accounts.values()] }, null, 2)}\n`, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
         await fs.rename(tempPath, this.filePath);
+        this.accounts = accounts;
         return result;
       } catch (error) {
         await fs.rm(tempPath, { force: true }).catch(() => {});
-        this.accounts = previous;
         throw error;
       }
     });

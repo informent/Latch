@@ -31,7 +31,9 @@ Role assignment/removal and nickname changes now verify current actor/bot permis
 
 Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
 
-This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
+Version 0.13.0 adds a substantial reliability release: 164 automated tests, isolated ticket/economy commits, concurrent responder protection, template input isolation and stronger voice member checks. Local line coverage is 89.33%, with enforced coverage floors in CI. See [verification evidence and limits](docs/VERIFICATION.md).
+
+This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, Gateway reconnect/event handling, role menus, temporary voice recovery, templates, responders and timers. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores
 

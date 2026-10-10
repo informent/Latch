@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.13.0 - 2026-10-10
+
+- Expanded the regression suite from 87 to 164 tests across new stores, automation, authorization, role menus, ticket workflows, economy progression, interactions and temporary voice recovery.
+- Fixed profession status failing on its default user selection and saved templates retaining caller-owned mutable input.
+- Serialized responder dispatch so concurrent channels cannot bypass the global send guard. Logger failures no longer escape delivery handling.
+- Ticket and economy mutations now use isolated snapshots, validate queued updates and commit in-memory state only after atomic file replacement succeeds. Ticket storage is bounded to 50000 records and 32 MiB.
+- Voice transfers reject missing or mismatched member identities; room creation and access changes also verify returned member identity.
+- Added enforced test coverage floors: 85% lines, 75% branches and 80% functions. Local coverage is 89.33% lines, 79.67% branches and 83.90% functions.
+
+These tests use local files and simulated Discord responses. Live Discord validation remains outstanding. The catalog remains 115 command paths across 19 suites; full competitor parity remains unfinished. See [verification evidence](docs/VERIFICATION.md).
+
 ## 0.12.0 - 2026-10-10
 
 - Added economy beg, profile and profession list/choose/status, bringing the catalog to 115 command paths across 19 suites.
