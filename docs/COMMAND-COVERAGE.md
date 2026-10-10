@@ -39,6 +39,8 @@ Only command names and independently authored implementation notes are recorded 
 | voicemaster lock, unlock, ghost, unghost | `/voice` actions | Everyone overwrite controls; member/role overrides and administrators may retain access |
 | voicemaster permit | `/voice permit` | Member access only; no role targets |
 | voicemaster claim, transfer | `/voice claim`, `/voice transfer` | One owned room per member; current presence required; no automatic role assignment |
+| Button role assignment/removal | `/rolemenu` and member buttons | Explicit Get/Remove actions; permission-free unmanaged roles only; no emoji/toggle policies |
+| Join roles | `/autorole add`, `/autorole remove`, `/autorole list`, `/autorole apply` | Human joins only; permission-free roles; pending screening and failed joins require staff apply |
 
 Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moderation](https://www.greed.sh/docs/moderation/), [Bleed giveaways](https://docs.bleed.bot/miscellaneous/giveaway), [Bleed tickets](https://docs.bleed.bot/configuration/tickets/commands), [Bleed moderation](https://docs.bleed.bot/security/moderation).
 
@@ -57,7 +59,7 @@ These are concrete gaps from the sources above; the list will expand as further 
 
 ## Suites awaiting a detailed inventory
 
-Antinuke, antiraid, reaction/button/booster/vanity roles, autoresponders, message timers, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only.
+Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, autoresponders, message timers, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
 
 ## OpenDesk additions already implemented
 

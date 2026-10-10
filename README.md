@@ -31,6 +31,8 @@ Ticket records may include the assigned support member ID. Giveaway records may 
 
 The optional voice suite uses `data/voice.json` for guild/lobby/category IDs, managed room IDs, owners and creation times. Current voice occupancy stays in memory; no audio or voice session IDs are recorded. Include this sixth store in backups. See the [voice guide](docs/VOICE.md) for recovery and access-control limits.
 
+Role menus and join-role configuration use `data/role-menus.json` for guild, menu/channel/message IDs, titles, labels, role IDs, menu states and publication retry metadata. Include this seventh store in backups. Member role assignments remain in Discord; interaction tokens are not stored.
+
 OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores only guild/user IDs, XP, and award timestamps; received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
 
 ## Requirements
@@ -58,7 +60,7 @@ For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only
    npm start
    ```
 
-   `register` adds or updates all fourteen command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
+   `register` adds or updates all sixteen command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
 4. Configure the Discord application's **Interactions Endpoint URL** to your HTTPS proxy URL ending in `/interactions`. Discord will send a signed ping while validating it; OpenDesk verifies Ed25519 request signatures and answers that ping.
 5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP awards 15 points no more than once per member each minute. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
 6. In the test server, verify `/utility ping`, `/utility server`, `/ticket create`, `/ticket close`, `/level`, `/leaderboard levels`, and `/leaderboard coins`. Use a disposable test member to check moderation and role commands. Confirm unauthorized members are rejected and the bot's role position permits each operation.
@@ -67,7 +69,7 @@ The start and register scripts load `.env` with Node's built-in env-file support
 
 ## Commands
 
-The catalog currently declares 71 command paths across 14 suites. `/voice` adds optional join-to-create rooms, persistent ownership, rename/limit, lock/unlock, ghost/unghost, permit/reject, claim/transfer, info and setup/status/disable. Enable `DISCORD_VOICE_ENABLED=true`, install the matching permissions, and follow the [voice guide](docs/VOICE.md). Voice lifecycle has not been validated on a live server, and existing CI does not exercise its new workflows.
+The catalog currently declares 83 command paths across 16 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have not been validated on a live server, and existing CI does not exercise their new workflows.
 
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.
 - `/automod list`, `/automod keywords`, `/automod mentions`, and `/automod spam` manage native Discord message filters. Staff and bot need **Manage Server**. New rules are disabled for review; `/automod enable`, `/automod disable`, and `/automod remove` take a rule ID. Only rules created by this bot with the OpenDesk name prefix can be changed. Keyword input supports up to 100 comma-separated terms, with Discord wildcard matching. Mention limits range from 1 to 50. Discord applies its own rule-count limits. Native rules continue running while the bot is offline and do not require OpenDesk to receive chat content. Review exemptions in Server Settings > AutoMod. [Discord AutoMod reference](https://docs.discord.com/developers/resources/auto-moderation).
@@ -85,12 +87,12 @@ The catalog currently declares 71 command paths across 14 suites. `/voice` adds 
 - `/leaderboard coins` shows the coin economy ranking.
 - Gateway sessions send heartbeats, track event sequence numbers, and resume when Discord allows it. Gateway connection logs never include message content or bot tokens.
 
-- `/ticket create` — create one active private ticket per member. Repeated requests return the existing open channel.
-- `/ticket close` — close the ticket in the current ticket channel, or choose a ticket channel with the optional `channel` field. The owner, configured support role, or a server administrator may close it. The owner retains read access but cannot send more messages; the optional channel field also lets the owner retry a partially completed close from another channel.
-- `/ticket list page:1` — privately list active tickets, ten per page. Members see their own; the configured support role and administrators see the queue.
-- `/ticket stats` — support staff see retained lifetime counts for open, closing, closed and claimed tickets. This does not measure per-staff workload or timed activity.
-- `/ticket claim` and `/ticket unclaim` — support staff assign themselves or clear the current assignment. The owner cannot claim their own ticket; an existing different claimer must be cleared first. Any support staff may unclaim. Assignments persist across restarts and do not alter channel permissions or who can close a ticket.
-- `/ticket rename name:billing-question` — support staff rename an open OpenDesk ticket. Names use 1–90 lowercase letters, digits or hyphens. Claim/unclaim/rename accept an optional `channel`; otherwise they use the current channel.
+- `/ticket create` - create one active private ticket per member. Repeated requests return the existing open channel.
+- `/ticket close` - close the ticket in the current ticket channel, or choose a ticket channel with the optional `channel` field. The owner, configured support role, or a server administrator may close it. The owner retains read access but cannot send more messages; the optional channel field also lets the owner retry a partially completed close from another channel.
+- `/ticket list page:1` - privately list active tickets, ten per page. Members see their own; the configured support role and administrators see the queue.
+- `/ticket stats` - support staff see retained lifetime counts for open, closing, closed and claimed tickets. This does not measure per-staff workload or timed activity.
+- `/ticket claim` and `/ticket unclaim` - support staff assign themselves or clear the current assignment. The owner cannot claim their own ticket; an existing different claimer must be cleared first. Any support staff may unclaim. Assignments persist across restarts and do not alter channel permissions or who can close a ticket.
+- `/ticket rename name:billing-question` - support staff rename an open OpenDesk ticket. Names use 1–90 lowercase letters, digits or hyphens. Claim/unclaim/rename accept an optional `channel`; otherwise they use the current channel.
 
 The bot keeps no transcript. Deleting a ticket channel manually does not delete its small state record; remove that record while the bot is stopped if you need to clean up stale entries. Never edit the JSON file while the bot is running, and run only one OpenDesk process against a given store file.
 

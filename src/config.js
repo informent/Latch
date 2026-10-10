@@ -55,7 +55,8 @@ function loadConfig(env = process.env) {
     economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
     communityStorePath: env.COMMUNITY_STORE_PATH?.trim() || './data/community.json',
     levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json',
-    voiceStorePath: env.VOICE_STORE_PATH?.trim() || './data/voice.json'
+    voiceStorePath: env.VOICE_STORE_PATH?.trim() || './data/voice.json',
+    roleMenuStorePath: env.ROLE_MENU_STORE_PATH?.trim() || './data/role-menus.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);

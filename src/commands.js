@@ -118,4 +118,23 @@ commands.push({
   ]
 });
 
+commands.push({
+  name: 'rolemenu', description: 'Manage persistent self-service role button menus.', type: 1, default_member_permissions: '268435456',
+  options: [
+    subcommand('create', 'Create an unpublished menu in this channel.', [option(3, 'title', 'Menu title.', { required: true, min_length: 1, max_length: 200 })]),
+    subcommand('add', 'Add a permission-free role below your role and the bot.', [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 }), option(8, 'role', 'Role to offer.', { required: true }), option(3, 'label', 'Button label.', { required: true, min_length: 1, max_length: 60 })]),
+    subcommand('remove', 'Remove a role from a menu.', [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 }), option(8, 'role', 'Role to remove.', { required: true })]),
+    subcommand('list', 'List stored role menus.'),
+    ...['publish', 'disable', 'delete', 'info'].map((action) => subcommand(action, `${action} a role menu by ID.`, [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 })]))
+  ]
+}, {
+  name: 'autorole', description: 'Configure permission-free roles for new human members.', type: 1, default_member_permissions: '268435456',
+  options: [
+    subcommand('add', 'Add a permission-free join role; member events must be enabled.', [option(8, 'role', 'Role below your role and the bot.', { required: true })]),
+    subcommand('remove', 'Stop assigning a configured join role.', [option(8, 'role', 'Role to remove.', { required: true })]),
+    subcommand('list', 'List configured join roles and event status.'),
+    subcommand('apply', 'Apply configured join roles to a screened human member.', [option(6, 'user', 'Member to reconcile.', { required: true })])
+  ]
+});
+
 module.exports = { commands };

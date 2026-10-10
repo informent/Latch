@@ -17,6 +17,7 @@ services:
       LEVEL_STORE_PATH: /app/data/levels.json
       COMMUNITY_STORE_PATH: /app/data/community.json
       VOICE_STORE_PATH: /app/data/voice.json
+      ROLE_MENU_STORE_PATH: /app/data/role-menus.json
     secrets:
       - discord_bot_token
     ports:

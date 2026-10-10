@@ -10,7 +10,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | AutoMod | Native keyword, spam and mention filters; enable/disable/remove | Presets, exclusions through commands, regex validation, management UI |
 | Server security | Join burst detection; native mention-raid filter | Account-age policies, antinuke audit attribution, action budgets, restoration plans |
 | Tickets | Private channels, durable ownership/assignment, list/stats, rename and retryable closure | Panels, per-option categories and policies, reopen, transcripts, configurable retention |
-| Roles | Staff role assignment/removal and nickname changes | Autoroles, reaction/button roles, booster roles, menus |
+| Roles | Staff roles/nicknames, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
 | Economy | Durable balances, daily/work, transfers and leaderboard | Shops, professions, inventory, seasonal events, staff controls |
 | Embeds | Custom announcements in the invoking channel | Saved templates, variables, preview/edit workflow |

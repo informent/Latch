@@ -35,7 +35,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, discord, logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, moderation, economy, levels, automod, community, voice, roleMenus, discord, logger = () => {}, now = () => new Date() }) {
   const handleCommunity = createCommunityHandler({ config, community, discord, logger }, { response, defer, hasPermission, safeText, findOption });
   return async function handle(interaction) {
     if (interaction.type === 1) return { immediate: { type: 1 } };
@@ -44,6 +44,44 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    const roleButton = interaction.type === 3 ? /^rolemenu:(grant|revoke):(\d{5,25}):(\d{5,25})$/.exec(interaction.data?.custom_id || '') : null;
+    if (roleButton || ['rolemenu', 'autorole'].includes(commandName)) {
+      if (!roleMenus) return { immediate: response('Role automation is unavailable.') };
+      if (user.bot) return { immediate: response('Role automation is available to human members only.') };
+      if (!roleButton && !hasPermission(interaction.member?.permissions, 1n << 28n)) return { immediate: response('You need Manage Roles to configure role automation.') };
+      const action = roleButton ? roleButton[1] : subcommand?.name;
+      const options = subcommand?.options || [];
+      const id = roleButton ? roleButton[2] : action === 'create' ? interaction.id : findOption(options, 'id');
+      return { immediate: defer(), work: async () => {
+        try {
+          let content;
+          if (roleButton) content = await roleMenus.button({ action, id, roleId: roleButton[3], guildId: interaction.guild_id, channelId: interaction.channel_id, messageId: interaction.message?.id, userId: user.id });
+          else if (commandName === 'autorole') {
+            if (action === 'list') content = `Member events: ${config.memberEventsEnabled ? 'enabled' : 'disabled'}\nJoin roles: ${roleMenus.autoroles().map((role) => `<@&${role}>`).join(', ') || 'none'}`;
+            else if (['add', 'remove'].includes(action)) { await roleMenus.configureAutorole(findOption(options, 'role'), action === 'remove', user.id); content = 'Autorole configuration saved. Existing member roles are unchanged.'; }
+            else if (action === 'apply') { const count = await roleMenus.applyAutoroles(findOption(options, 'user'), user.id); content = `Applied ${count} configured join role(s).`; }
+            else throw new Error('Unknown autorole action.');
+          } else if (action === 'create') {
+            const menu = await roleMenus.create({ id, channelId: interaction.channel_id, title: findOption(options, 'title') });
+            content = `Draft role menu ${menu.id} saved. Add roles, then publish it.`;
+          } else if (action === 'list') {
+            content = roleMenus.list().map((menu) => `${menu.id}: ${safeText(menu.title).slice(0, 60)} | ${menu.state} | ${menu.roles.length} roles${menu.pending ? ' | update pending' : ''}`).join('\n') || 'No role menus configured.';
+          } else if (action === 'info') {
+            const menu = roleMenus.get(id);
+            if (!menu) throw new Error('Unknown role menu.');
+            content = `**${safeText(menu.title)}**\nID: ${menu.id}\nChannel: <#${menu.channelId}>\nState: ${menu.state}\nRoles: ${menu.roles.map((role) => `<@&${role.id}>`).join(', ') || 'none'}\nUpdate: ${menu.pending ? 'pending' : 'complete'}`;
+          } else if (['add', 'remove', 'publish', 'disable', 'delete'].includes(action)) {
+            const menu = await roleMenus.change(id, action, { roleId: findOption(options, 'role'), label: findOption(options, 'label'), actorId: user.id });
+            content = menu ? `Role menu ${id}: ${menu.state}${menu.pending ? '. Public message update will retry automatically.' : '. Saved.'}` : 'Role menu deleted.';
+          } else throw new Error('Unknown role menu action.');
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+        } catch {
+          logger('role_automation_failed', { action });
+          const content = roleButton ? 'Could not update your role. The menu may be disabled or stale, screening may be incomplete, or the role no longer meets permission and hierarchy rules.' : 'Could not complete this role action. Use a valid menu ID, a server text channel, up to 10 permission-free unmanaged roles below your role and the bot, and up to 20 menus. Autoroles require member events; limit five. Complete member screening before applying roles.';
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'voice') {
       const action = subcommand?.name;
       if (!voice) return { immediate: response('The voice suite is unavailable.') };

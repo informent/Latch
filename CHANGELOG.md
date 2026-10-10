@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 - 2026-10-10
+
+- Added eight persistent role-menu commands and separate Get/Remove buttons with signed message/guild/channel binding and live role eligibility checks.
+- Added autorole add/remove/list/apply. New human joins can receive up to five permission-free roles; staff can reconcile a screened member after a failure or skipped join.
+- Restricted automated roles to unmanaged roles with zero permission bits below the bot and configuring staff. Menu disable/delete/removal reject stale controls before public updates finish.
+- Added durable publication/update/delete retries, strict guild-bound role-menu storage, offline inspection, deployment paths and shutdown draining. Catalog now declares 83 command paths across 16 suites.
+- Removed em dashes from public README text and added a publication-text gate for documentation, profile drafts and release notes.
+
+Existing CI does not exercise new role automation workflows. Live Discord validation remains outstanding. Pending-screening joins and failed autorole assignments require staff apply; no persistent join retry/backfill exists yet. Full competitor parity remains unfinished.
+
 ## 0.5.0 - 2026-10-10
 
 - Added an optional temporary voice suite with 14 command paths: setup, status, disable, rename, limit, lock, unlock, ghost, unghost, claim, info, permit, reject and transfer.
