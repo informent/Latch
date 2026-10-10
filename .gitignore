@@ -1,4 +1,8 @@
 .env
+.env.*
+!.env.example
+.secrets/
+backups/
 data/tickets.json
 data/moderation.json
 data/economy.json

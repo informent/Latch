@@ -1,5 +1,21 @@
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
+
+function botToken(env) {
+  const direct = env.DISCORD_BOT_TOKEN?.trim();
+  const file = env.DISCORD_BOT_TOKEN_FILE?.trim();
+  if (direct && file) throw new Error('Set only one of DISCORD_BOT_TOKEN or DISCORD_BOT_TOKEN_FILE.');
+  if (!file) return required(env, 'DISCORD_BOT_TOKEN');
+  try {
+    if (fs.statSync(file).size > 16 * 1024) throw new Error();
+    const value = fs.readFileSync(file, 'utf8').trim();
+    if (!value || /\s/.test(value)) throw new Error();
+    return value;
+  } catch { throw new Error('DISCORD_BOT_TOKEN_FILE must point to a readable, non-empty token file.'); }
+}
+
 function required(env, key) {
   const value = env[key]?.trim();
   if (!value) throw new Error(`Missing required environment variable: ${key}`);
@@ -31,6 +47,25 @@ function loadConfig(env = process.env) {
   const levelingEnabled = boolean(env, 'DISCORD_LEVELING_ENABLED');
   const memberEventsEnabled = boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS');
   const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled);
+  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling or member events are enabled.');
+  const storePaths = {
+    storePath: env.TICKET_STORE_PATH?.trim() || './data/tickets.json',
+    moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
+    economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
+    communityStorePath: env.COMMUNITY_STORE_PATH?.trim() || './data/community.json',
+    levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json'
+  };
+  const normalized = Object.values(storePaths).map((value) => {
+    const absolute = path.resolve(value);
+    return process.platform === 'win32' ? absolute.toLowerCase() : absolute;
+  });
+  if (new Set(normalized).size !== normalized.length) throw new Error('Each data store must use a separate file path.');
+  if (normalized.some((file, index) => normalized.some((other, otherIndex) => index !== otherIndex && file.startsWith(`${other}${path.sep}`)))) throw new Error('Data store file paths cannot contain another store file path.');
+  const protectedFiles = ['.env', '.env.example', env.DISCORD_BOT_TOKEN_FILE?.trim()].filter(Boolean).map((file) => {
+    const absolute = path.resolve(file);
+    return process.platform === 'win32' ? absolute.toLowerCase() : absolute;
+  });
+  if (normalized.some((file) => protectedFiles.includes(file))) throw new Error('Data stores cannot overwrite configuration or token files.');
   const gatewayIntents = 1 | 512
     | (memberEventsEnabled ? 2 : 0)
     | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled ? 1 << 15 : 0);
@@ -41,25 +76,21 @@ function loadConfig(env = process.env) {
   return Object.freeze({
     applicationId: snowflake(required(env, 'DISCORD_APPLICATION_ID'), 'DISCORD_APPLICATION_ID'),
     publicKey,
-    botToken: required(env, 'DISCORD_BOT_TOKEN'),
+    botToken: botToken(env),
     guildId: snowflake(required(env, 'DISCORD_GUILD_ID'), 'DISCORD_GUILD_ID'),
     supportRoleId: env.DISCORD_SUPPORT_ROLE_ID?.trim() ? snowflake(env.DISCORD_SUPPORT_ROLE_ID.trim(), 'DISCORD_SUPPORT_ROLE_ID') : null,
     categoryId: env.DISCORD_CATEGORY_ID?.trim() ? snowflake(env.DISCORD_CATEGORY_ID.trim(), 'DISCORD_CATEGORY_ID') : null,
-    moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
-    economyStorePath: env.ECONOMY_STORE_PATH?.trim() || './data/economy.json',
-    communityStorePath: env.COMMUNITY_STORE_PATH?.trim() || './data/community.json',
+    ...storePaths,
     gatewayEnabled,
     memberEventsEnabled,
     gatewayIntents,
     levelingEnabled,
-    levelStorePath: env.LEVEL_STORE_PATH?.trim() || './data/levels.json',
     welcomeChannelId: env.DISCORD_WELCOME_CHANNEL_ID?.trim() ? snowflake(env.DISCORD_WELCOME_CHANNEL_ID.trim(), 'DISCORD_WELCOME_CHANNEL_ID') : null,
     welcomeMessage: env.DISCORD_WELCOME_MESSAGE?.trim() || 'Welcome {user} to {server}!',
     raidJoinThreshold,
     raidJoinWindowMs,
     port,
     host,
-    storePath: env.TICKET_STORE_PATH?.trim() || './data/tickets.json'
   });
 }
 

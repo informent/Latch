@@ -2,6 +2,25 @@
 
 OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature suites cover moderation, AutoMod, roles, staff warnings, utilities, tickets, coins, XP, embeds, polls, reminders, giveaways, and games. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
+[![CI](https://github.com/informent/OpenDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/informent/OpenDesk/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Operations guide](docs/OPERATIONS.md) · [Changelog](CHANGELOG.md) · [Feature roadmap](ROADMAP.md)
+
+## Start here
+
+Install Node 22.9+ or Node 24, then run:
+
+```powershell
+npm run setup
+# Edit .env locally with your Discord application and server settings.
+npm run doctor
+npm run invite
+npm run register
+npm start
+```
+
+You also need a public HTTPS interaction endpoint configured in Discord. The setup command preserves existing settings. Doctor is an offline, read-only inspection, and invite prints a permission-based installation link without opening a browser. See the [operations guide](docs/OPERATIONS.md) for Docker Compose, Linux services, backups, upgrades, and troubleshooting.
+
+All upstream OpenDesk features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required OpenDesk hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
+
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, and Gateway reconnect/event handling. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
 ## What it stores

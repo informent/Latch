@@ -1,0 +1,12 @@
+*
+!package.json
+!LICENSE
+!src/
+!src/**
+!scripts/
+!scripts/**
+**/.env
+**/.env.*
+**/.secrets/**
+**/*.pem
+**/*.key

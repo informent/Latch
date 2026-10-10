@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 - 2026-10-10
+
+- Added non-destructive local setup, an offline configuration/store doctor with JSON output, and feature-based Discord installation links.
+- Added bot-token file loading for deployment secret mounts, conflicting credential-source rejection, and safer store-path configuration.
+- Added Docker Compose, a restricted container build context, HTTPS proxy and Linux service examples, and an operations guide for backups/upgrades/support.
+- Clarified the free upstream product commitment, MIT license, one-guild deployment model, and remaining readiness limits.
+
+Docker and Linux service execution remain unverified on the current Windows development host. The configuration doctor is read-only and cannot validate live Discord operation.
+
 ## 0.2.0 - 2026-10-09
 
 - Added personal channel reminders with durable deadlines, private listing, owner-only cancellation, delivery retries, and bounded retention.

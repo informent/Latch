@@ -1,0 +1,43 @@
+services:
+  opendesk:
+    build: .
+    image: opendesk:local
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+      DISCORD_BOT_TOKEN: ""
+      DISCORD_BOT_TOKEN_FILE: /run/secrets/discord_bot_token
+      TICKET_STORE_PATH: /app/data/tickets.json
+      MODERATION_STORE_PATH: /app/data/moderation.json
+      ECONOMY_STORE_PATH: /app/data/economy.json
+      LEVEL_STORE_PATH: /app/data/levels.json
+      COMMUNITY_STORE_PATH: /app/data/community.json
+    secrets:
+      - discord_bot_token
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - opendesk-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  opendesk-data:
+
+secrets:
+  discord_bot_token:
+    file: .secrets/discord_bot_token.txt

@@ -1,0 +1,11 @@
+# Run Caddy on the same host as the loopback-bound OpenDesk port.
+# Set OPENDESK_DOMAIN to a real domain pointing at this host.
+{$OPENDESK_DOMAIN} {
+    @interactions path /interactions
+    handle @interactions {
+        reverse_proxy 127.0.0.1:3000
+    }
+    handle {
+        respond "Not found" 404
+    }
+}
