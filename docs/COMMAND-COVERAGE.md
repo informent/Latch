@@ -1,3 +1,5 @@
+[Complete OpenDesk command reference](../COMMANDS.md): every registered command and option, generated and checked in CI.
+
 # Command coverage
 
 Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus OpenDesk additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-10, not a complete competitor command count.
@@ -25,6 +27,7 @@ Only command names and independently authored implementation notes are recorded 
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
 | balance, daily, work, beg, professions | `/economy` actions and profession subcommands | OpenDesk reward amounts/cooldowns, equal-rate professions and work-based ranks; competitor mechanics remain different |
 | transfer | `/economy pay` | Different name and syntax |
+| level role rewards | `/levelreward add`, `remove`, `list`, `info`, `enable`, `disable`, `preview`, `reconcile` | Accumulating permission-free milestones, durable retries and existing-XP backfill; no role removal or exclusive policy |
 | leveling settings | `/levelconfig show`, `tune`, `reset`, `ignore`, `unignore`, `ignored`, `enable`, `disable` | Free per-guild settings, exact channel ignores and pause/resume; rewards/rank cards/voice XP remain unfinished |
 | leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only OpenDesk coin/XP records |
 | giveaway start | `/giveaway create` | Current channel; limited options |
@@ -76,7 +79,7 @@ Autoresponders now have eight `/responder` paths with persistent, disabled-by-de
 
 Saved embeds now have seven `/template` command paths with durable storage, private previews and staff publication; see the [template guide](TEMPLATES.md). This is partial embed functionality: scripting, variables and webhook branding remain absent.
 
-Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, starboard, level rewards, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
+Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, starboard, broader level reward policies, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
 
 ## OpenDesk additions already implemented
 

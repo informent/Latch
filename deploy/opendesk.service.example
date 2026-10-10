@@ -24,6 +24,7 @@ Environment=TEMPLATE_STORE_PATH=/var/lib/opendesk/templates.json
 Environment=RESPONDER_STORE_PATH=/var/lib/opendesk/responders.json
 Environment=TIMER_STORE_PATH=/var/lib/opendesk/timers.json
 Environment=TICKET_PANEL_STORE_PATH=/var/lib/opendesk/ticket-panels.json
+Environment=LEVEL_REWARD_STORE_PATH=/var/lib/opendesk/level-rewards.json
 ExecStart=/usr/bin/node /opt/opendesk/src/server.js
 Restart=on-failure
 RestartSec=5

@@ -5,7 +5,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const files = process.argv.slice(2);
 if (!files.length) {
-  files.push('README.md', 'CHANGELOG.md', 'ROADMAP.md', 'AGENTS.md');
+  files.push('README.md', 'COMMANDS.md', 'CHANGELOG.md', 'ROADMAP.md', 'AGENTS.md');
   for (const directory of ['docs', 'src', 'scripts', 'test']) {
     files.push(...fs.readdirSync(path.join(root, directory)).filter((file) => /\.(?:md|js)$/.test(file)).map((file) => `${directory}/${file}`));
   }

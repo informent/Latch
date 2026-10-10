@@ -31,3 +31,5 @@ require('./shop-interactions.test');
 require('./automod-configuration.test');
 require('./ticket-workflow.test');
 require('./level-configuration.test');
+require('./level-rewards.test');
+require('./command-catalog.test');

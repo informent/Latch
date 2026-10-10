@@ -10,6 +10,8 @@ const { EconomyStore } = require('./economy-store');
 const { GatewayClient } = require('./gateway');
 const { GuildEventService } = require('./guild-events');
 const { LevelStore } = require('./level-store');
+const { LevelRewardStore } = require('./level-reward-store');
+const { LevelRewardService } = require('./level-reward-service');
 const { AutoModService } = require('./automod-service');
 const { CommunityStore } = require('./community-store');
 const { CommunityService } = require('./community-service');
@@ -103,13 +105,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     void server.roleMenus?.stop();
     void server.timers?.stop();
     void server.ticketPanels?.stop();
+    void server.levelRewards?.stop();
     const timeout = setTimeout(() => {
       log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop()])).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop(), server.levelRewards?.stop()])).then(
       () => clearTimeout(timeout),
       (error) => {
         clearTimeout(timeout);
@@ -128,6 +131,9 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   await levels.load();
   await communityStore.load();
   const botUser = await discord.getCurrentUser();
+  const levelRewardStore = new LevelRewardStore(config.levelRewardStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'level-rewards.json'), config.guildId);
+  await levelRewardStore.load();
+  const levelRewards = new LevelRewardService({ config, store: levelRewardStore, levels, discord, botUserId: botUser.id, logger });
   const tickets = new TicketService({ config, store, discord, botUserId: botUser.id });
   const ticketPanelStore = new TicketPanelStore(config.ticketPanelStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'ticket-panels.json'), config.guildId);
   await ticketPanelStore.load();
@@ -148,20 +154,22 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const timerStore = new TimerStore(config.timerStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'timers.json'), config.guildId);
   await timerStore.load();
   const timers = new TimerService({ config, store: timerStore, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
+  const handle = createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
   const server = startServer({ config, publicKey, handle, logger });
   server.community = community;
   server.voice = voice;
   server.roleMenus = roleMenus;
   server.timers = timers;
   server.ticketPanels = ticketPanels;
-  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); void ticketPanels.stop(); });
+  server.levelRewards = levelRewards;
+  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); void ticketPanels.stop(); void levelRewards.stop(); });
   community.start();
   voice.start();
   roleMenus.start();
   timers.start();
   ticketPanels.start();
-  const guildEvents = new GuildEventService({ config, discord, levels, logger });
+  levelRewards.start();
+  const guildEvents = new GuildEventService({ config, discord, levels, levelRewards, logger });
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;
     gateway.onObserveDispatch = (type, data) => voice.observe(type, data);

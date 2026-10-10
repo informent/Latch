@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.18.0 - 2026-10-10
+
+- Added a complete generated COMMANDS.md reference for all 159 command paths across 23 suites, including options, choices, bounds, channel restrictions and default permissions. Linked it from README and added a CI freshness check.
+- Added eight free role reward commands: add, remove, list, info, enable, disable, preview and reconcile. Rewards start paused and accumulate without removing existing roles.
+- Added up to 20 configurable permission-free unmanaged milestones at levels 1-1000, current staff/bot permission checks, role/member hierarchy validation, screened human recipients and role assignment read-back.
+- Added guild-bound atomic reward storage, durable per-member intent/completion records, exponential retries, idempotent recovery after lost REST replies and failed settlement writes.
+- Added existing-XP scans of 25 accounts and one pending assignment per 15-second tick, coalesced scheduling and shutdown draining. The scan recovers a crash between the separate XP and reward commits.
+- Added reward store configuration, offline doctor inspection and persistent Docker/service paths. Corrected the leveling guide's XP store environment variable to LEVEL_STORE_PATH.
+- Added 59 tests, including signed HTTP commands, the wired Gateway, ambiguous success, corrupt records, current permission changes, scan limits, shutdown and complete command-reference validation. All 355 tests pass locally: 91.88% lines, 83.57% branches, 86.59% functions.
+
+Back up all twelve stores together before upgrading. Existing XP schema is unchanged; level-rewards.json is a new version 1 store. Removing/pausing rewards preserves member roles. Scans/retries are bounded and can take time on large servers. No external role-edit lock or cross-process file lock exists. Live Discord validation, exclusive reward policies, rank cards, voice XP and complete competitor parity remain unfinished.
+
 ## 0.17.0 - 2026-10-10
 
 - Added eight Manage Server leveling commands: show, tune, reset, ignore, unignore, ignored, enable and disable. Catalog now declares 151 paths across 22 suites.

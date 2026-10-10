@@ -6,6 +6,8 @@ OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature sui
 
 ## Start here
 
+The [complete command reference](COMMANDS.md) lists every command, option, limit and permission default. It is generated from the registration payload and checked in CI.
+
 Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered OpenDesk command paths, or `npm run commands -- --json` for a machine-readable catalog.
 
 Install Node 22.9+ or Node 24, then run:
@@ -31,6 +33,8 @@ Role assignment/removal and nickname changes now verify current actor/bot permis
 
 Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
 
+Version 0.18.0 adds earned role milestones with saved retries and existing-XP backfill. Staff can configure, pause, preview and reconcile rewards. Only permission-free unmanaged roles below bot/staff are accepted. See the [level reward guide](docs/LEVEL-REWARDS.md) and [all commands](COMMANDS.md).
+
 Version 0.17.0 adds eight staff leveling configuration commands: tune XP and cooldowns, pause/resume awards, manage ignored channels and restore defaults. Settings and XP commit together, and the latest awarded message ID survives restart to suppress immediate replay. See the [leveling guide](docs/LEVELING.md).
 
 Version 0.16.0 adds a complete ticket panel workflow: draft a support panel, connect up to five topic buttons to server categories, publish it with durable retry recovery, and let members open private tickets. Staff can reopen closed tickets with saved recovery state and permission read-back verification. See the [panel guide](docs/TICKET-PANELS.md) and [ticket guide](docs/TICKETS.md).
@@ -41,7 +45,7 @@ This is an early prototype. Automated tests cover command authorization, native 
 
 ## What it stores
 
-Ticket panels use `data/ticket-panels.json`, an eleventh guild-bound store for panel/message IDs, topic categories and publication retries. Include it in every complete backup. Reopening tickets can retain a durable `reopening` status until staff retry the command successfully. The everyone role is refused as a support role.
+Ticket panels use `data/ticket-panels.json`, an eleventh guild-bound store for panel/message IDs, topic categories and publication retries. Include it in every complete backup. Level rewards add `data/level-rewards.json`, the twelfth store, for rules and durable member retry/completion records. Reopening tickets can retain a durable `reopening` status until staff retry the command successfully. The everyone role is refused as a support role.
 
 Ticket records may include the assigned support member ID. Giveaway records may include the last reroll interaction ID for duplicate-request handling. These fields contain no interaction token. Back up stores before upgrading; older releases can reject records containing these new fields.
 
@@ -91,7 +95,7 @@ The start and register scripts load `.env` with Node's built-in env-file support
 
 ## Commands
 
-The catalog currently declares 151 command paths across 22 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
+The catalog currently declares 159 command paths across 23 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
 
 - `/shop` provides coin-priced virtual items, inventories, gifts, consumables and transaction history. Staff configure items with Manage Server; new items start disabled. See the [shop guide](docs/SHOP.md).
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.
@@ -106,6 +110,7 @@ The catalog currently declares 151 command paths across 22 suites. `/voice` adds
 - `/utility ping` and `/utility server` check the bot response and show basic server information.
 - Optional welcome messages and join burst reports use member join events. Both require the Server Members privileged intent; burst detection only logs an alert.
 - `/economy balance`, `/economy daily`, `/economy work`, and `/economy pay` provide a small per-server coin system. Daily rewards are 100 coins; work rewards 25-100 coins with a one-hour cooldown. Transfers are limited to 1,000,000 coins per command.
+- `/levelreward` configures free level-based role rewards, lists/statuses, eligibility previews, pause/resume and explicit member reconciliation.
 - `/levelconfig` lets staff tune XP/cooldown, pause/resume, list/ignore/unignore exact channel IDs and reset defaults.
 - `/level` and `/leaderboard levels` show XP from non-empty human messages when leveling is enabled. By default each member can earn 15 XP once per minute; level N starts at N² × 100 XP.
 - `/leaderboard coins` shows the coin economy ranking.

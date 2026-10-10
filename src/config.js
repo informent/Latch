@@ -61,7 +61,8 @@ function loadConfig(env = process.env) {
     templateStorePath: env.TEMPLATE_STORE_PATH?.trim() || './data/templates.json',
     responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json',
     timerStorePath: env.TIMER_STORE_PATH?.trim() || './data/timers.json',
-    ticketPanelStorePath: env.TICKET_PANEL_STORE_PATH?.trim() || './data/ticket-panels.json'
+    ticketPanelStorePath: env.TICKET_PANEL_STORE_PATH?.trim() || './data/ticket-panels.json',
+    levelRewardStorePath: env.LEVEL_REWARD_STORE_PATH?.trim() || './data/level-rewards.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
     const absolute = path.resolve(value);

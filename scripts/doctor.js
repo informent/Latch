@@ -13,6 +13,7 @@ const { RoleMenuStore } = require('../src/role-menu-store');
 const { TemplateStore } = require('../src/template-store');
 const { ResponderStore } = require('../src/responder-store');
 const { TimerStore } = require('../src/timer-store');
+const { LevelRewardStore } = require('../src/level-reward-store');
 const { TicketPanelStore } = require('../src/ticket-panel-store');
 const { commands } = require('../src/commands');
 
@@ -44,10 +45,10 @@ async function inspectSetup(env = process.env) {
     if (config.raidJoinThreshold && !config.memberEventsEnabled) add('warn', 'Join alerts', 'A join threshold is configured but member events are disabled.');
     if (config.memberEventsEnabled || config.levelingEnabled || config.respondersEnabled) add('warn', 'Privileged intents', 'Enable the matching Server Members / Message Content intents in the Discord Developer Portal.');
     if (config.voiceEnabled) add('warn', 'Voice lifecycle', 'Voice requires Gateway voice states and bot View Channel, Connect, Move Members, Manage Channels and Manage Roles permissions. Live operation is not checked here.');
-    const stores = [['Tickets', TicketStore, config.storePath], ['Warnings', ModerationStore, config.moderationStorePath], ['Coins', EconomyStore, config.economyStorePath], ['XP', LevelStore, config.levelStorePath], ['Community jobs', CommunityStore, config.communityStorePath], ['Voice', VoiceStore, config.voiceStorePath], ['Role menus', RoleMenuStore, config.roleMenuStorePath], ['Templates', TemplateStore, config.templateStorePath], ['Responders', ResponderStore, config.responderStorePath], ['Timers', TimerStore, config.timerStorePath], ['Ticket panels', TicketPanelStore, config.ticketPanelStorePath]];
+    const stores = [['Tickets', TicketStore, config.storePath], ['Warnings', ModerationStore, config.moderationStorePath], ['Coins', EconomyStore, config.economyStorePath], ['XP', LevelStore, config.levelStorePath], ['Community jobs', CommunityStore, config.communityStorePath], ['Voice', VoiceStore, config.voiceStorePath], ['Role menus', RoleMenuStore, config.roleMenuStorePath], ['Templates', TemplateStore, config.templateStorePath], ['Responders', ResponderStore, config.responderStorePath], ['Timers', TimerStore, config.timerStorePath], ['Ticket panels', TicketPanelStore, config.ticketPanelStorePath], ['Level rewards', LevelRewardStore, config.levelRewardStorePath]];
     const results = await Promise.all(stores.map(async ([name, Store, file]) => {
       try {
-        await (Store === TicketPanelStore || Store === VoiceStore || Store === RoleMenuStore || Store === TemplateStore || Store === ResponderStore || Store === TimerStore ? new Store(file, config.guildId) : new Store(file)).load();
+        await (Store === LevelRewardStore || Store === TicketPanelStore || Store === VoiceStore || Store === RoleMenuStore || Store === TemplateStore || Store === ResponderStore || Store === TimerStore ? new Store(file, config.guildId) : new Store(file)).load();
         return { name, valid: true, writable: await writableParent(file) };
       } catch { return { name, valid: false, writable: false }; }
     }));

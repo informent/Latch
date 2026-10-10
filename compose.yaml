@@ -22,6 +22,7 @@ services:
       RESPONDER_STORE_PATH: /app/data/responders.json
       TIMER_STORE_PATH: /app/data/timers.json
       TICKET_PANEL_STORE_PATH: /app/data/ticket-panels.json
+      LEVEL_REWARD_STORE_PATH: /app/data/level-rewards.json
     secrets:
       - discord_bot_token
     ports:

@@ -211,6 +211,22 @@ commands.push({
 module.exports = { commands };
 
 commands.push({
+  name: 'levelreward', description: 'Manage free earned role rewards with durable retries.', type: 1, default_member_permissions: '32',
+  options: [
+    subcommand('add', 'Create or update a permission-free role milestone.', [
+      option(8, 'role', 'Unmanaged role below staff and bot.', { required: true }),
+      option(4, 'level', 'Level required to earn this role.', { required: true, min_value: 1, max_value: 1000 })
+    ]),
+    subcommand('remove', 'Remove a reward rule; member roles are preserved.', [option(3, 'role', 'Role ID, including a deleted role reference.', { required: true, min_length: 5, max_length: 25 })]),
+    subcommand('list', 'List role milestones and whether rewards are enabled.'),
+    subcommand('info', 'Show pending count, configuration revision and scan policy.'),
+    subcommand('enable', 'Enable rewards after checking every configured role.'),
+    subcommand('disable', 'Pause role rewards without changing XP or member roles.'),
+    ...['preview', 'reconcile'].map((action) => subcommand(action, action === 'preview' ? 'Inspect eligibility and saved retry state without assigning roles.' : 'Apply eligible roles to a current screened human member.', [option(6, 'user', 'Server member.', { required: true })]))
+  ]
+});
+
+commands.push({
   name: 'levelconfig', description: 'Configure free server XP awards and ignored channels.', type: 1, default_member_permissions: '32',
   options: [
     subcommand('show', 'Show current server XP settings and Gateway status.'),

@@ -29,12 +29,12 @@ Tuning applies to the next evaluated event and measures the new cooldown against
 
 ## Persistence and recovery
 
-`DISCORD_LEVEL_STORE_PATH` defaults to `./data/levels.json`. Version 2 stores account XP, last-award time, optionally the most recently awarded message ID, and per-guild settings. Awards/configuration are serialized, written to a private temporary file and atomically renamed. Readers see the last committed state until replacement succeeds. A failed write does not spend the cooldown or expose an unsaved setting. Concurrent setting changes and awards follow queue order.
+`LEVEL_STORE_PATH` defaults to `./data/levels.json`. Version 2 stores account XP, last-award time, optionally the most recently awarded message ID, and per-guild settings. Awards/configuration are serialized, written to a private temporary file and atomically renamed. Readers see the last committed state until replacement succeeds. A failed write does not spend the cooldown or expose an unsaved setting. Concurrent setting changes and awards follow queue order.
 
 The latest-message ID prevents an immediate replay even after a cooldown or restart. It is a bounded guard, not a complete message history: replaying an older ID after a different message has earned XP can qualify if fresh and outside cooldown. No cross-process write lock exists; run only one process against a store.
 
-Version 1 loads without modification and migrates on the next successful configuration or XP write. Back up all eleven stores together before upgrading. Older OpenDesk versions reject version 2; stop the service and restore a compatible complete backup to roll back. Never edit a running store. Strict schema checks refuse duplicate accounts/settings/channels, unsupported fields/versions, numeric IDs, invalid timestamps and oversized files. Limits are 50,000 accounts, 1,000 guild setting records and 32 MiB.
+Version 1 loads without modification and migrates on the next successful configuration or XP write. Back up all twelve stores together before upgrading. Older OpenDesk versions reject version 2; stop the service and restore a compatible complete backup to roll back. Never edit a running store. Strict schema checks refuse duplicate accounts/settings/channels, unsupported fields/versions, numeric IDs, invalid timestamps and oversized files. Limits are 50,000 accounts, 1,000 guild setting records and 32 MiB.
 
 ## Verification boundary
 
-Tests exercise temporary files, simulated Discord calls, signed local HTTP and the runtime Gateway callback. Live Discord permissions, transport, rate limits and hosting remain unverified. Level rewards, rank cards and voice XP are planned.
+Tests exercise temporary files, simulated Discord calls, signed local HTTP and the runtime Gateway callback. Live Discord permissions, transport, rate limits and hosting remain unverified. Free milestone roles are available in the [level reward guide](LEVEL-REWARDS.md). Rank cards and voice XP are planned.

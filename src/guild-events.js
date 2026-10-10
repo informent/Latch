@@ -1,10 +1,11 @@
 'use strict';
 
 class GuildEventService {
-  constructor({ config, discord, levels, logger = () => {}, now = Date.now }) {
+  constructor({ config, discord, levels, levelRewards, logger = () => {}, now = Date.now }) {
     this.config = config;
     this.discord = discord;
     this.levels = levels;
+    this.levelRewards = levelRewards;
     this.logger = logger;
     this.now = now;
     this.joins = [];
@@ -21,8 +22,13 @@ class GuildEventService {
           const created = Date.parse(data.timestamp), now = this.now();
           if (!Number.isFinite(created) || created > now + 5000 || now - created > 300_000) return;
         }
-        try { await this.levels?.awardMessage(data.guild_id, data.author.id, { channelId: data.channel_id, messageId: data.id }); }
-        catch (error) { this.#log('level_award_failed', { guildId: data.guild_id, message: error.message }); }
+        let award;
+        try { award = await this.levels?.awardMessage(data.guild_id, data.author.id, { channelId: data.channel_id, messageId: data.id }); }
+        catch (error) { this.#log('level_award_failed', { guildId: data.guild_id, message: error.message }); return; }
+        if (award?.awarded) {
+          try { await this.levelRewards?.schedule(data.author.id); }
+          catch { this.#log('level_reward_schedule_failed', { guildId: data.guild_id, userId: data.author.id }); }
+        }
       }
       return;
     }

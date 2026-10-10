@@ -1,5 +1,13 @@
 # Verification
 
+## Version 0.18.0
+
+All 355 tests pass locally. Coverage is 91.88% lines, 83.57% branches and 86.59% functions with the existing floors enforced. The catalog contains 159 command paths across 23 roots, all listed with options in the generated [command reference](../COMMANDS.md). CI checks reference freshness.
+
+Fifty-nine new tests cover reward rules, durable pending/completion state, paused behavior, accumulating milestones, current actor/bot/recipient permissions and hierarchy, screening, all-role preflight, ambiguous successful assignments, failed scheduling/settlement, restart recovery, backoff preservation, bounded/coalesced ticks, shutdown, corruption/limits, store-path protection and offline doctor inspection. Reference tests assert every command and option appears, and reject missing/stale references.
+
+A signed HTTP runtime test configures rewards, earns XP through the wired Gateway callback, loses an assignment reply, reconciles while losing the interaction reply and reloads the persisted reward records. Discord calls and Gateway transport are simulated. No live Discord server validation is claimed. Reward rules and completion/retry state add a twelfth local store; see [reward operations](LEVEL-REWARDS.md).
+
 ## Version 0.17.0
 
 All 296 tests pass locally. Coverage is 91.21% lines, 82.46% branches and 85.91% functions, with the existing CI floors enforced. The catalog contains 151 command paths across 22 roots.
@@ -62,7 +70,7 @@ Failing tests reproduced template input aliasing, concurrent responder guard byp
 
 The suite uses temporary local files, a local HTTP server where applicable and simulated Discord API/Gateway responses. It does not prove live Discord delivery, real permission configuration, platform rate-limit behavior or production hosting. This checkout has no Discord configuration and no available Docker executable. No live server validation was performed for this release.
 
-Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 151 command paths across 22 slash command roots.
+Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 159 command paths across 23 slash command roots.
 
 ## Repeat the checks
 

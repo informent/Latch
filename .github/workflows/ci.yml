@@ -24,3 +24,4 @@ jobs:
       - run: npm run check:roles
       - run: npm run check:automation
       - run: npm run publication-check
+      - run: npm run commands:check
