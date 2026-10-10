@@ -15,7 +15,7 @@ const base = (subcommand, permissions = '0', options = []) => ({
 const hierarchyFixture = {
   getCurrentUser: async () => ({ id: '523456789012345678' }),
   getGuild: async () => ({ id: config.guildId, owner_id: '623456789012345678' }),
-  request: async () => [{ id: config.guildId, position: 0, permissions: '0' }, { id: '723456789012345678', position: 10, permissions: String(4n | 2n | (1n << 40n)) }],
+  request: async () => [{ id: config.guildId, position: 0, permissions: '0' }, { id: '723456789012345678', position: 10, managed: false, permissions: String(4n | 2n | (1n << 40n) | (1n << 28n) | (1n << 27n)) }, { id: '423456789012345679', position: 1, managed: false, permissions: '0' }],
   getGuildMember: async (guildId, id) => ({ user: { id }, roles: id === targetId ? [] : ['723456789012345678'] })
 };
 const targetOption = { name: 'user', value: targetId };
@@ -109,6 +109,7 @@ test('role grant requires Manage Roles and nickname update requires Manage Nickn
   const calls = [];
   const edited = [];
   const discord = {
+    ...hierarchyFixture,
     grantRole: async (...args) => calls.push(['grant', ...args]),
     setNickname: async (...args) => calls.push(['nickname', ...args]),
     editOriginalResponse: async (...args) => edited.push(args)

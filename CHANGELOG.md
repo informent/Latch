@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0 - 2026-10-10
+
+- Extended live actor/bot permission and hierarchy checks to role grants/removals and nickname updates. Blocks protected/self targets, managed/everyone roles and equal or higher role positions.
+- Non-admin staff cannot grant roles containing guild permissions they do not hold. Timed-out non-owner actors are refused before delegation.
+- Added private role metadata inspection with /utility role, highlighted management permissions and raw permission bits. Catalog now declares 107 command paths across 19 suites.
+- Updated existing role fixtures for live lookup responses, member-management documentation and command coverage.
+
+Existing CI does not cover every new rejection branch or the new role-inspection workflow. Live Discord validation remains outstanding. Role changes can race a final REST action. Complete competitor parity remains unfinished.
+
 ## 0.9.1 - 2026-10-10
 
 - Added live actor and bot permission/hierarchy checks before ban, kick, timeout and timeout removal. Protects the server owner, invoking member and OpenDesk itself.

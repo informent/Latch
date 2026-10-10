@@ -8,6 +8,6 @@ Actors cannot target themselves, the server owner or OpenDesk. Timeout actions a
 
 These checks follow Discord's [permission hierarchy](https://docs.discord.com/developers/topics/permissions#permission-hierarchy) and [member modification rules](https://docs.discord.com/developers/resources/guild#modify-guild-member). Discord remains the final enforcement layer. Role changes can race the REST action after the snapshot, so these lookups are not an atomic permission transaction.
 
-Unban, warning records, purge and slowmode retain their existing permission checks. This guard does not yet protect role/nickname delegation or implement temporary bans, jail, strikes, antinuke or full competitor parity. Member and role lookup data is not persisted. Private failures explain known policy denials; unknown API errors use a generic message.
+Unban, warning records, purge and slowmode retain their existing permission checks. The guard also protects [role/nickname delegation](MEMBER-MANAGEMENT.md). Temporary bans, jail, strikes, antinuke and full competitor parity remain unfinished. Member and role lookup data is not persisted. Private failures explain known policy denials; unknown API errors use a generic message.
 
 Existing moderation CI fixtures supply the live lookup responses, but they do not cover every new rejection branch. Live Discord operation remains unverified.

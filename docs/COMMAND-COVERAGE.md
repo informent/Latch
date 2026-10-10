@@ -20,6 +20,8 @@ Only command names and independently authored implementation notes are recorded 
 | ban, kick, timeout, untimeout | `/moderation` actions | Slash syntax; no competitor-specific message customization |
 | unban | `/moderation unban user-id` | Slash syntax; requires Ban Members |
 | warn | `/moderation warn` | Persistent warning only; no strike punishment policy |
+| Role inspection | `/utility role` | Private metadata and raw permission bits; does not calculate effective channel/member access |
+| Role/nickname delegation | `/roles` actions | Live actor/bot hierarchy and grant-permission checks; conservative equal-position and protected-target rules |
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
 | balance, daily, work | `/economy` actions | OpenDesk reward amounts and cooldowns |
 | transfer | `/economy pay` | Different name and syntax |

@@ -35,7 +35,7 @@ const commands = [
   },
   {
     name: 'utility', description: 'Useful server information and bot health.', type: 1,
-    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('help', 'Show available feature suites and configuration status.')]
+    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('role', 'Privately inspect a server role and its permission bits.', [option(8, 'role', 'Server role to inspect.', { required: true })]), subcommand('help', 'Show available feature suites and configuration status.')]
   },
   {
     name: 'economy', description: 'Earn, save, and share server coins.', type: 1,

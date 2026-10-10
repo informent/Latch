@@ -6,11 +6,11 @@ All OpenDesk features are intended to be available without subscriptions or prem
 
 | Area | Current implementation | Remaining work |
 | --- | --- | --- |
-| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, staff warnings; live actor/bot hierarchy checks for member moderation | Cases, strikes/expiry, appeals, configurable audit channel, role/nickname delegation checks |
+| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, staff warnings; live actor/bot hierarchy checks for member moderation | Cases, strikes/expiry, appeals, configurable audit channel, delegation audit records and configurable policies |
 | AutoMod | Native keyword, spam and mention filters; enable/disable/remove | Presets, exclusions through commands, regex validation, management UI |
 | Server security | Join burst detection; native mention-raid filter | Account-age policies, antinuke audit attribution, action budgets, restoration plans |
 | Tickets | Private channels, durable ownership/assignment, list/stats, rename and retryable closure | Panels, per-option categories and policies, reopen, transcripts, configurable retention |
-| Roles | Staff roles/nicknames, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
+| Roles | Staff roles/nicknames with live delegation checks, persistent self-service button menus, permission-free join roles and staff reconciliation | Live validation, reaction/toggle policies, mutually exclusive menus, booster/vanity roles, persistent join retries |
 | Leveling | Persistent XP, cooldowns and leaderboard | Rewards, ignored channels, tuning, rank cards, voice XP |
 | Economy | Durable balances, daily/work, transfers and leaderboard | Shops, professions, inventory, seasonal events, staff controls |
 | Embeds | Custom announcements, persistent templates, private previews and staff publication | Variables, scripting, editing previously published copies, webhook branding |

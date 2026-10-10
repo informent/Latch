@@ -343,6 +343,25 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       } };
     }
     if (commandName === 'utility') {
+      if (subcommand?.name === 'role') {
+        const roleId = findOption(subcommand.options || [], 'role');
+        if (typeof roleId !== 'string' || !/^\d{5,25}$/.test(roleId)) return { immediate: response('Choose a valid server role.') };
+        return { immediate: defer(), work: async () => {
+          try {
+            const roles = await discord.request('GET', `/guilds/${config.guildId}/roles`);
+            if (!Array.isArray(roles)) throw new Error();
+            const role = roles.find((item) => item.id === roleId);
+            if (!role || typeof role.name !== 'string' || !Number.isInteger(role.position) || typeof role.permissions !== 'string' || !/^\d{1,30}$/.test(role.permissions)) throw new Error();
+            const permissions = BigInt(role.permissions);
+            const important = [[3, 'Administrator'], [1, 'Kick Members'], [2, 'Ban Members'], [4, 'Manage Channels'], [5, 'Manage Server'], [13, 'Manage Messages'], [27, 'Manage Nicknames'], [28, 'Manage Roles'], [29, 'Manage Webhooks'], [40, 'Moderate Members']].filter(([bit]) => permissions & (1n << BigInt(bit))).map(([, label]) => label);
+            const content = `**${safeText(role.name).slice(0, 300)}**\nID: ${role.id}\nPosition: ${role.position}\nManaged by integration: ${role.managed === true ? 'yes' : role.managed === false ? 'no' : 'unknown'}\nMentionable: ${role.mentionable === true ? 'yes' : role.mentionable === false ? 'no' : 'unknown'}\nDisplayed separately: ${role.hoist === true ? 'yes' : role.hoist === false ? 'no' : 'unknown'}\nServer permission bits: ${role.permissions}\nHighlighted permissions: ${important.join(', ') || 'none'}\nThis shows role metadata; effective member/channel access also depends on other roles, ownership and overwrites.`;
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
+          } catch {
+            logger('utility_role_failed', {});
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not load that role from the configured server.', allowed_mentions: { parse: [] } }).catch(() => {});
+          }
+        } };
+      }
       if (['user', 'avatar'].includes(subcommand?.name)) {
         const selected = findOption(subcommand.options || [], 'user');
         const targetId = typeof selected === 'object' ? selected.id : selected || user.id;
@@ -428,6 +447,7 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
       if (action === 'nickname' && (typeof nickname !== 'string' || !nickname.length || nickname.length > 32)) return { immediate: response('Nickname must contain 1 to 32 characters.') };
       return { immediate: defer(), work: async () => {
         try {
+          await moderationGuard.check(action, user.id, targetId, roleId);
           if (action === 'grant') await discord.grantRole(interaction.guild_id, targetId, roleId, `Role granted by ${user.id}`);
           else if (action === 'revoke') await discord.revokeRole(interaction.guild_id, targetId, roleId, `Role removed by ${user.id}`);
           else if (action === 'nickname' || action === 'clear-nickname') await discord.setNickname(interaction.guild_id, targetId, action === 'nickname' ? nickname : null, `Nickname changed by ${user.id}`);
@@ -437,7 +457,8 @@ function createInteractionHandler({ config, tickets, moderation, economy, levels
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
         } catch (error) {
           logger('role_action_failed', { action, message: error.message });
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the role change. Check the bot permissions and role position.', allowed_mentions: { parse: [] } }).catch(() => {});
+          const detail = error instanceof ModerationDenied ? error.message : 'Check current staff/bot permissions, both role positions and target membership.';
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Could not complete the member change. ${detail}`, allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
     }
