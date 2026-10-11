@@ -29,6 +29,6 @@ Configuration changes and timer delivery are serialized through the same service
 
 ## Storage and backups
 
-`TIMER_STORE_PATH` defaults to `./data/timers.json`, the tenth store. It holds configured names, channel IDs, text, intervals, enabled states, deadlines and attempt/result/nonce metadata. The schema is versioned, guild-bound and capped at 1 MiB. Existing invalid data stops startup instead of being overwritten. Writes use an exclusive temporary file and rename before updating in-memory state. Stop the bot and back up all ten stores together. `npm run doctor` inspects the timer store without changing it.
+`TIMER_STORE_PATH` defaults to `./data/timers.json`, the tenth store. It holds configured names, channel IDs, text, intervals, enabled states, deadlines and attempt/result/nonce metadata. The schema is versioned, guild-bound and capped at 1 MiB. Existing invalid data stops startup instead of being overwritten. Writes use an exclusive temporary file and rename before updating in-memory state. Stop the bot and back up all twelve stores together using the [backup and recovery guide](BACKUPS.md). `npm run doctor` inspects the timer store without changing it.
 
-Existing CI does not exercise these new timer workflows. Live Discord operation remains unverified. Activity thresholds, embed templates, richer scheduling and full competitor parity remain unfinished.
+CI runs timer store, interaction and scheduler regression tests, including persisted deadlines, failed delivery and in-flight shutdown behavior. Live Discord operation remains unverified. Activity thresholds, embed templates, richer scheduling and full competitor parity remain unfinished.
