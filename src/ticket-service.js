@@ -1,5 +1,6 @@
 'use strict';
 
+const { exportTranscript, channelAccess, LIMIT } = require('./ticket-transcript');
 const { MAX_GUESTS } = require('./ticket-store');
 
 const PERMISSIONS = Object.freeze({
@@ -170,6 +171,28 @@ class TicketService {
     const ticket = this.store.getByChannel(channelId);
     if (!ticket || ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Ticket information is available only to its owner or the support team.' };
     return { ok: true, ticket: { ...ticket } };
+  }
+
+  async transcript({ channelId, userId, roles = [], permissions = '0', limit = 50, format = 'text' }) {
+    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId) || !Number.isInteger(limit) || limit < 1 || limit > LIMIT || !['text', 'json'].includes(format)) return { ok: false, reason: 'Choose a ticket, text or JSON, and 1 to 100 recent messages.' };
+    return this.store.withChannelLock(channelId, async () => {
+      const ticket = this.store.getByChannel(channelId);
+      if (!ticket || ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the ticket owner or support team can export its conversation.' };
+      const member = await this.discord.getGuildMember(this.config.guildId, userId);
+      if (member?.user?.id !== userId || member.user.bot || member.pending) return { ok: false, reason: 'Conversation exports require current human membership and completed screening.' };
+      const [guild, currentRoles, channel] = await Promise.all([this.discord.getGuild(this.config.guildId), this.discord.request('GET', `/guilds/${this.config.guildId}/roles`), this.discord.request('GET', `/channels/${channelId}`)]);
+      if (guild?.id !== this.config.guildId) throw new Error('Transcript guild unavailable.');
+      const entries = privateChannel(channel, channelId, this.config.guildId);
+      const access = channelAccess({ guild, roles: currentRoles, member, entries });
+      if (ticket.ownerId !== userId && !this.isStaff({ roles: member.roles, permissions: access.base.toString() })) return { ok: false, reason: 'Your support access is no longer active.' };
+      if (!access.readable) return { ok: false, reason: 'Your current roles and ticket permissions must allow viewing the channel and reading message history.' };
+      const before = permissionSnapshot(entries);
+      const messages = await this.discord.getChannelMessages(channelId, limit);
+      const file = exportTranscript({ ticket, channelId, guildId: this.config.guildId, messages, limit, format, exportedAt: this.now().toISOString() });
+      const confirmed = await this.discord.request('GET', `/channels/${channelId}`);
+      if (permissionSnapshot(privateChannel(confirmed, channelId, this.config.guildId)) !== before) throw new Error('Ticket permissions changed during export. Retry after inspection.');
+      return { ok: true, file };
+    });
   }
 
   async guests({ action, channelId, targetId, userId, roles = [], permissions = '0' }) {

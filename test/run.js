@@ -58,3 +58,5 @@ require('./server-errors.test');
 require('./release-verify.test');
 
 require('./ticket-guests.test');
+
+require('./ticket-transcript.test');

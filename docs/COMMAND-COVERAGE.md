@@ -39,7 +39,8 @@ Only command names and independently authored implementation notes are recorded 
 | tickets stats | `/ticket stats` | Staff-only lifetime counts; no time-window or per-staff workload reporting |
 | tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
 | tickets move, reason | `/ticket move`, `/ticket reason` | Open stored tickets only; staff checks; explicit overwrite preservation/read-back; reason visible to owner and support |
-| ticket information | `/ticket info` | Stored metadata only; owner or support staff; no conversation export |
+| ticket information | `/ticket info` | Stored metadata only; owner or support staff; recent-message exports through `/ticket transcript` |
+| ticket transcripts | `/ticket transcript` | Private text/JSON snapshots of up to 100 recent messages; current role/read access checks; full-history exports and retention remain unfinished |
 | tickets guests | `/ticket guest add`, `/ticket guest remove`, `/ticket guest list` | Staff-only, 20 screened human guests, persistent intent and permission verification; closure revokes, reopening does not reinvite |
 | tickets rename | `/ticket rename` | Open Latch tickets only; staff-only; no arbitrary text-channel rename |
 | giveaway edit prize, duration, winners, host, description, image, thumbnail | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline; human host attribution and bounded HTTPS media; lifetime limited to 30 days |
@@ -73,7 +74,7 @@ These are concrete gaps from the sources above; the list will expand as further 
 
 ## Suites awaiting a detailed inventory
 
-Ticket panels now have eight `/ticketpanel` paths, durable publication retries, saved server/channel/message bindings and up to five topic/category buttons. `/ticket reopen` supports staff recovery with persisted intent and permission read-back checks. Intake forms, transcripts and competitor-specific panel policies remain missing; see the [panel guide](TICKET-PANELS.md).
+Ticket panels now have eight `/ticketpanel` paths, durable publication retries, saved server/channel/message bindings and up to five topic/category buttons. `/ticket reopen` supports staff recovery with persisted intent and permission read-back checks. Intake forms, full-history transcripts and competitor-specific panel policies remain missing; see the [panel guide](TICKET-PANELS.md).
 
 Native AutoMod now adds preset wordsets, private rule inspection, role/channel exemptions, allowed-word replacement and custom blocking explanations. It manages only rules created by this bot with the Latch prefix. See the [AutoMod guide](AUTOMOD.md).
 

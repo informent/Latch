@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.31.0 - 2026-10-11
+
+- Add private text and JSON ticket transcript downloads for up to 100 recent messages, ordered by exact numeric ID. Include message metadata, attachment links and embed text with explicit snapshot limitations.
+- Check current membership, staff privileges and effective channel read permissions; refuse public tickets or overwrite changes during export. Guests cannot export conversations.
+- Upload bounded files through multipart private-response edits, preserving exact bytes, credential-safe errors and existing rate-limit behavior. No local transcript files or store writes are created.
+- Add 32 transcript/upload regression tests and signed text/JSON runtime smoke checks. Re-register commands; the reference contains 203 paths. No additional data migration is required.
+
 ## 0.30.0 - 2026-10-11
 
 - Add staff-only ticket guest add, remove and list commands, with up to 20 current screened human guests per open ticket.
