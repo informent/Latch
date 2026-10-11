@@ -32,6 +32,7 @@ const { publicKeyFromHex, verifySignature, createInteractionHandler } = require(
 
 const BODY_LIMIT = 64 * 1024;
 const SHUTDOWN_DRAIN_TIMEOUT_MS = 30_000;
+function safeLog(logger, event, details) { try { logger(event, details); } catch {} }
 
 function readBody(request) {
   return new Promise((resolve, reject) => {
@@ -74,14 +75,14 @@ function startServer({ config, publicKey, handle, logger = () => {} }) {
       reply.end(JSON.stringify(result.immediate));
       if (result.work) {
         let task;
-        task = Promise.resolve().then(result.work).catch((error) => {
-          try { logger('interaction_work_failed', { message: error.message }); } catch {}
+        task = Promise.resolve().then(result.work).catch(() => {
+          safeLog(logger, 'interaction_work_failed', { message: 'Unexpected interaction work failure.' });
         }).finally(() => pendingWork.delete(task));
         pendingWork.add(task);
       }
     } catch (error) {
-      logger('http_request_failed', { message: error.message });
-      if (!reply.headersSent) reply.writeHead(error.statusCode || 500).end();
+      safeLog(logger, 'http_request_failed', { message: 'Interaction request could not be completed.' });
+      if (!reply.headersSent) reply.writeHead(error?.statusCode === 413 ? 413 : 500).end();
     }
   });
   server.requestTimeout = 10_000;
@@ -107,16 +108,16 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     void server.ticketPanels?.stop();
     void server.levelRewards?.stop();
     const timeout = setTimeout(() => {
-      log('shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
+      safeLog(log, 'shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
     void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop(), server.levelRewards?.stop()])).then(
       () => clearTimeout(timeout),
-      (error) => {
+      () => {
         clearTimeout(timeout);
-        log('shutdown_drain_failed', { message: error.message });
+        safeLog(log, 'shutdown_drain_failed', { message: 'Shutdown work could not be drained.' });
         processRef.exitCode = 1;
       }
     );
@@ -192,6 +193,6 @@ async function main() {
   installShutdownHandlers(server, { gateway, log });
 }
 
-if (require.main === module) main().catch((error) => { console.error(`Latch failed to start: ${error.message}`); process.exitCode = 1; });
+if (require.main === module) main().catch(() => { console.error('Latch failed to start. Run npm run doctor and npm run doctor:live to inspect setup and Discord access.'); process.exitCode = 1; });
 
 module.exports = { startServer, createServerRuntime, installShutdownHandlers, readBody, BODY_LIMIT, SHUTDOWN_DRAIN_TIMEOUT_MS };

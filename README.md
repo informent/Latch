@@ -46,7 +46,7 @@ npm run backup -- verify ../Latch-backup-before-upgrade
 
 Use a new backup folder for each upgrade. Follow the [backup guide](docs/BACKUPS.md) to preserve configuration and all twelve stores. After upgrading, run `npm run doctor`, update command definitions with `npm run register`, and use `npm run doctor:live` to inspect Discord access and registration. Live checks do not replace trying commands in your test server.
 
-For an isolated runtime and recovery check without Discord credentials, run `npm run release:smoke`.
+For the complete automated release gate without Discord credentials, run `npm run release:verify`. Add `-- --json --output release-evidence/verification.json` to save a new report. See [release readiness](docs/RELEASE.md) for the remaining live checks.
 
 ## What it stores
 
@@ -142,4 +142,4 @@ Reminder delivery is **at least once**: Discord message nonces suppress repeats 
 
 ## Development
 
-There are no third-party runtime dependencies. Run `npm test` and `npm run check` before proposing changes. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+There are no third-party runtime dependencies. Run `npm run release:verify` before proposing changes. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
