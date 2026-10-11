@@ -10,7 +10,7 @@ for (const action of actions) {
     await guard.check(action, ids.actor, ids.user, ids.role);
     for (const target of [ids.actor, ids.owner, ids.bot]) await assert.rejects(guard.check(action, ids.actor, target, ids.role), ModerationDenied);
     f.members.get(ids.user).roles = [ids.actorRole]; await assert.rejects(guard.check(action, ids.actor, ids.user, ids.role), /below your highest/);
-    f.members.get(ids.user).roles = [ids.botRole]; await assert.rejects(guard.check(action, ids.owner, ids.user, ids.role), /below OpenDesk/);
+    f.members.get(ids.user).roles = [ids.botRole]; await assert.rejects(guard.check(action, ids.owner, ids.user, ids.role), /below Latch/);
   });
   test(`delegation ${action}: live permission removal and invalid role snapshots`, async () => {
     const f = fakeDiscord(); const guard = new ModerationGuard({ config: { guildId: ids.guild }, discord: f.discord });

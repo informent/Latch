@@ -177,7 +177,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
       return { immediate: defer(), work: async () => {
         try {
           await discord.createMessage(interaction.channel_id, { poll: { question: { text: question.trim() }, answers: answers.map((text) => ({ poll_media: { text } })), duration: hours, allow_multiselect: multiple, layout_type: 1 }, allowed_mentions: { parse: [] } });
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Poll published in this channel. Discord manages voting and expiration even while OpenDesk is offline.', allowed_mentions: { parse: [] } });
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Poll published in this channel. Discord manages voting and expiration even while Latch is offline.', allowed_mentions: { parse: [] } });
         } catch {
           logger('poll_publish_failed', {});
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not publish the poll. Check the bot Send Messages and Send Polls permissions and that this channel supports polls.', allowed_mentions: { parse: [] } }).catch(() => {});
@@ -246,7 +246,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
         } catch (error) {
           logger('automod_action_failed', { action });
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the AutoMod action. Check the rule ID, keyword limits, bot Manage Server permission, and Discord rule limits. OpenDesk only changes rules it created.', allowed_mentions: { parse: [] } }).catch(() => {});
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the AutoMod action. Check the rule ID, keyword limits, bot Manage Server permission, and Discord rule limits. Latch only changes rules it created.', allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
     }
@@ -426,8 +426,8 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           }
         } };
       }
-      if (subcommand?.name === 'help') return { immediate: response(`**OpenDesk features**\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
-      if (subcommand?.name === 'ping') return { immediate: response('OpenDesk is responding.') };
+      if (subcommand?.name === 'help') return { immediate: response(`**Latch features**\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
+      if (subcommand?.name === 'ping') return { immediate: response('Latch is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {
         try {
           const guild = await discord.getGuild(interaction.guild_id);

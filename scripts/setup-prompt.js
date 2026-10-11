@@ -3,7 +3,7 @@ const readline = require('node:readline/promises');
 const { Writable } = require('node:stream');
 
 function createPrompter(input = process.stdin, output = process.stdout) {
-  if (!input.isTTY || !output.isTTY) throw new Error('Guided setup needs a terminal. Open a terminal in the OpenDesk folder and run npm run setup.');
+  if (!input.isTTY || !output.isTTY) throw new Error('Guided setup needs a terminal. Open a terminal in the Latch folder and run npm run setup.');
   let hidden = false;
   const sink = new Writable({ write(chunk, encoding, callback) { if (!hidden) output.write(chunk); callback(); } });
   Object.defineProperty(sink, 'columns', { get: () => output.columns || 80 });

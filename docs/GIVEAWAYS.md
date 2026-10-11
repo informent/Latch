@@ -17,7 +17,7 @@ Staff need Manage Messages. The bot needs Send Messages and Embed Links in the c
 
 Up to five required role IDs can be stored. A member must hold all of them; everyone is refused. A requirement role can contain permissions or be managed because the bot only checks possession and never grants it. Roles are validated against the current configured guild on addition. `/giveaway requirements role-remove` takes an ID, so deleted references can be removed.
 
-Level bounds are inclusive integers 0-1000; omit max for no upper bound. OpenDesk's committed XP determines level N at N squared times 100 XP. XP may remain readable while message awards are disabled. `/giveaway requirements clear` removes role and level gates while retaining membership/screening checks.
+Level bounds are inclusive integers 0-1000; omit max for no upper bound. Latch's committed XP determines level N at N squared times 100 XP. XP may remain readable while message awards are disabled. `/giveaway requirements clear` removes role and level gates while retaining membership/screening checks.
 
 Requirements can change only while a giveaway is draft/open and before its deadline. Existing entries are preserved and rechecked against the final saved requirements during selection. Members can leave while entry remains open even if they no longer qualify. Preview makes no entry/winner changes and reports current eligibility. Entrant lists are private, mention-suppressed and paginated at 20 per page (up to 500 pages).
 

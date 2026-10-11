@@ -1,8 +1,8 @@
-# OpenDesk feature roadmap
+# Latch feature roadmap
 
 Goal: a free, open-source community bot spanning the feature areas advertised by [Bleed](https://bleed.bot/commands) and [Greed](https://greed.sh/docs/introduction/), with transparent configuration, durable data, and documented operating limits. This is a feature-area comparison, not a claim of command-for-command parity. Inventory reviewed October 9, 2026.
 
-All OpenDesk features are intended to be available without subscriptions or premium gates. Self-hosting still needs a machine and network access. External providers can require their own credentials, impose limits, or charge fees; integrations must document those conditions.
+All Latch features are intended to be available without subscriptions or premium gates. Self-hosting still needs a machine and network access. External providers can require their own credentials, impose limits, or charge fees; integrations must document those conditions.
 
 | Area | Current implementation | Remaining work |
 | --- | --- | --- |

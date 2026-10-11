@@ -1,4 +1,4 @@
-# Run Caddy on the same host as the loopback-bound OpenDesk port.
+# Run Caddy on the same host as the loopback-bound Latch port.
 # Set OPENDESK_DOMAIN to a real domain pointing at this host.
 {$OPENDESK_DOMAIN} {
     @interactions path /interactions

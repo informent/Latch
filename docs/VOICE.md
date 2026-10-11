@@ -5,7 +5,7 @@ This is an optional, free suite. It manages channels through Discord's REST API 
 ## Enable and configure
 
 1. Set `DISCORD_VOICE_ENABLED=true` in your private `.env`. Leave `DISCORD_GATEWAY_ENABLED` blank or set it to true, then restart. Voice adds the `GUILD_VOICE_STATES` intent (`128`).
-2. Use `npm run invite -- community,voice` to obtain an installation link with View Channel, Connect, Move Members, Manage Channels and Manage Roles. Review guild permissions and category overrides; OpenDesk does not request Administrator.
+2. Use `npm run invite -- community,voice` to obtain an installation link with View Channel, Connect, Move Members, Manage Channels and Manage Roles. Review guild permissions and category overrides; Latch does not request Administrator.
 3. Re-register commands with `npm run register`.
 4. Create a normal voice channel to serve as the lobby and a category for temporary rooms. Use `/voice setup lobby:... category:...` as a member with Manage Server. Setup stores existing channel IDs rather than creating or editing a lobby/category.
 5. Check `/voice status`. After a current server voice snapshot arrives, join the lobby to create your room and move into it.

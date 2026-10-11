@@ -1,10 +1,10 @@
-[Complete OpenDesk command reference](../COMMANDS.md): every registered command and option, generated and checked in CI.
+[Complete Latch command reference](../COMMANDS.md): every registered command and option, generated and checked in CI.
 
 # Command coverage
 
-Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus OpenDesk additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-10, not a complete competitor command count.
+Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus Latch additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-10, not a complete competitor command count.
 
-OpenDesk currently uses slash commands. Competitor prefix commands, aliases, argument syntax, permission policies, and nested settings are separate requirements. A similar slash command is not proof of identical behavior. No placeholders count as implemented commands. Source implementation also does not establish live Discord validation.
+Latch currently uses slash commands. Competitor prefix commands, aliases, argument syntax, permission policies, and nested settings are separate requirements. A similar slash command is not proof of identical behavior. No placeholders count as implemented commands. Source implementation also does not establish live Discord validation.
 
 ## Sources and inventory limits
 
@@ -17,7 +17,7 @@ Only command names and independently authored implementation notes are recorded 
 
 ## Core behaviors present, with different syntax or scope
 
-| Documented command | OpenDesk | Remaining difference |
+| Documented command | Latch | Remaining difference |
 | --- | --- | --- |
 | ban, kick, timeout, untimeout | `/moderation` actions | Slash syntax; no competitor-specific message customization |
 | unban | `/moderation unban user-id` | Slash syntax; requires Ban Members |
@@ -25,13 +25,13 @@ Only command names and independently authored implementation notes are recorded 
 | Role inspection | `/utility role` | Private metadata and raw permission bits; does not calculate effective channel/member access |
 | Role/nickname delegation | `/roles` actions | Live actor/bot hierarchy and grant-permission checks; conservative equal-position and protected-target rules |
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
-| balance, daily, work, beg, professions | `/economy` actions and profession subcommands | OpenDesk reward amounts/cooldowns, equal-rate professions and work-based ranks; competitor mechanics remain different |
+| balance, daily, work, beg, professions | `/economy` actions and profession subcommands | Latch reward amounts/cooldowns, equal-rate professions and work-based ranks; competitor mechanics remain different |
 | transfer | `/economy pay` | Different name and syntax |
 | level role rewards | `/levelreward add`, `remove`, `list`, `info`, `enable`, `disable`, `preview`, `reconcile` | Accumulating permission-free milestones, durable retries and existing-XP backfill; no role removal or exclusive policy |
 | leveling settings | `/levelconfig show`, `tune`, `reset`, `ignore`, `unignore`, `ignored`, `enable`, `disable` | Free per-guild settings, exact channel ignores and pause/resume; rewards/rank cards/voice XP remain unfinished |
-| leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only OpenDesk coin/XP records |
+| leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only Latch coin/XP records |
 | giveaway start | `/giveaway create` | Current channel; limited options |
-| giveaway end, list | `/giveaway end`, `/giveaway list` | OpenDesk IDs instead of message links |
+| giveaway end, list | `/giveaway end`, `/giveaway list` | Latch IDs instead of message links |
 | giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
 | tickets close | `/ticket close` | Private tickets with persistent category panels and staff reopening; per-option claim policies remain missing |
 | tickets list | `/ticket list` | Staff see all active tickets; others see only their own; ten per page |
@@ -39,7 +39,7 @@ Only command names and independently authored implementation notes are recorded 
 | tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
 | tickets move, reason | `/ticket move`, `/ticket reason` | Open stored tickets only; staff checks; explicit overwrite preservation/read-back; reason visible to owner and support |
 | ticket information | `/ticket info` | Stored metadata only; owner or support staff; no conversation export |
-| tickets rename | `/ticket rename` | Open OpenDesk tickets only; staff-only; no arbitrary text-channel rename |
+| tickets rename | `/ticket rename` | Open Latch tickets only; staff-only; no arbitrary text-channel rename |
 | giveaway edit prize, duration, winners | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline only; lifetime limited to 30 days |
 | giveaway reroll | `/giveaway reroll` | Finished giveaways only; excludes immediately previous winners; same interaction ID reuses saved result |
 | voicemaster setup | `/voice setup` | Configures existing lobby/category; no generated lobby or interface panel |
@@ -62,14 +62,14 @@ These are concrete gaps from the sources above; the list will expand as further 
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
 - Last.fm: fm, recent, topartists, who-knows. No Last.fm integration exists yet.
-- Economy: begging and professions now exist with OpenDesk-specific rewards, cooldowns and work progression. Competitor-specific profession policies and broader economy mechanics remain unverified. See the [economy guide](ECONOMY.md).
+- Economy: begging and professions now exist with Latch-specific rewards, cooldowns and work progression. Competitor-specific profession policies and broader economy mechanics remain unverified. See the [economy guide](ECONOMY.md).
 - Prefix support: configurable prefix, prefix set, cmds alias, command aliases and competitor command syntax.
 
 ## Suites awaiting a detailed inventory
 
 Ticket panels now have eight `/ticketpanel` paths, durable publication retries, saved server/channel/message bindings and up to five topic/category buttons. `/ticket reopen` supports staff recovery with persisted intent and permission read-back checks. Intake forms, transcripts and competitor-specific panel policies remain missing; see the [panel guide](TICKET-PANELS.md).
 
-Native AutoMod now adds preset wordsets, private rule inspection, role/channel exemptions, allowed-word replacement and custom blocking explanations. It manages only rules created by this bot with the OpenDesk prefix. See the [AutoMod guide](AUTOMOD.md).
+Native AutoMod now adds preset wordsets, private rule inspection, role/channel exemptions, allowed-word replacement and custom blocking explanations. It manages only rules created by this bot with the Latch prefix. See the [AutoMod guide](AUTOMOD.md).
 
 The new `/shop` suite adds 11 paths for staff catalog management, purchases, inventories, gifts, consumption and private receipts. These virtual items have no Discord role or permission effects. See the [shop guide](SHOP.md); this is independently implemented functionality and does not establish competitor shop parity.
 
@@ -81,7 +81,7 @@ Saved embeds now have seven `/template` command paths with durable storage, priv
 
 Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, starboard, broader level reward policies, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
 
-## OpenDesk additions already implemented
+## Latch additions already implemented
 
 Persistent public-channel reminders with private list/info/cancel, owner-only text editing and rescheduling, signed interaction handling, native Discord polls, offline configuration diagnostics, permission-based invite generation, token-file configuration, deployment examples, bounded REST retries, and reconnect recovery. `/utility user` and `/utility avatar` provide server member details and Discord CDN avatars. These additions do not offset missing competitor commands when evaluating parity.
 

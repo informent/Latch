@@ -6,7 +6,7 @@ const { createInteractionHandler } = require('../src/interactions');
 const { ids, fakeDiscord, interaction } = require('./feature-fixtures');
 function fixture() {
   const fake = fakeDiscord(); const rules = new Map(); const edits = [];
-  const rule = { id: ids.menu, guild_id: ids.guild, creator_id: ids.bot, name: 'OpenDesk: Review', event_type: 1, trigger_type: 1, trigger_metadata: { keyword_filter: ['blocked'], regex_patterns: ['test'], allow_list: [] }, enabled: false, actions: [{ type: 1 }, { type: 2, metadata: { channel_id: ids.channel } }], exempt_roles: [], exempt_channels: [] }; rules.set(rule.id, rule);
+  const rule = { id: ids.menu, guild_id: ids.guild, creator_id: ids.bot, name: 'Latch: Review', event_type: 1, trigger_type: 1, trigger_metadata: { keyword_filter: ['blocked'], regex_patterns: ['test'], allow_list: [] }, enabled: false, actions: [{ type: 1 }, { type: 2, metadata: { channel_id: ids.channel } }], exempt_roles: [], exempt_channels: [] }; rules.set(rule.id, rule);
   fake.discord.getAutoModRule = async (guild, id) => { assert.equal(guild, ids.guild); return structuredClone(rules.get(id)); };
   fake.discord.editAutoModRule = async (guild, id, patch) => { edits.push(structuredClone(patch)); Object.assign(rules.get(id), structuredClone(patch)); };
   fake.discord.createAutoModRule = async (guild, body) => { const created = { ...structuredClone(body), id: ids.message, guild_id: guild, creator_id: ids.bot }; rules.set(created.id, created); return structuredClone(created); };

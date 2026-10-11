@@ -1,6 +1,6 @@
 # Native polls
 
-OpenDesk uses Discord native polls. Voting and vote records stay in Discord; OpenDesk does not store poll or voter history. The existing `/poll` command creates a poll with 2-10 choices, a question up to 300 characters, answers up to 55 characters, duration 1-768 hours and optional multiple selection.
+Latch uses Discord native polls. Voting and vote records stay in Discord; Latch does not store poll or voter history. The existing `/poll` command creates a poll with 2-10 choices, a question up to 300 characters, answers up to 55 characters, duration 1-768 hours and optional multiple selection.
 
 ## Staff management
 
@@ -9,7 +9,7 @@ OpenDesk uses Discord native polls. Voting and vote records stay in Discord; Ope
 | `/pollmanage info message:...` | Privately show the poll question, actual answer IDs, expiry, selection mode and available vote counts |
 | `/pollmanage voters message:... answer:...` | Privately fetch up to 25 voters for one answer |
 | `/pollmanage voters message:... answer:... after:...` | Fetch the next page using the prior page's user-ID cursor |
-| `/pollmanage end message:...` | End an OpenDesk poll early and confirm the result through a message fetch |
+| `/pollmanage end message:...` | End an Latch poll early and confirm the result through a message fetch |
 
 All management commands require Manage Messages (or Administrator) in the invoking interaction. They operate only in the current server text channel. Enable Discord Developer Mode and copy the poll message ID, then invoke the command in that same channel. No destination channel selector is accepted. The fetched channel ID, configured guild, text type, message ID, message channel and author must match. Only polls authored by this bot can be managed through these commands.
 
@@ -23,7 +23,7 @@ Voter pages fetch at most 25 users. A full page includes the largest returned us
 
 Ending sends Discord's expire request and then fetches the message. Success requires matching message identity and either an elapsed expiry or finalized results. A poll can be ended while final counting is still pending. Already elapsed or finalized polls avoid another expire request. Concurrent management operations for the same channel/message serialize within the running bot process; locks are released even after failures.
 
-If an update or response fails, inspect the poll and retry. Discord may have ended it before OpenDesk received an error; a fresh fetch lets a retry recognize that state. There is no cross-process lock or local poll state, so run one process for a configured bot. Other apps' polls, poll editing after publication, voting on behalf of members and durable poll history are not supported.
+If an update or response fails, inspect the poll and retry. Discord may have ended it before Latch received an error; a fresh fetch lets a retry recognize that state. There is no cross-process lock or local poll state, so run one process for a configured bot. Other apps' polls, poll editing after publication, voting on behalf of members and durable poll history are not supported.
 
 ## Upgrade and verification
 

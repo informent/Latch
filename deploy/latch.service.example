@@ -1,5 +1,5 @@
 [Unit]
-Description=OpenDesk Discord community bot
+Description=Latch Discord community bot
 Wants=network-online.target
 After=network-online.target
 StartLimitIntervalSec=60

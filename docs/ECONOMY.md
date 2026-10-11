@@ -1,6 +1,6 @@
 # Coins and professions
 
-OpenDesk coins are per-guild game points, not money, redeemable credit or a payment system. All features are free. Existing `/economy balance`, `daily`, `work`, `pay` and `/leaderboard coins` remain available.
+Latch coins are per-guild game points, not money, redeemable credit or a payment system. All features are free. Existing `/economy balance`, `daily`, `work`, `pay` and `/leaderboard coins` remain available.
 
 ## Rewards and profiles
 

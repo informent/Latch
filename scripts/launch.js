@@ -1,7 +1,7 @@
 'use strict';
 const [major, minor] = process.versions.node.split('.').map(Number);
 if (!(major > 22 || major === 22 && minor >= 9)) {
-  console.error('OpenDesk needs Node 22.9+ or Node 24. Install Node from https://nodejs.org/en/download and reopen this window.');
+  console.error('Latch needs Node 22.9+ or Node 24. Install Node from https://nodejs.org/en/download and reopen this window.');
   process.exitCode = 1;
 } else {
   const path = require('node:path');
@@ -11,7 +11,7 @@ if (!(major > 22 || major === 22 && minor >= 9)) {
   if (!args) { console.error('Choose setup or start.'); process.exitCode = 1; }
   else {
     const result = spawnSync(process.execPath, args, { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' });
-    if (result.error) console.error('Could not start OpenDesk. Check the extracted folder and Node installation.');
+    if (result.error) console.error('Could not start Latch. Check the extracted folder and Node installation.');
     process.exitCode = result.status ?? 1;
   }
 }

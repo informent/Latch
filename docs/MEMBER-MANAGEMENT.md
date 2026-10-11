@@ -6,7 +6,7 @@
 
 The target member must be strictly below both the bot and the staff actor. The server owner bypasses the actor hierarchy check, but bot checks remain. Equal positions are refused conservatively. Administrator does not bypass role position requirements. Missing, malformed or unavailable role/member snapshots prevent delegation.
 
-The bot cannot be used to change the invoking member, the guild owner or OpenDesk itself. These are conservative OpenDesk policies; use Discord's own administration interface for those targets. Timed-out non-owner actors are refused, even if their raw roles still carry management permissions.
+The bot cannot be used to change the invoking member, the guild owner or Latch itself. These are conservative Latch policies; use Discord's own administration interface for those targets. Timed-out non-owner actors are refused, even if their raw roles still carry management permissions.
 
 For grant/revoke, the selected role must be unmanaged, distinct from everyone, and strictly below the bot and non-owner actor. Unknown managed status is refused. Granting a role also checks that every guild permission bit in it is held by the actor. Administrator or server ownership bypasses that grant-bit subset check, while hierarchy still applies. Revoke does not require holding every permission of the role being removed.
 

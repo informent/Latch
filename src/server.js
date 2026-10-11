@@ -188,10 +188,10 @@ async function main() {
   const log = (event, details) => console.error(JSON.stringify({ time: new Date().toISOString(), event, ...details }));
   const gateway = config.gatewayEnabled ? new GatewayClient({ token: config.botToken, intents: config.gatewayIntents, getGateway: () => discord.getGatewayBot(), logger: log }) : null;
   const server = await createServerRuntime({ config, publicKey, discord, store, gateway, logger: log });
-  server.on('listening', () => console.log(`OpenDesk listening on ${config.host}:${config.port}/interactions`));
+  server.on('listening', () => console.log(`Latch listening on ${config.host}:${config.port}/interactions`));
   installShutdownHandlers(server, { gateway, log });
 }
 
-if (require.main === module) main().catch((error) => { console.error(`OpenDesk failed to start: ${error.message}`); process.exitCode = 1; });
+if (require.main === module) main().catch((error) => { console.error(`Latch failed to start: ${error.message}`); process.exitCode = 1; });
 
 module.exports = { startServer, createServerRuntime, installShutdownHandlers, readBody, BODY_LIMIT, SHUTDOWN_DRAIN_TIMEOUT_MS };

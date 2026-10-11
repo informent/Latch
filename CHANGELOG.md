@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.25.0 - 2026-10-11
+
+- Renamed OpenDesk to Latch, including visible bot messages, command documentation and Windows launchers. Existing data formats, backup version keys and deployed state paths remain compatible. Owned legacy AutoMod rules are still accepted; new rules use the Latch name.
 
 - Replaced blank-file-only setup with a guided wizard, hidden token entry, feature presets, local checks and optional command registration. Added Windows setup/start launchers and a beginner guide covering HTTPS and common errors. Existing settings are preserved.
 

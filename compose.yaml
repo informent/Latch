@@ -1,7 +1,8 @@
+name: opendesk
 services:
-  opendesk:
+  latch:
     build: .
-    image: opendesk:local
+    image: latch:local
     init: true
     restart: unless-stopped
     stop_grace_period: 45s

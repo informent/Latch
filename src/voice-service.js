@@ -98,7 +98,7 @@ class VoiceService {
       if (!this.#live()) throw new Error('Voice occupancy is not ready.');
       const channelId = this.members.get(userId);
       const record = this.store.get().channels.find((room) => room.channelId === channelId);
-      if (!record) throw new Error('Join an OpenDesk temporary voice channel first.');
+      if (!record) throw new Error('Join an Latch temporary voice channel first.');
       if (action === 'claim') {
         if (this.members.get(record.ownerId) === channelId && record.ownerId !== userId) throw new Error('The current owner is still present.');
         if (this.store.get().channels.some((room) => room.channelId !== channelId && room.ownerId === userId)) throw new Error('You already own another room.');
@@ -171,7 +171,7 @@ class VoiceService {
         try {
           await this.#channel(room.channelId);
           if (!this.#live() || this.connection() !== socket || this.#occupants(room.channelId).length) continue;
-          await this.discord.request('DELETE', `/channels/${room.channelId}`, undefined, { auditReason: 'OpenDesk empty temporary voice room' });
+          await this.discord.request('DELETE', `/channels/${room.channelId}`, undefined, { auditReason: 'Latch empty temporary voice room' });
           await this.store.remove(room.channelId);
           this.emptySince.delete(room.channelId);
         } catch (error) {

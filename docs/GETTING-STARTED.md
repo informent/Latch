@@ -4,9 +4,9 @@ You need a computer that can stay on, Node 24, a Discord application, and a test
 
 ## 1. Open the setup wizard
 
-Download the source ZIP from [Releases](https://github.com/informent/OpenDesk/releases) and extract it first. Install [Node 24](https://nodejs.org/en/download), then reopen your terminal.
+Download the source ZIP from [Releases](https://github.com/informent/Latch/releases) and extract it first. Install [Node 24](https://nodejs.org/en/download), then reopen your terminal.
 
-On Windows, double-click **OpenDesk-Setup.cmd** in the extracted folder. On Windows, Linux or macOS, open a terminal in that folder and run:
+On Windows, double-click **Latch-Setup.cmd** in the extracted folder. On Windows, Linux or macOS, open a terminal in that folder and run:
 
 ```sh
 npm run setup
@@ -37,7 +37,7 @@ After installing, answer **y** when setup offers to add/update slash commands. T
 
 ## 3. Start the bot and connect Discord
 
-Double-click **OpenDesk-Start.cmd** on Windows, or run:
+Double-click **Latch-Start.cmd** on Windows, or run:
 
 ```sh
 npm start
@@ -61,7 +61,7 @@ Copy the HTTPS address it prints. In the Discord Developer Portal, open General 
 | --- | --- |
 | Node is missing or too old | Install Node 24 and reopen the terminal or launcher. |
 | Setup shows no questions | Run it in a terminal, or use the Windows setup launcher. `--plain` deliberately has no questions. |
-| A setting conflicts with the terminal | Open a terminal without previously exported OpenDesk environment variables. Node gives those variables precedence over `.env`. |
+| A setting conflicts with the terminal | Open a terminal without previously exported Latch environment variables. Node gives those variables precedence over `.env`. |
 | Registration fails | Confirm the token and Server ID, install the bot in that server, then rerun `npm run register`. |
 | Discord refuses the endpoint URL | Keep the bot and HTTPS proxy running. Check `/interactions` and the matching application public key. |
 | Commands are missing | Rerun `npm run register`, then reopen Discord. Check that you installed the correct application. |

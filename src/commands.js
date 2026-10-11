@@ -38,7 +38,7 @@ const commands = [
   },
   {
     name: 'utility', description: 'Useful server information and bot health.', type: 1,
-    options: [subcommand('ping', 'Check whether OpenDesk is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('role', 'Privately inspect a server role and its permission bits.', [option(8, 'role', 'Server role to inspect.', { required: true })]), subcommand('help', 'Show available feature suites and configuration status.')]
+    options: [subcommand('ping', 'Check whether Latch is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('role', 'Privately inspect a server role and its permission bits.', [option(8, 'role', 'Server role to inspect.', { required: true })]), subcommand('help', 'Show available feature suites and configuration status.')]
   },
   {
     name: 'economy', description: 'Earn, save, and share server coins.', type: 1,
@@ -77,15 +77,15 @@ const commands = [
     name: 'automod', description: 'Manage Discord native message filtering rules.', type: 1, default_member_permissions: '32',
     options: [
       subcommand('list', 'List server AutoMod rules and their IDs.'),
-      subcommand('info', 'Inspect an OpenDesk rule, filters, actions and exemptions.', [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 })]),
+      subcommand('info', 'Inspect an Latch rule, filters, actions and exemptions.', [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 })]),
       subcommand('presets', 'Create a disabled native preset filter for review.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 }), option(3, 'preset', 'Built-in wordsets.', { required: true, choices: [{ name: 'Profanity', value: 'profanity' }, { name: 'Sexual content', value: 'sexual' }, { name: 'Slurs', value: 'slurs' }, { name: 'All wordsets', value: 'all' }] })]),
-      ...['exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel'].map((action) => subcommand(action, `${action} on an OpenDesk rule.`, [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 }), option(action.endsWith('role') ? 8 : 7, 'target', 'Server role or channel.', { required: true })])),
+      ...['exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel'].map((action) => subcommand(action, `${action} on an Latch rule.`, [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 }), option(action.endsWith('role') ? 8 : 7, 'target', 'Server role or channel.', { required: true })])),
       subcommand('allow-words', 'Replace allowed words on a keyword/preset rule; omit to clear.', [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 }), option(3, 'words', 'Comma-separated exceptions, up to 100 words of 60 characters.', { max_length: 2000 })]),
       subcommand('block-message', 'Set the explanation shown when a rule blocks a message.', [option(3, 'rule', 'Rule ID.', { required: true, max_length: 25 }), option(3, 'message', 'Explanation shown to the member.', { required: true, min_length: 1, max_length: 150 })]),
       subcommand('keywords', 'Create a disabled keyword filter for review.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 }), option(3, 'keywords', 'Comma-separated words or phrases; Discord wildcards supported.', { required: true, max_length: 2000 })]),
       subcommand('mentions', 'Create a disabled mention spam and raid filter.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 }), option(4, 'limit', 'Maximum unique mentions allowed per message.', { required: true, min_value: 1, max_value: 50 })]),
       subcommand('spam', 'Create a disabled Discord spam filter.', [option(3, 'name', 'Rule name.', { required: true, max_length: 80 })]),
-      ...['enable', 'disable', 'remove'].map((action) => subcommand(action, `${action} an OpenDesk rule by ID.`, [option(3, 'rule', 'Rule ID from /automod list.', { required: true, max_length: 25 })]))
+      ...['enable', 'disable', 'remove'].map((action) => subcommand(action, `${action} an Latch rule by ID.`, [option(3, 'rule', 'Rule ID from /automod list.', { required: true, max_length: 25 })]))
     ]
   },
   {
@@ -265,9 +265,9 @@ commands.push({
 });
 
 commands.push({
-  name: 'pollmanage', description: 'Inspect and end native polls created by OpenDesk.', type: 1, default_member_permissions: '8192',
+  name: 'pollmanage', description: 'Inspect and end native polls created by Latch.', type: 1, default_member_permissions: '8192',
   options: [
-    ...['info', 'end'].map((action) => subcommand(action, `${action} an OpenDesk poll in this text channel.`, [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 })])),
+    ...['info', 'end'].map((action) => subcommand(action, `${action} an Latch poll in this text channel.`, [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 })])),
     subcommand('voters', 'Privately list up to 25 voters for one poll answer.', [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 }), option(4, 'answer', 'Answer ID from pollmanage info.', { required: true, min_value: 1, max_value: 2147483647 }), option(3, 'after', 'User ID cursor from the previous page.', { min_length: 5, max_length: 25 })])
   ]
 });

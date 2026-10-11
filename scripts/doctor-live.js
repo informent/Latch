@@ -70,7 +70,7 @@ async function main(args = process.argv.slice(2)) {
   if (args.length > 1 || args.some((arg) => arg !== '--json')) throw new Error('Usage: npm run doctor:live -- [--json]');
   const result = await inspectLive();
   if (args.includes('--json')) console.log(JSON.stringify(result, null, 2));
-  else { console.log('OpenDesk Discord preflight (online, GET-only)'); for (const check of result.checks) console.log(`[${check.status.toUpperCase()}] ${check.name}: ${check.detail}`); }
+  else { console.log('Latch Discord preflight (online, GET-only)'); for (const check of result.checks) console.log(`[${check.status.toUpperCase()}] ${check.name}: ${check.detail}`); }
   if (!result.ok) process.exitCode = 1;
 }
 

@@ -1,6 +1,6 @@
 # Leveling operations
 
-XP and every configuration command are free and MIT-licensed. OpenDesk serves one configured guild per process.
+XP and every configuration command are free and MIT-licensed. Latch serves one configured guild per process.
 
 ## Enable message awards
 
@@ -33,7 +33,7 @@ Tuning applies to the next evaluated event and measures the new cooldown against
 
 The latest-message ID prevents an immediate replay even after a cooldown or restart. It is a bounded guard, not a complete message history: replaying an older ID after a different message has earned XP can qualify if fresh and outside cooldown. No cross-process write lock exists; run only one process against a store.
 
-Version 1 loads without modification and migrates on the next successful configuration or XP write. Back up all twelve stores together before upgrading. Older OpenDesk versions reject version 2; stop the service and restore a compatible complete backup to roll back. Never edit a running store. Strict schema checks refuse duplicate accounts/settings/channels, unsupported fields/versions, numeric IDs, invalid timestamps and oversized files. Limits are 50,000 accounts, 1,000 guild setting records and 32 MiB.
+Version 1 loads without modification and migrates on the next successful configuration or XP write. Back up all twelve stores together before upgrading. Older Latch versions reject version 2; stop the service and restore a compatible complete backup to roll back. Never edit a running store. Strict schema checks refuse duplicate accounts/settings/channels, unsupported fields/versions, numeric IDs, invalid timestamps and oversized files. Limits are 50,000 accounts, 1,000 guild setting records and 32 MiB.
 
 ## Verification boundary
 

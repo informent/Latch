@@ -17,9 +17,9 @@ const escape = (value) => String(value).replaceAll('|', '\\|').replaceAll('\n', 
 
 function markdown() {
   const lines = [
-    '# OpenDesk command reference', '',
-    `All ${catalog.length} registered command paths across ${commands.length} slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.`, '',
-    'Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.', '',
+    '# Latch command reference', '',
+    `All ${catalog.length} registered command paths across ${commands.length} slash command roots are listed below. Every Latch feature is free and MIT-licensed.`, '',
+    'Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.', '',
     'Required options must be supplied. Optional values use the handler default when omitted. Default permissions control Discord visibility; runtime checks also enforce guild, identity, current permissions, hierarchy and feature configuration. Administrators can adjust command visibility in Discord, but runtime checks still apply. Commands require a configured server and are not DM commands.', '',
     'Start with `/utility help`. See [README](README.md), [operations](docs/OPERATIONS.md) and [feature coverage](docs/COMMAND-COVERAGE.md) for setup and operating limits.', '',
     '## Suites', '',

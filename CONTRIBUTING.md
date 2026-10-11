@@ -9,4 +9,4 @@ npm test
 npm run check
 ```
 
-Do not include real bot tokens, interaction tokens, server/member IDs from private servers, message content, or local ticket-store files in issues or commits. Reproduce bugs with fabricated test data. OpenDesk deliberately avoids transcript capture and third-party runtime dependencies; discuss any change to those boundaries before implementing it.
+Do not include real bot tokens, interaction tokens, server/member IDs from private servers, message content, or local ticket-store files in issues or commits. Reproduce bugs with fabricated test data. Latch deliberately avoids transcript capture and third-party runtime dependencies; discuss any change to those boundaries before implementing it.

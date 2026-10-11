@@ -4,7 +4,7 @@ Ban, kick, timeout and timeout removal first check the signed interaction permis
 
 The target must be below the bot's highest role and, unless the actor owns the server, below the actor's highest role. Equal role positions are rejected conservatively. Administrator permits the action but does not bypass the actor hierarchy check. The server owner bypasses only that actor check: bot permission and hierarchy requirements remain.
 
-Actors cannot target themselves, the server owner or OpenDesk. Timeout actions also reject bots and members whose guild roles grant Administrator. Current actor and bot guild permissions must include the action permission or Administrator. Permission removal after interaction creation can therefore block a queued action. Bans through this path require a current server member; use unban with a user ID to remove an existing ban.
+Actors cannot target themselves, the server owner or Latch. Timeout actions also reject bots and members whose guild roles grant Administrator. Current actor and bot guild permissions must include the action permission or Administrator. Permission removal after interaction creation can therefore block a queued action. Bans through this path require a current server member; use unban with a user ID to remove an existing ban.
 
 These checks follow Discord's [permission hierarchy](https://docs.discord.com/developers/topics/permissions#permission-hierarchy) and [member modification rules](https://docs.discord.com/developers/resources/guild#modify-guild-member). Discord remains the final enforcement layer. Role changes can race the REST action after the snapshot, so these lookups are not an atomic permission transaction.
 

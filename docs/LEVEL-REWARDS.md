@@ -4,7 +4,7 @@ Every reward feature is free and MIT-licensed. No subscription, license key or p
 
 ## Configure milestones
 
-Create permission-free unmanaged roles below OpenDesk and the configuring staff member. Run `npm run register` after upgrading. Rewards start paused.
+Create permission-free unmanaged roles below Latch and the configuring staff member. Run `npm run register` after upgrading. Rewards start paused.
 
 ```text
 /levelreward add role:LevelOne level:1
