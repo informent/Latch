@@ -12,18 +12,13 @@ The [complete command reference](COMMANDS.md) lists every command, option, limit
 
 Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered OpenDesk command paths, or `npm run commands -- --json` for a machine-readable catalog.
 
-Install Node 22.9+ or Node 24, then run:
+For a first installation, follow the [beginner setup guide](docs/GETTING-STARTED.md). Install Node 24, extract the source ZIP, then double-click **OpenDesk-Setup.cmd** on Windows or run:
 
-```powershell
+```sh
 npm run setup
-# Edit .env locally with your Discord application and server settings.
-npm run doctor
-npm run invite
-npm run register
-npm start
 ```
 
-You also need a public HTTPS interaction endpoint configured in Discord. The setup command preserves existing settings. Doctor is an offline, read-only inspection, and invite prints a permission-based installation link without opening a browser. See the [operations guide](docs/OPERATIONS.md) for Docker Compose, Linux services, backups, upgrades, and troubleshooting.
+The wizard explains the four required Discord values, hides the token while you enter it, checks the configuration and offers command registration after installation. Existing valid settings are preserved. Start with **OpenDesk-Start.cmd** or `npm start`, then connect a public HTTPS interaction endpoint using the guide. No package installation is required.
 
 Before an upgrade, stop the bot and create a checked snapshot with `npm run backup -- create ../OpenDesk-backup-2026-10-10`. Verify it with `npm run backup -- verify ../OpenDesk-backup-2026-10-10`. See the [backup and recovery guide](docs/BACKUPS.md) for the twelve-store manifest and safe restore steps.
 
@@ -51,7 +46,7 @@ Version 0.17.0 adds eight staff leveling configuration commands: tune XP and coo
 
 Version 0.16.0 adds a complete ticket panel workflow: draft a support panel, connect up to five topic buttons to server categories, publish it with durable retry recovery, and let members open private tickets. Staff can reopen closed tickets with saved recovery state and permission read-back verification. See the [panel guide](docs/TICKET-PANELS.md) and [ticket guide](docs/TICKETS.md).
 
-The suite now passes 261 tests with 91.06% local line coverage, including the signed HTTP panel-to-ticket-to-close-to-reopen flow. CI enforces coverage floors; see [verification evidence and limits](docs/VERIFICATION.md).
+The regression suite and CI enforce coverage floors. See [verification evidence and limits](docs/VERIFICATION.md).
 
 This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, Gateway reconnect/event handling, role menus, temporary voice recovery, templates, responders and timers. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
 
@@ -85,29 +80,15 @@ The app handles slash commands over Discord's HTTP interaction endpoint. It open
 
 For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only that the HTTP process is responding; it does not check Discord API connectivity or store health. On `SIGINT` or `SIGTERM`, OpenDesk stops accepting new requests, stops scheduling jobs, and drains acknowledged interaction work and current scheduled delivery. If work remains after 30 seconds, it logs the pending interaction count and marks the process for a non-zero exit; configure your process manager with a stop grace period of at least 30 seconds.
 
-## Setup
+## Setup details
 
-1. Create a Discord application in the Developer Portal, add a bot, and install it into a **test** server with the `bot` and `applications.commands` scopes. The bot needs `Manage Channels` (`16`) to create/rename ticket channels and set slowmode, `Manage Roles` (`268435456`) for channel permission overwrites and role assignment, `Manage Nicknames` (`134217728`) for nickname changes, `Manage Messages` (`8192`) for purge, and moderation permissions `Ban Members` (`4`), `Kick Members` (`2`), and `Moderate Members` (`1099511627776`). Discord requires `Manage Roles` for channel permission overwrites ([official endpoint docs](https://docs.discord.com/developers/resources/channel#edit-channel-permissions)). Do not grant Administrator; put the bot role above roles it must moderate or assign. Test in a private server first.
-2. Copy `.env.example` to `.env`. Fill in the application ID, bot token, public key, and test-server guild ID. Optionally set the support-role ID, ticket category ID, and data file paths. Never commit `.env` or share the bot token.
-3. Install Node.js 22+, then run:
+The [beginner guide](docs/GETTING-STARTED.md) covers the wizard, installation, HTTPS routing and common errors. The [operations guide](docs/OPERATIONS.md) covers Docker, services and upgrades. For automation, `npm run setup -- --plain` preserves an existing `.env` or creates a blank template without prompting.
 
-   ```powershell
-   npm test
-   npm run check
-   npm run register
-   npm start
-   ```
-
-   `register` adds or updates all sixteen command suites for the configured test server using individual upserts. It makes a Discord API change, so verify the IDs and bot credentials before running it. Re-run it when upgrading to receive new commands.
-4. Configure the Discord application's **Interactions Endpoint URL** to your HTTPS proxy URL ending in `/interactions`. Discord will send a signed ping while validating it; OpenDesk verifies Ed25519 request signatures and answers that ping.
-5. For XP, set `DISCORD_LEVELING_ENABLED=true` and enable **Message Content Intent** in the Developer Portal. Discord may require approval for privileged intents at larger bot scales. XP defaults to 15 points no more than once per member each minute; staff can tune these settings with `/levelconfig`. Set `DISCORD_ENABLE_MEMBER_EVENTS=true` for welcome messages or join burst reports; enable **Server Members Intent**, configure `DISCORD_WELCOME_CHANNEL_ID` for welcomes, and set `DISCORD_RAID_JOIN_THRESHOLD` above zero for reports. Burst reports do not trigger automatic moderation. Set `DISCORD_GATEWAY_ENABLED=true` only if you want the Gateway with other intents disabled.
-6. In the test server, verify `/utility ping`, `/utility server`, `/ticket create`, `/ticket close`, `/level`, `/leaderboard levels`, and `/leaderboard coins`. Use a disposable test member to check moderation and role commands. Confirm unauthorized members are rejected and the bot's role position permits each operation.
-
-The start and register scripts load `.env` with Node's built-in env-file support, so no dotenv package is needed. In production, a process manager or secret store is preferable to a plaintext `.env` file. On PowerShell, you can instead set values for the current session with `$env:NAME = 'value'`.
+Run `npm run doctor` for offline checks and `npm run doctor:live` to inspect Discord access and registered commands. Runtime commands load `.env` with Node's built-in support. Keep credentials in local configuration or a secret store.
 
 ## Commands
 
-The catalog currently declares 165 command paths across 23 suites. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
+See the generated [complete command reference](COMMANDS.md) for the current command count and every option. `/voice` adds optional join-to-create rooms, persistent ownership and access controls; follow the [voice guide](docs/VOICE.md). `/rolemenu` adds stored self-service button menus with explicit Get/Remove actions and publication retries. `/autorole` adds join-role configuration and staff reconciliation. Automated roles must have zero permission bits and satisfy live hierarchy checks; follow the [role-menu guide](docs/ROLE-MENUS.md). Voice and role automation have dedicated regression tests; live-server validation remains unfinished.
 
 - `/shop` provides coin-priced virtual items, inventories, gifts, consumables and transaction history. Staff configure items with Manage Server; new items start disabled. See the [shop guide](docs/SHOP.md).
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.

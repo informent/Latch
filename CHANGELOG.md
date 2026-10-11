@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced blank-file-only setup with a guided wizard, hidden token entry, feature presets, local checks and optional command registration. Added Windows setup/start launchers and a beginner guide covering HTTPS and common errors. Existing settings are preserved.
+
 - Added doctor:live, a GET-only Discord preflight for bot identity, guild membership, guild permission masks, support role, configured channels and exact registered command definitions. Errors and reports exclude credentials and raw Discord responses. This does not execute commands or satisfy the stable live validation gate.
 
 ## 0.24.0 - 2026-10-10
