@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 191 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 193 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -1245,6 +1245,24 @@ update a saved embed template.
 List saved embed names.
 
 Options: none.
+
+### /template clone
+
+clone a template without publishing or overwriting another.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | Existing template name.; Minimum text length: 1; Maximum text length: 32 |
+| destination | text | yes | Unused lowercase name with letters, numbers, underscores or hyphens.; Minimum text length: 1; Maximum text length: 32 |
+
+### /template rename
+
+rename a template without publishing or overwriting another.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | Existing template name.; Minimum text length: 1; Maximum text length: 32 |
+| destination | text | yes | Unused lowercase name with letters, numbers, underscores or hyphens.; Minimum text length: 1; Maximum text length: 32 |
 
 ### /template info
 

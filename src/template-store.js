@@ -43,6 +43,13 @@ class TemplateStore {
       } else if (action === 'update') {
         if (index < 0) throw new Error('Unknown template.');
         state.templates[index] = item;
+      } else if (action === 'clone' || action === 'rename') {
+        if (index < 0) throw new Error('Unknown template.');
+        if (typeof item.destination !== 'string' || !NAME.test(item.destination)) throw new Error('Invalid destination name.');
+        if (state.templates.some((entry) => entry.name === item.destination)) throw new Error('Destination already exists.');
+        const copied = { ...state.templates[index], name: item.destination };
+        if (action === 'clone') state.templates.push(copied);
+        else state.templates[index] = copied;
       } else if (action === 'delete') {
         if (index < 0) throw new Error('Unknown template.');
         state.templates.splice(index, 1);

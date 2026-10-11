@@ -50,3 +50,5 @@ require('./information-utilities.test');
 require('./timer-controls.test');
 
 require('./automation-pagination.test');
+
+require('./template-management.test');
