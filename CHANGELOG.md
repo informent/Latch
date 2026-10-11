@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.29.1 - 2026-10-11
+
+- Add one automated release verification command with test/coverage gates, all JavaScript syntax checks, command reference freshness, publication checks, signed runtime smoke and backup recovery.
+- Save exclusive JSON evidence with public source fingerprints, test counts and explicit live acceptance limits; retain reports for all four CI environments.
+- Keep every default JSON data store and generated evidence out of Git.
+- Prevent unexpected interaction, background and shutdown errors from exposing private exception text. Handle null failures, invalid HTTP status codes and failing loggers safely.
+- Add 13 regression tests. Existing commands and store formats remain compatible; no command registration or data migration is required.
+
 ## 0.29.0 - 2026-10-11
 
 - Add descriptions, current human host attribution, HTTPS images and thumbnails when creating giveaways and through four new edit commands.

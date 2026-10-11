@@ -78,7 +78,7 @@ test('drains acknowledged background work and logs unexpected task failures', as
   await server.drain();
   assert.equal(server.pendingWorkCount(), 0);
   assert.deepEqual(logs.map(([event]) => event), ['interaction_work_failed']);
-  assert.equal(logs[0][1].message, 'simulated background failure');
+  assert.equal(logs[0][1].message, 'Unexpected interaction work failure.');
 });
 
 test('shutdown signals stop listening and wait for active ticket work', async () => {

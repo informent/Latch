@@ -54,3 +54,5 @@ require('./automation-pagination.test');
 require('./template-management.test');
 require('./panel-pagination.test');
 require('./giveaway-presentation.test');
+require('./server-errors.test');
+require('./release-verify.test');
