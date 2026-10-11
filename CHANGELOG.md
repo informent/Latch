@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.27.1 - 2026-10-11
+
+- Fixed silent truncation in responder and recurring-message lists. Both now accept an optional page, show ten entries in stable name order, and report total counts and page ranges.
+- Added maximum-capacity regression checks that prove every stored entry remains accessible with maximum-length names and IDs, plus empty-list, permission and invalid-page coverage.
+- Re-register commands to install the new page options. Existing calls without a page show page one. No data migration is required.
+
 ## 0.27.0 - 2026-10-11
 
 - Added `/timer reschedule` to change the next attempt without changing the recurring interval. Enabled timers accept a delay of 5 minutes to 30 days, persisted across restarts.

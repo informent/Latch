@@ -212,7 +212,7 @@ commands.push({
       option(3, 'reply', 'Reply text; mentions are suppressed.', { required: true, min_length: 1, max_length: 1800 }),
       option(4, 'cooldown', 'Seconds between attempts for this rule; defaults to 30.', { min_value: 15, max_value: 3600 })
     ])),
-    subcommand('list', 'List responder states, channels and automation status.'),
+    subcommand('list', 'List responder states, channels and automation status.', [option(4, 'page', 'Page of ten responders, ordered by name.', { min_value: 1, max_value: 5 })]),
     ...['info', 'preview', 'enable', 'disable', 'delete'].map((action) => subcommand(action, `${action} a configured responder.`, [option(3, 'name', 'Responder name.', { required: true, max_length: 32 })]))
   ]
 });
@@ -225,7 +225,7 @@ commands.push({
       option(4, 'minutes', 'Minutes between attempts, from 5 to 30 days.', { required: true, min_value: 5, max_value: 43200 }),
       option(3, 'text', 'Recurring message text; mentions are suppressed.', { required: true, min_length: 1, max_length: 1800 })
     ])),
-    subcommand('list', 'List recurring message states, intervals and last results.'),
+    subcommand('list', 'List recurring message states, intervals and last results.', [option(4, 'page', 'Page of ten timers, ordered by name.', { min_value: 1, max_value: 3 })]),
     subcommand('reschedule', 'Change the next attempt without changing the recurring interval.', [
       option(3, 'name', 'Enabled timer name.', { required: true, max_length: 32 }),
       option(4, 'minutes', 'Delay from now, from 5 minutes to 30 days.', { required: true, min_value: 5, max_value: 43200 })

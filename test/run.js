@@ -48,3 +48,5 @@ require('./setup-wizard.test');
 require('./information-utilities.test');
 
 require('./timer-controls.test');
+
+require('./automation-pagination.test');
