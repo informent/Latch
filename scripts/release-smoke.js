@@ -1,0 +1,56 @@
+'use strict';
+const assert = require('node:assert/strict'), crypto = require('node:crypto'), fs = require('node:fs/promises'), os = require('node:os'), path = require('node:path'), { once } = require('node:events');
+const { loadConfig } = require('../src/config'), { createServerRuntime } = require('../src/server'), { publicKeyFromHex } = require('../src/interactions');
+const { TicketStore } = require('../src/ticket-store'), { EconomyStore } = require('../src/economy-store');
+const { createBackup, verifyBackup } = require('./backup');
+const { version } = require('../package.json');
+async function runSmoke({ container = false } = {}) {
+  if (container) assert.equal(process.getuid?.(), 1000, 'Container must run as the node user.');
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-release-smoke-'));
+  const ids = { guild: '123456789012345678', bot: '223456789012345678', actor: '323456789012345678', target: '423456789012345678', role: '523456789012345678', channel: '623456789012345678', request: '723456789012345678', owner: '823456789012345678' };
+  let server; const responses = [], pair = crypto.generateKeyPairSync('ed25519');
+  try {
+    const env = { DISCORD_APPLICATION_ID: ids.bot, DISCORD_GUILD_ID: ids.guild, DISCORD_PUBLIC_KEY: pair.publicKey.export({ type: 'spki', format: 'der' }).subarray(-32).toString('hex'), DISCORD_BOT_TOKEN: 'isolated-smoke-placeholder', DISCORD_GATEWAY_ENABLED: 'false', HOST: '127.0.0.1', PORT: '3000' };
+    const keys = ['TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH'];
+    keys.forEach((key, index) => { env[key] = path.join(root, `store-${index}.json`); });
+    const config = { ...loadConfig(env), port: 0 }, economy = new EconomyStore(config.economyStorePath);
+    // This adapter never contacts Discord. Unexpected calls fail the smoke test.
+    const discord = {
+      getCurrentUser: async () => ({ id: ids.bot }),
+      getGuild: async () => ({ id: ids.guild, owner_id: ids.owner }),
+      getGuildMember: async (_guild, userId) => { assert.ok([ids.actor, ids.target].includes(userId)); return { user: { id: userId }, roles: userId === ids.actor ? [ids.role] : [] }; },
+      request: async (method, route) => { assert.equal(method, 'GET'); assert.equal(route, `/guilds/${ids.guild}/roles`); return [{ id: ids.guild, permissions: '0' }, { id: ids.role, permissions: '32' }]; },
+      editOriginalResponse: async (_application, _token, body) => { responses.push(body); }
+    };
+    server = await createServerRuntime({ config, publicKey: publicKeyFromHex(config.publicKey), discord, store: new TicketStore(config.storePath), economy });
+    await once(server, 'listening'); const url = `http://127.0.0.1:${server.address().port}`;
+    const health = await fetch(`${url}/healthz`, { signal: AbortSignal.timeout(5000) }); assert.equal(health.status, 200); assert.equal(await health.text(), 'ok');
+    const unsigned = await fetch(`${url}/interactions`, { method: 'POST', body: '{}', signal: AbortSignal.timeout(5000) }); assert.equal(unsigned.status, 401);
+    const send = async (payload) => {
+      const raw = Buffer.from(JSON.stringify(payload)), timestamp = String(Math.floor(Date.now() / 1000));
+      const result = await fetch(`${url}/interactions`, { method: 'POST', body: raw, headers: { 'x-signature-timestamp': timestamp, 'x-signature-ed25519': crypto.sign(null, Buffer.concat([Buffer.from(timestamp), raw]), pair.privateKey).toString('hex') }, signal: AbortSignal.timeout(5000) });
+      assert.equal(result.status, 200); const body = await result.json(); await server.drain(); return body;
+    };
+    assert.deepEqual(await send({ type: 1 }), { type: 1 });
+    const command = { id: ids.request, type: 2, guild_id: ids.guild, channel_id: ids.channel, token: 'smoke-interaction-placeholder', member: { user: { id: ids.actor }, roles: [ids.role], permissions: '32' }, data: { name: 'economyadmin', options: [{ name: 'grant', options: [{ name: 'user', value: ids.target }, { name: 'amount', value: 100 }, { name: 'reason', value: 'Isolated release smoke check' }] }] } };
+    assert.deepEqual(await send(command), { type: 5, data: { flags: 64 } }); assert.match(responses.at(-1).content, /Adjustment saved/); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
+    await send(command); assert.match(responses.at(-1).content, /Previously saved/); assert.equal(economy.balance(ids.guild, ids.target), 100);
+    await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
+    const backup = path.join(root, 'backup'), created = await createBackup(config, backup); assert.equal(created.present, 1); assert.equal(created.missing.length, 11); assert.equal((await verifyBackup(backup, ids.guild)).ok, true);
+    const recovered = new EconomyStore(path.join(backup, 'economy.json')); await recovered.load(); assert.equal(recovered.balance(ids.guild, ids.target), 100); assert.equal(recovered.adjustmentHistory(ids.guild).length, 1);
+    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery'] };
+  } finally {
+    if (server) {
+      await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
+      await server.drain(); if (server.listening) await new Promise((resolve) => server.close(resolve));
+    }
+    const resolved = path.resolve(root), temporaryRoot = path.resolve(os.tmpdir());
+    assert.equal(path.dirname(resolved), temporaryRoot); assert.ok(path.basename(resolved).startsWith('opendesk-release-smoke-')); await fs.rm(resolved, { recursive: true, force: true });
+  }
+}
+async function main(args = process.argv.slice(2)) {
+  if (args.some((arg) => arg !== '--container') || args.length > 1) throw new Error('Usage: npm run release:smoke -- [--container]');
+  console.log(JSON.stringify(await runSmoke({ container: args.includes('--container') }), null, 2));
+}
+if (require.main === module) main().catch(() => { console.error('Isolated release smoke failed. No live Discord validation was performed.'); process.exitCode = 1; });
+module.exports = { runSmoke, main };

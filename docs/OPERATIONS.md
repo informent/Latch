@@ -16,7 +16,7 @@ No npm package installation is required: OpenDesk currently uses only built-in N
 
 ## Docker Compose
 
-The repository includes a Linux container template. Docker is not installed in the current development environment, so the container and Compose workflow have not been exercised here.
+The repository includes a Linux container template. CI builds the production Dockerfile and runs isolated runtime/backup checks as the node user with a read-only root and no external network. Docker is not installed on the local Windows development machine. This CI proof does not establish live Discord login, external routing, persistent Compose-volume operation or production-host readiness; see the [release gate](RELEASE.md).
 
 1. Create `.env` as above. Create `.secrets/discord_bot_token.txt` containing only the bot token. Leave the `.env` token value blank; the Compose service always loads its token from the mounted secret file. Restrict access to both files.
 2. Run `docker compose build --pull` to build from the maintained Node 24 base image. The Docker build context is an allowlist of source, scripts, package metadata, and license; local environment files, secrets, and runtime data are excluded.

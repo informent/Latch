@@ -41,3 +41,5 @@ require('./poll-management.test');
 require('./backup.test');
 
 require('./economy-admin.test');
+
+require('./release-smoke.test');

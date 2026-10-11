@@ -6,6 +6,8 @@ OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature sui
 
 ## Start here
 
+The [release-readiness guide](docs/RELEASE.md) explains installation, automated Windows/Linux/container checks and the remaining live Discord gate. `npm run release:smoke` runs an isolated runtime and backup/recovery check without using your credentials.
+
 The [complete command reference](COMMANDS.md) lists every command, option, limit and permission default. It is generated from the registration payload and checked in CI.
 
 Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered OpenDesk command paths, or `npm run commands -- --json` for a machine-readable catalog.

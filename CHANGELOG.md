@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.24.0 - 2026-10-10
+
+- Added release:smoke with isolated real HTTP/runtime startup, health, signature rejection, signed ping/command, duplicate protection, private responses, scheduler shutdown, complete backup verification and economy recovery. It uses simulated Discord and temporary stores; it never reads local credentials or contacts Discord.
+- Expanded CI to Windows and Linux on Node 22/24, with the full test suite, coverage, syntax, publication and generated-command checks plus the release smoke command.
+- Added production-image build and isolated smoke in a hardened node-user container with a read-only root, no external network, dropped capabilities and no new privileges.
+- Added a release-readiness guide with exact install steps, honest automated/container evidence boundaries, migration/rollback requirements and the live Discord checklist before stable promotion.
+- Added three regression tests. All 538 tests pass locally: 93.37% lines, 85.49% branches and 88.27% functions. The command reference remains 176 paths across 25 suites.
+
+This is a release candidate. No new store migration or Discord command change is introduced. Back up all twelve stores before upgrades. Live Discord configuration is absent from the current checkout, so production readiness and stable promotion remain pending live checks. Docker CI does not verify production Compose volumes, HTTPS routing, Gateway login or actual Discord permissions. Full competitor parity remains unfinished.
+
 ## 0.23.0 - 2026-10-10
 
 - Added five economyadmin commands: grant/remove/set/history/receipt. The generated reference now lists 176 paths across 25 suites.

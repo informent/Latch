@@ -24,7 +24,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Social feeds | Planned | Provider-specific YouTube/Twitch and other feed adapters, deduplication, rate limits |
 | Search and utilities | Help, ping, server/member information and avatars | Image/search adapters, timers and translation |
 | Deleted/edited message tools | Planned, privacy policy undecided | Explicit retention settings and access controls before any message capture |
-| Deployment | Node 22/24 CI, signed interactions, durable scheduler, offline setup doctor, install links, container/service templates, twelve-store checksummed backup creation/verification and operations guide | Docker/service execution proof, live Discord validation, per-server administration |
+| Deployment | Windows/Linux Node 22/24 CI, hardened-image isolated runtime checks, signed interactions, durable scheduler, offline setup doctor, install links, container/service templates, twelve-store checksummed backup creation/verification and operations guide | Live Discord and Compose/service host validation, per-server administration |
 
 ## Delivery order
 
