@@ -12,7 +12,10 @@ const commands = [
   },
   {
     name: 'ticket', description: 'Create or close a private support ticket.', type: 1,
-    options: [subcommand('reopen', 'Reopen a closed ticket as support staff.', [option(7, 'channel', 'Closed ticket channel; defaults to this channel.', { channel_types: [0] })]), subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
+    options: [{ type: 2, name: 'guest', description: 'Manage invited ticket members as support staff.', options: [
+      ...['add', 'remove'].map(action => subcommand(action, `${action} a saved ticket guest and verify channel permissions.`, [option(6, 'user', 'Member to invite or revoke.', { required: true }), option(7, 'channel', 'Open ticket; defaults to this channel.', { channel_types: [0] })])),
+      subcommand('list', 'Privately list saved guests; access intents may need retrying.', [option(7, 'channel', 'Ticket; defaults to this channel.', { channel_types: [0] })])
+    ] }, subcommand('reopen', 'Reopen a closed ticket as support staff.', [option(7, 'channel', 'Closed ticket channel; defaults to this channel.', { channel_types: [0] })]), subcommand('create', 'Open a private support ticket.'), subcommand('close', 'Close a ticket in this channel or a selected channel.', [option(7, 'channel', 'Ticket channel to close.', { required: false, channel_types: [0] })]),
       subcommand('list', 'List open tickets; members see only their own.', [option(4, 'page', 'Results page, ten tickets per page.', { min_value: 1, max_value: 10000 })]),
       subcommand('stats', 'Show support team ticket statistics.'),
       subcommand('info', 'Privately inspect your ticket or any ticket as support staff.', [option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })]),

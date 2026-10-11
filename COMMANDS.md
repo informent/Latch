@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 199 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 202 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -58,6 +58,32 @@ Create a native Discord community poll.
 Create or close a private support ticket.
 
 Default command visibility: all members; individual staff actions require runtime permission checks.
+
+### /ticket guest add
+
+add a saved ticket guest and verify channel permissions.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to invite or revoke. |
+| channel | channel | no | Open ticket; defaults to this channel.; Allowed Discord channel type IDs: 0 |
+
+### /ticket guest remove
+
+remove a saved ticket guest and verify channel permissions.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to invite or revoke. |
+| channel | channel | no | Open ticket; defaults to this channel.; Allowed Discord channel type IDs: 0 |
+
+### /ticket guest list
+
+Privately list saved guests; access intents may need retrying.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| channel | channel | no | Ticket; defaults to this channel.; Allowed Discord channel type IDs: 0 |
 
 ### /ticket reopen
 
