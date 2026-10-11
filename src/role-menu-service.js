@@ -61,8 +61,8 @@ class RoleMenuService {
       if (!member.user || member.user.id !== userId || member.user.bot || member.pending) throw new Error('Complete membership screening first.');
       const already = (member.roles || []).includes(roleId);
       if (already === (action === 'grant')) return already ? 'You already have that role.' : 'You do not have that role.';
-      if (action === 'grant') await this.discord.grantRole(this.config.guildId, userId, roleId, 'OpenDesk member requested role');
-      else await this.discord.revokeRole(this.config.guildId, userId, roleId, 'OpenDesk member requested role removal');
+      if (action === 'grant') await this.discord.grantRole(this.config.guildId, userId, roleId, 'Latch member requested role');
+      else await this.discord.revokeRole(this.config.guildId, userId, roleId, 'Latch member requested role removal');
       return action === 'grant' ? 'Role added.' : 'Role removed.';
     });
   }
@@ -88,7 +88,7 @@ class RoleMenuService {
       for (const id of ids) {
         await this.#role(id, context, actorId);
         if ((member.roles || []).includes(id)) continue;
-        await this.discord.grantRole(this.config.guildId, userId, id, 'OpenDesk configured autorole');
+        await this.discord.grantRole(this.config.guildId, userId, id, 'Latch configured autorole');
         applied++;
       }
       return applied;
@@ -135,7 +135,7 @@ class RoleMenuService {
       }
       if (menu.state === 'deleting') {
         if (menu.messageId) {
-          try { await this.discord.deleteChannelMessage(menu.channelId, menu.messageId, 'OpenDesk role menu deleted'); }
+          try { await this.discord.deleteChannelMessage(menu.channelId, menu.messageId, 'Latch role menu deleted'); }
           catch (error) { if (error.statusCode !== 404) throw error; }
         }
         await this.store.delivered(menu.id, menu.messageId);

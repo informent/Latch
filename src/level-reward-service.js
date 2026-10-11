@@ -90,7 +90,7 @@ class LevelRewardService {
       let granted = 0;
       for (const reward of eligible) {
         if (member.roles.includes(reward.roleId)) continue;
-        await this.discord.grantRole(this.config.guildId, job.userId, reward.roleId, 'OpenDesk earned level reward');
+        await this.discord.grantRole(this.config.guildId, job.userId, reward.roleId, 'Latch earned level reward');
         granted++;
       }
       const confirmed = await this.#member(job.userId, context);

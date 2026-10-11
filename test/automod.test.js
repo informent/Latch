@@ -11,7 +11,7 @@ test('AutoMod creates disabled native filters with block actions and bounded met
   const created = [];
   const service = new AutoModService({ guildId, botUserId, discord: { createAutoModRule: async (...args) => { created.push(args); return { id: ruleId }; } } });
   await service.create({ kind: 'keywords', name: 'Terms', keywords: 'spam, *scam*, spam', actorId: botUserId });
-  assert.deepEqual(created[0][1], { name: 'OpenDesk: Terms', event_type: 1, trigger_type: 1, trigger_metadata: { keyword_filter: ['spam', '*scam*'] }, actions: [{ type: 1 }], enabled: false, exempt_roles: [], exempt_channels: [] });
+  assert.deepEqual(created[0][1], { name: 'Latch: Terms', event_type: 1, trigger_type: 1, trigger_metadata: { keyword_filter: ['spam', '*scam*'] }, actions: [{ type: 1 }], enabled: false, exempt_roles: [], exempt_channels: [] });
   await service.create({ kind: 'mentions', name: 'Mention raids', limit: 5, actorId: botUserId });
   assert.deepEqual(created[1][1].trigger_metadata, { mention_total_limit: 5, mention_raid_protection_enabled: true });
   await service.create({ kind: 'spam', name: 'Spam', actorId: botUserId });
@@ -26,7 +26,7 @@ test('AutoMod refuses foreign rules even if their names match and allows owned r
   const removed = [];
   let creator = '423456789012345678';
   const service = new AutoModService({ guildId, botUserId, discord: {
-    getAutoModRule: async () => ({ id: ruleId, guild_id: guildId, creator_id: creator, name: 'OpenDesk: Filter' }),
+    getAutoModRule: async () => ({ id: ruleId, guild_id: guildId, creator_id: creator, name: 'Latch: Filter' }),
     editAutoModRule: async (...args) => edited.push(args),
     deleteAutoModRule: async (...args) => removed.push(args)
   } });
@@ -53,4 +53,15 @@ test('AutoMod interactions require Manage Server and respond privately', async (
   await accepted.work();
   assert.equal(calls, 1);
   assert.deepEqual(edited[0][2].allowed_mentions, { parse: [] });
+});
+
+test('Latch retains legacy AutoMod ownership checks after renaming', async () => {
+  const edited = [];
+  const rule = { id: ruleId, guild_id: guildId, creator_id: botUserId, name: 'OpenDesk: Existing filter' };
+  const service = new AutoModService({ guildId, botUserId, discord: { getAutoModRule: async () => rule, editAutoModRule: async (...args) => edited.push(args) } });
+  await service.change({ ruleId, action: 'disable', actorId: botUserId });
+  assert.deepEqual(edited[0].slice(0, 3), [guildId, ruleId, { enabled: false }]);
+  rule.creator_id = '423456789012345678';
+  await assert.rejects(service.change({ ruleId, action: 'enable', actorId: botUserId }), /own AutoMod rules/);
+  assert.equal(edited.length, 1);
 });

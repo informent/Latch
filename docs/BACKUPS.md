@@ -1,6 +1,6 @@
 # Backup and recovery
 
-OpenDesk backup tooling is free, offline and built into the source release. It copies the configured data stores, validates their formats and verifies SHA256 checksums. It does not export Discord messages/channels/roles, collect credentials or call Discord. Files remain plaintext and can contain private text, IDs and economy records; store the backup somewhere private.
+Latch backup tooling is free, offline and built into the source release. It copies the configured data stores, validates their formats and verifies SHA256 checksums. It does not export Discord messages/channels/roles, collect credentials or call Discord. Files remain plaintext and can contain private text, IDs and economy records; store the backup somewhere private.
 
 ## Create a snapshot
 
@@ -9,15 +9,15 @@ OpenDesk backup tooling is free, offline and built into the source release. It c
 3. Create a new backup directory whose parent already exists:
 
 ```powershell
-npm run backup -- create ../OpenDesk-backup-2026-10-10
-npm run backup -- verify ../OpenDesk-backup-2026-10-10
+npm run backup -- create ../Latch-backup-2026-10-10
+npm run backup -- verify ../Latch-backup-2026-10-10
 ```
 
 Creation loads the configured store paths from .env. A destination must be new and must not contain the source stores. An existing file or directory is refused. No source file is modified. Copied files must be regular bounded files; symbolic file entries are rejected. Copied store schemas are validated using the same registry as doctor. Original source hashes are checked again after copying to detect changes and newly appearing/disappearing stores.
 
 These checks cannot prove a consistent snapshot of a running bot. A store could change after the final check or change and change back. Stop all writers first. There is no live process lock, encryption or cryptographic signature.
 
-A failed creation can leave an incomplete destination. Do not restore it. Correct the cause and choose a new destination. Successful creation returns JSON with ok, guild ID, source OpenDesk version, present count and missing store keys. Missing source stores are recorded explicitly rather than replaced with empty files.
+A failed creation can leave an incomplete destination. Do not restore it. Correct the cause and choose a new destination. Successful creation returns JSON with ok, guild ID, source Latch version, present count and missing store keys. Missing source stores are recorded explicitly rather than replaced with empty files.
 
 ## Included stores
 
@@ -38,7 +38,7 @@ The backup uses fixed portable filenames even when your configured source paths 
 | TICKET_PANEL_STORE_PATH | ticket-panels.json |
 | LEVEL_REWARD_STORE_PATH | level-rewards.json |
 
-manifest.json records the format version, source OpenDesk version, guild ID, UTC creation timestamp and twelve entries with logical store key, fixed filename, presence, byte length and SHA256. Absolute source paths, configuration and tokens are excluded. Preserve .env securely through your own configuration backup process.
+manifest.json records the format version, source Latch version, guild ID, UTC creation timestamp and twelve entries with logical store key, fixed filename, presence, byte length and SHA256. Absolute source paths, configuration and tokens are excluded. Preserve .env securely through your own configuration backup process.
 
 ## Verify a snapshot
 
@@ -51,7 +51,7 @@ Verification proves compatibility with the version performing verification and a
 The tool does not automatically overwrite active stores.
 
 1. Stop the bot and every other writer. Preserve the current stores as a separate complete backup before replacing anything.
-2. Verify the chosen snapshot using a compatible OpenDesk version. Check the reported guild ID against your configured DISCORD_GUILD_ID. A default verification does not know your intended guild; exported verifyBackup supports an explicit expected guild for integration.
+2. Verify the chosen snapshot using a compatible Latch version. Check the reported guild ID against your configured DISCORD_GUILD_ID. A default verification does not know your intended guild; exported verifyBackup supports an explicit expected guild for integration.
 3. Prepare an empty recovery data directory. Copy each present backup file to the matching configured store path using the table above. Keep the twelve files from one snapshot together. For entries marked missing, leave the corresponding recovered store absent. Do not mix a missing backup entry with an old destination file.
 4. Keep the existing configuration and credential files separate. Adjust configured data paths if using a new recovery directory. Never copy manifest.json into a data-store path.
 5. Run doctor against the recovery paths before starting. Preserve the previous configuration and data so you can return to them if recovery fails.

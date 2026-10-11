@@ -15,7 +15,7 @@ class ModerationGuard {
     if (actorId === targetId) deny('You cannot use this moderation action on yourself.');
     const botId = this.botUserId || (await this.discord.getCurrentUser()).id;
     if (!ID.test(botId)) throw new Error('Bot identity unavailable.');
-    if (targetId === botId) deny('You cannot use this moderation action on OpenDesk.');
+    if (targetId === botId) deny('You cannot use this moderation action on Latch.');
     const guildId = this.config.guildId;
     const [guild, roles, actor, target, bot] = await Promise.all([
       this.discord.getGuild(guildId), this.discord.request('GET', `/guilds/${guildId}/roles`),
@@ -42,13 +42,13 @@ class ModerationGuard {
       if (!(staff.permissions & 8n) && !(staff.permissions & permission)) deny('Your current server roles no longer permit this moderation action.');
       if (staff.position <= subject.position) deny('The target must be below your highest role. Administrator does not bypass this check.');
     }
-    if (!(app.permissions & 8n) && !(app.permissions & permission)) deny('OpenDesk lacks the server permission required for this action.');
-    if (app.position <= subject.position) deny('The target must be below OpenDesk\'s highest role.');
+    if (!(app.permissions & 8n) && !(app.permissions & permission)) deny('Latch lacks the server permission required for this action.');
+    if (app.position <= subject.position) deny('The target must be below Latch\'s highest role.');
     if (['timeout', 'untimeout'].includes(action) && (subject.permissions & 8n || target.user.bot)) deny('Timeout actions cannot target administrators or bots.');
     if (action === 'grant' || action === 'revoke') {
       const role = typeof roleId === 'string' && roleMap.get(roleId);
       if (!role || role.id === guildId || role.managed !== false) deny('Choose an unmanaged server role other than everyone.');
-      if (role.position >= app.position) deny('The selected role must be below OpenDesk\'s highest role.');
+      if (role.position >= app.position) deny('The selected role must be below Latch\'s highest role.');
       if (actorId !== guild.owner_id && role.position >= staff.position) deny('The selected role must be below your highest role.');
       if (action === 'grant' && actorId !== guild.owner_id && !(staff.permissions & 8n) && (BigInt(role.permissions) & ~staff.permissions)) deny('You cannot grant a role containing server permissions you do not hold.');
     }

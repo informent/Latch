@@ -1,6 +1,6 @@
-# Installing and operating OpenDesk
+# Installing and operating Latch
 
-OpenDesk is free MIT-licensed source software. The current application serves one configured Discord guild per process. Use separate applications, configurations, and data directories for separate deployments. Run exactly one process against each store set. This is an early release; live Discord validation remains outstanding.
+Latch is free MIT-licensed source software. The current application serves one configured Discord guild per process. Use separate applications, configurations, and data directories for separate deployments. Run exactly one process against each store set. This is an early release; live Discord validation remains outstanding.
 
 ## Local installation
 
@@ -16,20 +16,20 @@ The repository includes a Linux container template. CI builds the production Doc
 
 1. Create `.env` as above. Create `.secrets/discord_bot_token.txt` containing only the bot token. Leave the `.env` token value blank; the Compose service always loads its token from the mounted secret file. Restrict access to both files.
 2. Run `docker compose build --pull` to build from the maintained Node 24 base image. The Docker build context is an allowlist of source, scripts, package metadata, and license; local environment files, secrets, and runtime data are excluded.
-3. Run `docker compose run --rm opendesk node scripts/doctor.js`, then `docker compose run --rm opendesk node scripts/register-commands.js` after reviewing setup. Ensure the normal bot service is stopped when running an additional process that uses these volumes. Doctor and registration do not start the bot scheduler.
-4. Run `docker compose up -d`. The host port binds only to `127.0.0.1:3000`. Place an HTTPS reverse proxy on the same host and forward `/interactions` to that port. The example Caddyfile limits the public route to interactions. It needs a real domain and DNS configuration. If Caddy runs in another container, loopback targets that container; configure a shared internal network and the OpenDesk service name instead.
-5. Inspect process status with `docker compose ps` and logs with `docker compose logs --tail=100 opendesk`. Do not paste private configuration or data into support issues.
+3. Run `docker compose run --rm latch node scripts/doctor.js`, then `docker compose run --rm latch node scripts/register-commands.js` after reviewing setup. Ensure the normal bot service is stopped when running an additional process that uses these volumes. Doctor and registration do not start the bot scheduler.
+4. Run `docker compose up -d`. The host port binds only to `127.0.0.1:3000`. Place an HTTPS reverse proxy on the same host and forward `/interactions` to that port. The example Caddyfile limits the public route to interactions. It needs a real domain and DNS configuration. If Caddy runs in another container, loopback targets that container; configure a shared internal network and the Latch service name instead.
+5. Inspect process status with `docker compose ps` and logs with `docker compose logs --tail=100 latch`. Do not paste private configuration or data into support issues.
 
 The container runs as the Node user, with a read-only root filesystem, dropped Linux capabilities, a persistent data volume, bounded logs, and a 45-second stop grace period. `/healthz` reports HTTP liveness only. The base image tag is maintained rather than digest-pinned; record the built image digest for rollback and rebuild deliberately to adopt updates. Environment variables are visible to Docker administrators; the token secret file is still sensitive host data. See [Docker Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/) and [Node container guidance](https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md).
 
 ## Linux service template
 
-`deploy/opendesk.service.example` is an alternative to Compose. Create a dedicated `opendesk` user/group, place the source under `/opt/opendesk`, and use a restricted `/etc/opendesk/opendesk.env`. Confirm the absolute Node executable path in `ExecStart` matches your installation; Node must be 22.9+ or 24. Install the unit under `/etc/systemd/system/opendesk.service`, reload systemd, and enable/start it. The state directory is `/var/lib/opendesk`, owned by the service user. Configure HTTPS separately. The template is not a verified service installation on this Windows workstation.
+`deploy/latch.service.example` is an alternative to Compose. Create a dedicated `opendesk` user/group, place the source under `/opt/opendesk`, and use a restricted `/etc/opendesk/opendesk.env`. Confirm the absolute Node executable path in `ExecStart` matches your installation; Node must be 22.9+ or 24. Install the unit under `/etc/systemd/system/opendesk.service`, reload systemd, and enable/start it. The state directory is `/var/lib/opendesk`, owned by the service user. Configure HTTPS separately. The template is not a verified service installation on this Windows workstation.
 
 ## Updates, backups, and rollback
 
 - Before updating, stop the bot and copy **all twelve** JSON stores together into a private backup, including `voice.json`, `role-menus.json`, `templates.json`, `responders.json`, `timers.json`, `ticket-panels.json` and `level-rewards.json`. Back up secret/configuration files separately. Keep source commit IDs or image digests with backups. Ticket channels and conversations remain in Discord and are not included in the JSON stores.
-- For Compose, stop with `docker compose stop opendesk`. The named volume persists. Find its actual name with `docker volume ls`; it usually includes the Compose project prefix. With the bot stopped, use an administrative backup container or your Docker volume backup tooling to copy the complete volume. Treat archives as private server data.
+- For Compose, stop with `docker compose stop latch`. The named volume persists. Find its actual name with `docker volume ls`; it usually includes the Compose project prefix. With the bot stopped, use an administrative backup container or your Docker volume backup tooling to copy the complete volume. Treat archives as private server data.
 - Never use `docker compose down -v` for a routine update: it deletes the data volume. Rebuild deliberately, then start one instance. Run doctor and register new commands as needed.
 - Check the changelog before rolling back. Restore a compatible source/image version and the matching complete store backup while the bot is stopped. Verify permissions and resume only one instance. There is no automatic downgrade or migration guarantee.
 - Giveaways save their selected winners before updating Discord. Reminder delivery is at least once; an interrupted delivery can duplicate outside Discord's short nonce window. Review pending job IDs after permissions or connectivity failures.
@@ -53,3 +53,9 @@ Version 0.19.0 writes community.json version 2 on the next successful community 
 ## Verified backup snapshots
 
 Use `npm run backup -- create <new-directory>` after stopping the bot. It includes all twelve configured stores, records missing files explicitly, validates copied schemas and creates a SHA256 manifest. Use `npm run backup -- verify <directory>` before restoration; verification needs no Discord credentials and performs no network calls. Existing backups are never overwritten. See the [complete backup guide](BACKUPS.md) for consistency limits, custom paths, incomplete snapshots and recovery.
+
+## Upgrade from OpenDesk
+
+Latch is the new name for OpenDesk. Use the same Discord application, .env and complete store set. Windows launchers are now Latch-Setup.cmd and Latch-Start.cmd. Existing owned AutoMod rules with the OpenDesk prefix remain manageable; new rules use Latch. Backup manifest format 1 retains the opendeskVersion field for compatibility.
+
+The Compose template keeps the legacy project name opendesk and volume key opendesk-data while renaming the service to latch. Stop the old service before starting the new one. If you previously used a custom Compose project name, set COMPOSE_PROJECT_NAME to that same value so Docker uses the existing volume. Never start both services against the same stores or use down -v during a rename. Existing Linux account and state paths remain valid; stop an old installed unit before installing a replacement from deploy/latch.service.example.

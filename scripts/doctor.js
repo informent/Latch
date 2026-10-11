@@ -52,7 +52,7 @@ async function main() {
   if (args.some((arg) => arg !== '--json')) { console.error('Usage: npm run doctor -- [--json]'); process.exitCode = 1; return; }
   const result = await inspectSetup();
   if (args.includes('--json')) console.log(JSON.stringify(result, null, 2));
-  else { console.log('OpenDesk setup inspection (offline, read-only)'); for (const check of result.checks) console.log(`[${check.status.toUpperCase()}] ${check.name}: ${check.detail}`); }
+  else { console.log('Latch setup inspection (offline, read-only)'); for (const check of result.checks) console.log(`[${check.status.toUpperCase()}] ${check.name}: ${check.detail}`); }
   if (!result.ok) process.exitCode = 1;
 }
 

@@ -61,7 +61,7 @@ class GatewayClient {
     this.reconnectTimer = null;
     const socket = this.socket;
     this.socket = null;
-    try { if (socket && socket.readyState < 2) socket.close(1000, 'OpenDesk shutdown'); } catch { this.#log('gateway_close_failed', {}); }
+    try { if (socket && socket.readyState < 2) socket.close(1000, 'Latch shutdown'); } catch { this.#log('gateway_close_failed', {}); }
     return this.drain();
   }
 
@@ -164,7 +164,7 @@ class GatewayClient {
       this.#send({ op: 2, d: {
         token: this.token,
         intents: this.intents,
-        properties: { os: process.platform, browser: 'OpenDesk', device: 'OpenDesk' }
+        properties: { os: process.platform, browser: 'Latch', device: 'Latch' }
       } });
     }
     if (this.socket) this.#scheduleHeartbeat(Math.floor(interval * this.random()));

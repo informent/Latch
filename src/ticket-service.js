@@ -78,7 +78,7 @@ class TicketService {
     if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket channel.' };
     return this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
-      if (!ticket) return { ok: false, reason: 'This channel is not an OpenDesk ticket.' };
+      if (!ticket) return { ok: false, reason: 'This channel is not an Latch ticket.' };
       if (ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the ticket owner or server support team can close this ticket.' };
       if (ticket.status === 'closed') return { ok: true, alreadyClosed: true };
       if (ticket.status === 'reopening') return { ok: false, reason: 'Support staff must finish reopening this ticket before closing it.' };
@@ -111,7 +111,7 @@ class TicketService {
   async reopen({ channelId, userId, roles = [], permissions = '0' }) {
     if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can reopen tickets.' };
     const original = this.store.getByChannel(channelId);
-    if (!original) return { ok: false, reason: 'Choose a closed OpenDesk ticket.' };
+    if (!original) return { ok: false, reason: 'Choose a closed Latch ticket.' };
     return this.store.withUserLock(original.ownerId, () => this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
       if (ticket.status === 'open') return { ok: true, content: 'This ticket is already open.' };
@@ -167,7 +167,7 @@ class TicketService {
     if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket channel.' };
     return this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
-      if (!ticket || ticket.status !== 'open') return { ok: false, reason: 'Choose an open OpenDesk ticket.' };
+      if (!ticket || ticket.status !== 'open') return { ok: false, reason: 'Choose an open Latch ticket.' };
       if (action === 'reason') {
         await this.store.setReason(channelId, reason);
         return { ok: true, content: 'Ticket reason saved. It is visible to the owner and support staff through ticket info.' };

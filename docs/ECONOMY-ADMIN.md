@@ -12,7 +12,7 @@ Coins are server game points, not money or redeemable credit. These staff contro
 
 ## Authorization and limits
 
-Every command requires Manage Server or Administrator in the invoking interaction. Before reading private history or changing coins, OpenDesk fetches the current guild, role definitions and actor membership. Current Manage Server, Administrator or guild ownership is required. Bot actors, incomplete screening and currently timed-out staff are refused. Role definitions and member IDs must match the configured guild.
+Every command requires Manage Server or Administrator in the invoking interaction. Before reading private history or changing coins, Latch fetches the current guild, role definitions and actor membership. Current Manage Server, Administrator or guild ownership is required. Bot actors, incomplete screening and currently timed-out staff are refused. Role definitions and member IDs must match the configured guild.
 
 Adjustment targets must be current human members who completed screening. This is a game economy permission policy, so role position is not an additional restriction. Authorized staff may adjust their own balance; their identity and reason are recorded like every other adjustment. History can inspect retained records for departed members without requiring current target membership.
 

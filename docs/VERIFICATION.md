@@ -80,7 +80,7 @@ Failing tests reproduced template input aliasing, concurrent responder guard byp
 
 The suite uses temporary local files, a local HTTP server where applicable and simulated Discord API/Gateway responses. It does not prove live Discord delivery, real permission configuration, platform rate-limit behavior or production hosting. This checkout has no Discord configuration and no available Docker executable. No live server validation was performed for this release.
 
-Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 165 command paths across 23 slash command roots.
+Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current Latch catalog has 165 command paths across 23 slash command roots.
 
 ## Repeat the checks
 

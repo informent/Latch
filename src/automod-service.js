@@ -1,6 +1,7 @@
 'use strict';
 
-const PREFIX = 'OpenDesk: ';
+const PREFIX = 'Latch: ';
+const LEGACY_PREFIX = 'OpenDesk: ';
 const ID = (value) => typeof value === 'string' && /^\d{5,25}$/.test(value);
 const PRESETS = Object.freeze({ profanity: Object.freeze([1]), sexual: Object.freeze([2]), slurs: Object.freeze([3]), all: Object.freeze([1, 2, 3]) });
 class AutoModService {
@@ -82,7 +83,7 @@ class AutoModService {
   async #owned(ruleId) {
     if (!ID(ruleId)) throw new Error('Enter a valid rule ID.');
     const rule = await this.discord.getAutoModRule(this.guildId, ruleId);
-    if (!rule || rule.id !== ruleId || rule.guild_id !== this.guildId || rule.creator_id !== this.botUserId || typeof rule.name !== 'string' || !rule.name.startsWith(PREFIX)) throw new Error('OpenDesk can only change its own AutoMod rules.');
+    if (!rule || rule.id !== ruleId || rule.guild_id !== this.guildId || rule.creator_id !== this.botUserId || typeof rule.name !== 'string' || ![PREFIX, LEGACY_PREFIX].some((prefix) => rule.name.startsWith(prefix))) throw new Error('Latch can only change its own AutoMod rules.');
     return structuredClone(rule);
   }
   #serialize(work) { const task = this.queue.then(work); this.queue = task.catch(() => {}); return task; }

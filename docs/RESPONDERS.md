@@ -5,7 +5,7 @@ Responders are free, optional message automation for one configured guild. They 
 ## Enable the feature
 
 1. Set `DISCORD_RESPONDERS_ENABLED=true` in the environment. Leave `DISCORD_GATEWAY_ENABLED` blank or set it to `true`. Setting it to `false` is rejected while responders are enabled.
-2. Enable the privileged **Message Content** intent for your application in the Discord Developer Portal, including approval where Discord requires it. OpenDesk requests Guild Messages and Message Content intents automatically when responders are enabled.
+2. Enable the privileged **Message Content** intent for your application in the Discord Developer Portal, including approval where Discord requires it. Latch requests Guild Messages and Message Content intents automatically when responders are enabled.
 3. Give the bot View Channel and Send Messages in each destination text channel. The community installation link includes these permissions; channel overwrites can still deny them.
 4. Restart the bot and run `npm run register` after upgrading. Existing slash commands still need the HTTPS interaction endpoint.
 
@@ -13,7 +13,7 @@ Discord documents [Gateway message events](https://docs.discord.com/developers/e
 
 ## Staff commands
 
-All eight commands require Manage Server or Administrator. OpenDesk checks the permission in each signed interaction, independently of command visibility.
+All eight commands require Manage Server or Administrator. Latch checks the permission in each signed interaction, independently of command visibility.
 
 - `/responder create name trigger reply cooldown`: save a disabled rule for the current server text channel.
 - `/responder update name trigger reply cooldown`: replace the rule text and cooldown in its assigned channel, then disable it for review. Omitting cooldown resets it to 30 seconds. The channel cannot be moved through update.

@@ -1,8 +1,8 @@
-# OpenDesk command reference
+# Latch command reference
 
-All 176 registered command paths across 25 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
+All 176 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
-Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.
+Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
 Required options must be supplied. Optional values use the handler default when omitted. Default permissions control Discord visibility; runtime checks also enforce guild, identity, current permissions, hierarchy and feature configuration. Administrators can adjust command visibility in Discord, but runtime checks still apply. Commands require a configured server and are not DM commands.
 
@@ -33,7 +33,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 - [/levelreward](#levelreward): Manage free earned role rewards with durable retries.
 - [/levelconfig](#levelconfig): Configure free server XP awards and ignored channels.
 - [/ticketpanel](#ticketpanel): Build persistent support panels with category buttons.
-- [/pollmanage](#pollmanage): Inspect and end native polls created by OpenDesk.
+- [/pollmanage](#pollmanage): Inspect and end native polls created by Latch.
 - [/economyadmin](#economyadmin): Adjust server coins with a durable staff audit ledger.
 
 ## poll
@@ -247,7 +247,7 @@ Default command visibility: all members; individual staff actions require runtim
 
 ### /utility ping
 
-Check whether OpenDesk is responding.
+Check whether Latch is responding.
 
 Options: none.
 
@@ -443,7 +443,7 @@ Options: none.
 
 ### /automod info
 
-Inspect an OpenDesk rule, filters, actions and exemptions.
+Inspect an Latch rule, filters, actions and exemptions.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -460,7 +460,7 @@ Create a disabled native preset filter for review.
 
 ### /automod exempt-role
 
-exempt-role on an OpenDesk rule.
+exempt-role on an Latch rule.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -469,7 +469,7 @@ exempt-role on an OpenDesk rule.
 
 ### /automod unexempt-role
 
-unexempt-role on an OpenDesk rule.
+unexempt-role on an Latch rule.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -478,7 +478,7 @@ unexempt-role on an OpenDesk rule.
 
 ### /automod exempt-channel
 
-exempt-channel on an OpenDesk rule.
+exempt-channel on an Latch rule.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -487,7 +487,7 @@ exempt-channel on an OpenDesk rule.
 
 ### /automod unexempt-channel
 
-unexempt-channel on an OpenDesk rule.
+unexempt-channel on an Latch rule.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -540,7 +540,7 @@ Create a disabled Discord spam filter.
 
 ### /automod enable
 
-enable an OpenDesk rule by ID.
+enable an Latch rule by ID.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -548,7 +548,7 @@ enable an OpenDesk rule by ID.
 
 ### /automod disable
 
-disable an OpenDesk rule by ID.
+disable an Latch rule by ID.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -556,7 +556,7 @@ disable an OpenDesk rule by ID.
 
 ### /automod remove
 
-remove an OpenDesk rule by ID.
+remove an Latch rule by ID.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -1525,13 +1525,13 @@ delete a ticket panel.
 
 ## pollmanage
 
-Inspect and end native polls created by OpenDesk.
+Inspect and end native polls created by Latch.
 
 Default command visibility: Manage Messages (8192).
 
 ### /pollmanage info
 
-info an OpenDesk poll in this text channel.
+info an Latch poll in this text channel.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
@@ -1539,7 +1539,7 @@ info an OpenDesk poll in this text channel.
 
 ### /pollmanage end
 
-end an OpenDesk poll in this text channel.
+end an Latch poll in this text channel.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |

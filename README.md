@@ -1,8 +1,8 @@
-# OpenDesk
+# Latch
 
-OpenDesk is a free, open-source, self-hosted Discord server bot. Its feature suites cover moderation, AutoMod, roles, staff warnings, utilities, tickets, coins, XP, embeds, polls, reminders, giveaways, games, and optional temporary voice channels. It requires no SaaS account, paid tier, database server, or third-party runtime package.
+Latch is a free, open-source, self-hosted Discord server bot. Its feature suites cover moderation, AutoMod, roles, staff warnings, utilities, tickets, coins, XP, embeds, polls, reminders, giveaways, games, and optional temporary voice channels. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
-[![CI](https://github.com/informent/OpenDesk/actions/workflows/ci.yml/badge.svg)](https://github.com/informent/OpenDesk/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Operations guide](docs/OPERATIONS.md) · [Changelog](CHANGELOG.md) · [Feature roadmap](ROADMAP.md)
+[![CI](https://github.com/informent/Latch/actions/workflows/ci.yml/badge.svg)](https://github.com/informent/Latch/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Operations guide](docs/OPERATIONS.md) · [Changelog](CHANGELOG.md) · [Feature roadmap](ROADMAP.md)
 
 ## Start here
 
@@ -10,19 +10,19 @@ The [release-readiness guide](docs/RELEASE.md) explains installation, automated 
 
 The [complete command reference](COMMANDS.md) lists every command, option, limit and permission default. It is generated from the registration payload and checked in CI.
 
-Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered OpenDesk command paths, or `npm run commands -- --json` for a machine-readable catalog.
+Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered Latch command paths, or `npm run commands -- --json` for a machine-readable catalog.
 
-For a first installation, follow the [beginner setup guide](docs/GETTING-STARTED.md). Install Node 24, extract the source ZIP, then double-click **OpenDesk-Setup.cmd** on Windows or run:
+For a first installation, follow the [beginner setup guide](docs/GETTING-STARTED.md). Install Node 24, extract the source ZIP, then double-click **Latch-Setup.cmd** on Windows or run:
 
 ```sh
 npm run setup
 ```
 
-The wizard explains the four required Discord values, hides the token while you enter it, checks the configuration and offers command registration after installation. Existing valid settings are preserved. Start with **OpenDesk-Start.cmd** or `npm start`, then connect a public HTTPS interaction endpoint using the guide. No package installation is required.
+The wizard explains the four required Discord values, hides the token while you enter it, checks the configuration and offers command registration after installation. Existing valid settings are preserved. Start with **Latch-Start.cmd** or `npm start`, then connect a public HTTPS interaction endpoint using the guide. No package installation is required.
 
-Before an upgrade, stop the bot and create a checked snapshot with `npm run backup -- create ../OpenDesk-backup-2026-10-10`. Verify it with `npm run backup -- verify ../OpenDesk-backup-2026-10-10`. See the [backup and recovery guide](docs/BACKUPS.md) for the twelve-store manifest and safe restore steps.
+Before an upgrade, stop the bot and create a checked snapshot with `npm run backup -- create ../Latch-backup-2026-10-10`. Verify it with `npm run backup -- verify ../Latch-backup-2026-10-10`. See the [backup and recovery guide](docs/BACKUPS.md) for the twelve-store manifest and safe restore steps.
 
-All upstream OpenDesk features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required OpenDesk hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
+All upstream Latch features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required Latch hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
 
 Native polls now support private results, cursor-paginated voter lists and confirmed early ending through `/pollmanage`. See the [poll guide](docs/POLLS.md) for result accuracy and permissions.
 
@@ -66,7 +66,7 @@ Saved embed templates use `data/templates.json`, an eighth guild-bound store wit
 
 Role menus and join-role configuration use `data/role-menus.json` for guild, menu/channel/message IDs, titles, labels, role IDs, menu states and publication retry metadata. Include this seventh store in backups. Member role assignments remain in Discord; interaction tokens are not stored.
 
-OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores guild/user IDs, XP, award timestamps, the latest awarded message ID and per-guild settings (including ignored channel IDs); received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
+Latch stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores guild/user IDs, XP, award timestamps, the latest awarded message ID and per-guild settings (including ignored channel IDs); received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
 
 ## Requirements
 
@@ -78,7 +78,7 @@ OpenDesk stores ticket state in `data/tickets.json`, staff warning records in `d
 
 The app handles slash commands over Discord's HTTP interaction endpoint. It opens a Gateway connection when member events, leveling, temporary voice channels or responders are enabled, or when explicitly configured. Configure the public HTTPS interaction URL in the Discord Developer Portal. Do not expose the local HTTP listener directly to the internet; terminate HTTPS at a trusted reverse proxy and restrict the forwarded route to this service.
 
-For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only that the HTTP process is responding; it does not check Discord API connectivity or store health. On `SIGINT` or `SIGTERM`, OpenDesk stops accepting new requests, stops scheduling jobs, and drains acknowledged interaction work and current scheduled delivery. If work remains after 30 seconds, it logs the pending interaction count and marks the process for a non-zero exit; configure your process manager with a stop grace period of at least 30 seconds.
+For process monitoring, `GET /healthz` returns plain-text `ok`. It confirms only that the HTTP process is responding; it does not check Discord API connectivity or store health. On `SIGINT` or `SIGTERM`, Latch stops accepting new requests, stops scheduling jobs, and drains acknowledged interaction work and current scheduled delivery. If work remains after 30 seconds, it logs the pending interaction count and marks the process for a non-zero exit; configure your process manager with a stop grace period of at least 30 seconds.
 
 ## Setup details
 
@@ -92,7 +92,7 @@ See the generated [complete command reference](COMMANDS.md) for the current comm
 
 - `/shop` provides coin-priced virtual items, inventories, gifts, consumables and transaction history. Staff configure items with Manage Server; new items start disabled. See the [shop guide](docs/SHOP.md).
 - `/utility help` shows available suites and whether Gateway and XP awards are enabled.
-- `/automod list`, `/automod keywords`, `/automod mentions`, and `/automod spam` manage native Discord message filters. Staff and bot need **Manage Server**. New rules are disabled for review; `/automod enable`, `/automod disable`, and `/automod remove` take a rule ID. Only rules created by this bot with the OpenDesk name prefix can be changed. Keyword input supports up to 100 comma-separated terms, with Discord wildcard matching. Mention limits range from 1 to 50. Discord applies its own rule-count limits. Native rules continue running while the bot is offline and do not require OpenDesk to receive chat content. Use `/automod info`, `presets`, `exempt-role`, `unexempt-role`, `exempt-channel`, `unexempt-channel`, `allow-words` and `block-message` for configuration. See the [AutoMod guide](docs/AUTOMOD.md). [Discord AutoMod reference](https://docs.discord.com/developers/resources/auto-moderation).
+- `/automod list`, `/automod keywords`, `/automod mentions`, and `/automod spam` manage native Discord message filters. Staff and bot need **Manage Server**. New rules are disabled for review; `/automod enable`, `/automod disable`, and `/automod remove` take a rule ID. Only rules created by this bot with the Latch name prefix can be changed. Keyword input supports up to 100 comma-separated terms, with Discord wildcard matching. Mention limits range from 1 to 50. Discord applies its own rule-count limits. Native rules continue running while the bot is offline and do not require Latch to receive chat content. Use `/automod info`, `presets`, `exempt-role`, `unexempt-role`, `exempt-channel`, `unexempt-channel`, `allow-words` and `block-message` for configuration. See the [AutoMod guide](docs/AUTOMOD.md). [Discord AutoMod reference](https://docs.discord.com/developers/resources/auto-moderation).
 - `/embed title description color` posts a custom announcement in the current channel. Staff need **Manage Messages**; the bot needs **Send Messages** and **Embed Links**. Mentions are disabled. Publishing to another channel is not supported.
 - `/fun coin`, `/fun roll`, and `/fun eightball` provide coin flips, dice with 2 to 1000 sides, and random answers. These have no currency stakes or paid features.
 
@@ -114,13 +114,13 @@ See the generated [complete command reference](COMMANDS.md) for the current comm
 - `/ticket list page:1` - privately list active tickets, ten per page. Members see their own; the configured support role and administrators see the queue.
 - `/ticket stats` - support staff see retained lifetime counts for open, closing, closed and claimed tickets. This does not measure per-staff workload or timed activity.
 - `/ticket claim` and `/ticket unclaim` - support staff assign themselves or clear the current assignment. The owner cannot claim their own ticket; an existing different claimer must be cleared first. Any support staff may unclaim. Assignments persist across restarts and do not alter channel permissions or who can close a ticket.
-- `/ticket rename name:billing-question` - support staff rename an open OpenDesk ticket. Names use 1–90 lowercase letters, digits or hyphens. Claim/unclaim/rename accept an optional `channel`; otherwise they use the current channel.
+- `/ticket rename name:billing-question` - support staff rename an open Latch ticket. Names use 1–90 lowercase letters, digits or hyphens. Claim/unclaim/rename accept an optional `channel`; otherwise they use the current channel.
 
-The bot keeps no transcript. Deleting a ticket channel manually does not delete its small state record; remove that record while the bot is stopped if you need to clean up stale entries. Never edit the JSON file while the bot is running, and run only one OpenDesk process against a given store file.
+The bot keeps no transcript. Deleting a ticket channel manually does not delete its small state record; remove that record while the bot is stopped if you need to clean up stale entries. Never edit the JSON file while the bot is running, and run only one Latch process against a given store file.
 
 ## Community scheduling
 
-- `/poll question:"Next event?" answers:"Games | Movie | Trivia" hours:24 multiple:false` publishes a native Discord poll. Staff need Manage Messages; the bot needs Send Messages and Send Polls. Questions allow 300 characters, with 2–10 distinct choices of up to 55 characters each. Voting lasts 1–768 hours and continues while OpenDesk is offline. Discord manages votes and expiration; OpenDesk does not store voter records. See the [Discord poll API](https://docs.discord.com/developers/resources/poll).
+- `/poll question:"Next event?" answers:"Games | Movie | Trivia" hours:24 multiple:false` publishes a native Discord poll. Staff need Manage Messages; the bot needs Send Messages and Send Polls. Questions allow 300 characters, with 2–10 distinct choices of up to 55 characters each. Voting lasts 1–768 hours and continues while Latch is offline. Discord manages votes and expiration; Latch does not store voter records. See the [Discord poll API](https://docs.discord.com/developers/resources/poll).
 - `/reminder create minutes:30 text:"Community event"` saves a reminder for the current channel. It is posted **publicly in that channel**, mentioning only its owner; it is not a DM. `/reminder list` and `/reminder cancel id:...` privately manage your pending reminders. Limits: 10 pending per member, 500 text characters, 1–43200 minutes. Both the requesting member and the bot need Send Messages in the channel.
 - `/giveaway create prize:"Community prize" minutes:60 winners:2` publishes persistent Enter/Leave buttons in the current channel. Staff need Manage Messages; the bot needs Send Messages and Embed Links. `/giveaway list`, `/giveaway info id:...`, `/giveaway end id:...`, and `/giveaway cancel id:...` manage giveaways. Limits: 20 active per server, 10000 entries each, 1–20 winners, 200 prize characters, and 1–43200 minutes. Each human member gets one entry and may leave before the deadline. Winners are drawn uniformly without replacement using cryptographic randomness and saved before the original message is updated. A retry preserves the same draw. The host supplies and distributes the prize; new giveaways support required roles and level ranges with current membership/screening checks at entry and selection. See the [giveaway guide](docs/GIVEAWAYS.md) for legacy behavior and selection limits.
 - `/giveaway requirements role-add`, `role-remove`, `levels` and `clear` configure active giveaway eligibility. `/giveaway eligibility` previews a selected member; `/giveaway entrants` privately lists 20 entries per page. Requirements are checked again during selection.
@@ -137,7 +137,7 @@ Reminder delivery is **at least once**: Discord message nonces suppress repeats 
 - Raw interaction bodies and tokens are not logged. Errors are logged with bounded message text; review proxy/process logs too.
 - The interaction endpoint is unauthenticated at the HTTP layer by design; signature verification is mandatory. Keep the public route HTTPS-only and use rate limiting at the proxy.
 - The bot token is a secret. Rotate it in the Developer Portal if exposed.
-- The `Server Members` and `Message Content` intents are privileged Discord intents. OpenDesk requests member events only if `DISCORD_ENABLE_MEMBER_EVENTS=true`; it requests message content when `DISCORD_LEVELING_ENABLED=true` or `DISCORD_ENABLE_MESSAGE_CONTENT=true`. The message content itself is not stored or logged.
+- The `Server Members` and `Message Content` intents are privileged Discord intents. Latch requests member events only if `DISCORD_ENABLE_MEMBER_EVENTS=true`; it requests message content when `DISCORD_LEVELING_ENABLED=true` or `DISCORD_ENABLE_MESSAGE_CONTENT=true`. The message content itself is not stored or logged.
 - This project is not affiliated with or endorsed by Discord.
 
 ## Development

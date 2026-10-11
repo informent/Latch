@@ -15,7 +15,7 @@ function validatePoll(message, messageId, channelId, botId) {
 function createPollHandler({ config, discord, logger, now }, { response, defer, hasPermission, findOption, safeText }) {
   const locks = new Map();
   return async (interaction) => {
-    if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages in this channel to manage OpenDesk polls.') };
+    if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages in this channel to manage Latch polls.') };
     const command = interaction.data?.options?.[0], action = command?.name, options = command?.options || [];
     const messageId = findOption(options, 'message'), channelId = interaction.channel_id, answerId = findOption(options, 'answer'), after = findOption(options, 'after');
     if (!['info', 'end', 'voters'].includes(action)) return { immediate: response('Choose a poll management action.') };
@@ -51,7 +51,7 @@ function createPollHandler({ config, discord, logger, now }, { response, defer, 
         await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
       } catch {
         try { logger('poll_management_failed', { action }); } catch {}
-        await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the poll action. Use an OpenDesk poll message in this server text channel, check permissions and the answer ID, then retry. If ending failed, inspect the poll because Discord may already have ended it.', allowed_mentions: { parse: [] } }).catch(() => {});
+        await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not complete the poll action. Use an Latch poll message in this server text channel, check permissions and the answer ID, then retry. If ending failed, inspect the poll because Discord may already have ended it.', allowed_mentions: { parse: [] } }).catch(() => {});
       } finally { release(); if (locks.get(key) === gate) locks.delete(key); }
     } };
   };

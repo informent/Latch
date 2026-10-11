@@ -52,9 +52,9 @@ async function choice(ui, label, allowed, fallback) {
 
 function nextSteps(ui, config) {
   ui.say('\nNext: make the bot reachable by Discord');
-  ui.say('1. Start OpenDesk: npm start (or double-click OpenDesk-Start.cmd on Windows).');
+  ui.say('1. Start Latch: npm start (or double-click Latch-Start.cmd on Windows).');
   ui.say(`2. Forward a public HTTPS URL to local port ${config.port}. The beginner guide has a temporary tunnel example.`);
-  ui.say('3. Developer Portal > General Information > Interactions Endpoint URL: paste your HTTPS URL followed by /interactions. Save it while OpenDesk is running.');
+  ui.say('3. Developer Portal > General Information > Interactions Endpoint URL: paste your HTTPS URL followed by /interactions. Save it while Latch is running.');
   ui.say('4. Try /utility ping in your server. Keep the bot running to receive commands.');
   ui.say('Help: docs/GETTING-STARTED.md | All commands: COMMANDS.md');
 }
@@ -72,7 +72,7 @@ async function runSetup({ root = ROOT, ui, plain = false, inherited = process.en
   try { values = parseEnv(template); } catch { throw new Error('Could not read .env. Check its KEY=value format; your file was preserved.'); }
   const updates = {};
   const fresh = !questions.some(([key]) => values[key]?.trim()) && !Object.entries(values).some(([key, value]) => /^(?:DISCORD_.*_ENABLED|DISCORD_ENABLE_.*)$/.test(key) && value.trim().toLowerCase() === 'true');
-  ui.say('\nOpenDesk setup\nYou need a Discord application and a test server you manage.\nCreate or open your app: https://discord.com/developers/applications\nSettings stay in this folder. Press Ctrl+C to stop.\n');
+  ui.say('\nLatch setup\nYou need a Discord application and a test server you manage.\nCreate or open your app: https://discord.com/developers/applications\nSettings stay in this folder. Press Ctrl+C to stop.\n');
   ui.say('Step 1 of 3: Discord settings');
   for (const [key, label, valid, help] of questions) {
     if (key === 'DISCORD_BOT_TOKEN' && values.DISCORD_BOT_TOKEN_FILE?.trim()) { ui.say('Bot token: using your existing token file.'); continue; }
@@ -94,7 +94,7 @@ async function runSetup({ root = ROOT, ui, plain = false, inherited = process.en
   const text = Object.keys(updates).length ? `${template}${template.endsWith('\n') ? '' : '\n'}\n# Guided setup values override earlier blank entries.\n${Object.entries(updates).map(([key, value]) => `${key}=${value}`).join('\n')}\n` : template;
   values = parseEnv(text);
   const conflicts = Object.keys(values).filter((key) => inherited[key] !== undefined && inherited[key] !== values[key]);
-  if (conflicts.length) throw new Error('Terminal environment variables conflict with .env. Use a fresh terminal without OpenDesk variable overrides, then rerun setup. No settings were saved.');
+  if (conflicts.length) throw new Error('Terminal environment variables conflict with .env. Use a fresh terminal without Latch variable overrides, then rerun setup. No settings were saved.');
   const effective = { ...inherited, ...values };
   let config;
   try { config = loadConfig(effective); }
@@ -106,7 +106,7 @@ async function runSetup({ root = ROOT, ui, plain = false, inherited = process.en
   for (const check of report.checks.filter((check) => check.status === 'fail')) ui.say(`Needs attention: ${check.name}. ${check.detail}`);
   if (!report.ok) { ui.say('Settings are saved. Fix the reported issue and rerun npm run setup.'); return { ok: false, configured: true }; }
   ui.say('Local checks passed.');
-  ui.say('\nStep 3 of 3: Add OpenDesk to your test server');
+  ui.say('\nStep 3 of 3: Add Latch to your test server');
   ui.say(installLink(config.applicationId, Object.keys(features).filter((name) => name !== 'voice' || config.voiceEnabled)).url);
   ui.say('Open that link, choose your test server, and review the permissions. Place the bot role above roles it needs to manage.');
   let registered = false;
@@ -135,5 +135,5 @@ async function main(args = process.argv.slice(2)) {
   finally { ui.close?.(); }
 }
 
-if (require.main === module) main().catch((error) => { console.error(error.code ? 'Setup could not access its files. Extract OpenDesk into a folder you own and try again.' : error.message); process.exitCode = 1; });
+if (require.main === module) main().catch((error) => { console.error(error.code ? 'Setup could not access its files. Extract Latch into a folder you own and try again.' : error.message); process.exitCode = 1; });
 module.exports = { runSetup, main, readEnv, saveEnv };
