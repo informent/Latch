@@ -23,6 +23,8 @@ npm start
 
 You also need a public HTTPS interaction endpoint configured in Discord. The setup command preserves existing settings. Doctor is an offline, read-only inspection, and invite prints a permission-based installation link without opening a browser. See the [operations guide](docs/OPERATIONS.md) for Docker Compose, Linux services, backups, upgrades, and troubleshooting.
 
+Before an upgrade, stop the bot and create a checked snapshot with `npm run backup -- create ../OpenDesk-backup-2026-10-10`. Verify it with `npm run backup -- verify ../OpenDesk-backup-2026-10-10`. See the [backup and recovery guide](docs/BACKUPS.md) for the twelve-store manifest and safe restore steps.
+
 All upstream OpenDesk features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required OpenDesk hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
 
 Native polls now support private results, cursor-paginated voter lists and confirmed early ending through `/pollmanage`. See the [poll guide](docs/POLLS.md) for result accuracy and permissions.

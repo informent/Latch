@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.22.0 - 2026-10-10
+
+- Added npm run backup create/verify for complete portable snapshots of all twelve configured stores, with explicit missing entries, source version/guild/timestamp, byte counts and SHA256.
+- Creation reserves a new directory, refuses existing destinations and destinations containing source stores, validates copied schemas and rechecks originals for detectable changes before completion. Failures leave an incomplete destination rather than overwriting data.
+- Offline verification checks strict manifest fields, all twelve fixed filenames, checksums, store schemas, missing/extra files and detectable changes during verification. Credentials and absolute source paths are excluded; no network calls or automatic restore writes are made.
+- Doctor and backup now share a frozen twelve-store registry. Added a complete backup/recovery guide, including custom paths, plaintext data privacy, missing-file restoration and pending-work replay limits.
+- Added 30 tests. All 499 tests pass locally with 93.17% lines, 85.11% branches and 87.94% functions. The generated command reference remains 171 paths across 24 suites.
+
+No data migration or command registration change is introduced. Stop all store writers before creating or restoring snapshots; filesystem hashes cannot establish consistency for a running bot. SHA256 is not an authenticity signature, and restoring local stores cannot restore Discord objects or retract sent messages. Live Discord recovery validation and full competitor parity remain unfinished.
+
 ## 0.21.0 - 2026-10-10
 
 - Added pollmanage info/end/voters. The generated complete reference now lists 171 command paths across 24 suites, preserving the existing poll creation command.

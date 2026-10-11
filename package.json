@@ -1,6 +1,6 @@
 {
   "name": "opendesk-discord",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "private": true,
   "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
   "license": "MIT",
@@ -11,13 +11,14 @@
     "check:roles": "node --check src/role-menu-store.js && node --check src/role-menu-service.js && node --check scripts/check-publication-text.js && node --check src/template-store.js",
     "publication-check": "node scripts/check-publication-text.js",
     "commands": "node scripts/command-catalog.js",
+    "backup": "node --env-file-if-exists=.env scripts/backup.js",
     "setup": "node scripts/setup.js",
     "doctor": "node --env-file-if-exists=.env scripts/doctor.js",
     "invite": "node --env-file-if-exists=.env scripts/invite.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "register": "node --env-file-if-exists=.env scripts/register-commands.js",
     "test": "node --experimental-test-coverage --test-coverage-lines=85 --test-coverage-branches=75 --test-coverage-functions=80 test/run.js",
-    "check": "node --check src/poll-interactions.js && node --check src/voice-store.js && node --check src/voice-service.js && node --check scripts/command-catalog.js && node --check scripts/setup.js && node --check scripts/doctor.js && node --check scripts/invite.js && node --check src/community-store.js && node --check src/community-service.js && node --check src/community-interactions.js && node --check src/automod-service.js && node --check src/config.js && node --check src/commands.js && node --check src/discord-api.js && node --check src/gateway.js && node --check src/guild-events.js && node --check src/level-store.js && node --check src/level-interactions.js && node --check src/ticket-store.js && node --check src/moderation-store.js && node --check src/shop-schema.js && node --check src/shop-interactions.js && node --check src/economy-store.js && node --check src/ticket-panel-store.js && node --check src/ticket-panel-service.js && node --check src/ticket-panel-interactions.js && node --check src/ticket-service.js && node --check src/interactions.js && node --check src/server.js && node --check scripts/register-commands.js && node --check src/level-reward-store.js && node --check src/level-reward-service.js && node --check src/level-reward-interactions.js",
+    "check": "node --check scripts/backup.js && node --check src/store-registry.js && node --check src/poll-interactions.js && node --check src/voice-store.js && node --check src/voice-service.js && node --check scripts/command-catalog.js && node --check scripts/setup.js && node --check scripts/doctor.js && node --check scripts/invite.js && node --check src/community-store.js && node --check src/community-service.js && node --check src/community-interactions.js && node --check src/automod-service.js && node --check src/config.js && node --check src/commands.js && node --check src/discord-api.js && node --check src/gateway.js && node --check src/guild-events.js && node --check src/level-store.js && node --check src/level-interactions.js && node --check src/ticket-store.js && node --check src/moderation-store.js && node --check src/shop-schema.js && node --check src/shop-interactions.js && node --check src/economy-store.js && node --check src/ticket-panel-store.js && node --check src/ticket-panel-service.js && node --check src/ticket-panel-interactions.js && node --check src/ticket-service.js && node --check src/interactions.js && node --check src/server.js && node --check scripts/register-commands.js && node --check src/level-reward-store.js && node --check src/level-reward-service.js && node --check src/level-reward-interactions.js",
     "check:automation": "node --check src/responder-store.js && node --check src/responder-service.js && node --check src/responder-interactions.js && node --check src/timer-store.js && node --check src/timer-service.js && node --check src/timer-interactions.js && node --check src/moderation-guard.js",
     "commands:write": "node scripts/command-catalog.js --write",
     "commands:check": "node scripts/command-catalog.js --check"

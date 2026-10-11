@@ -37,3 +37,5 @@ require('./giveaway-eligibility.test');
 require('./reminder-management.test');
 
 require('./poll-management.test');
+
+require('./backup.test');
