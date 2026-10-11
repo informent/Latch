@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.27.0 - 2026-10-11
+
+- Added `/timer reschedule` to change the next attempt without changing the recurring interval. Enabled timers accept a delay of 5 minutes to 30 days, persisted across restarts.
+- Added `/timer move` to change a recurring message destination. The destination is checked against the configured server and ordinary text channel type; moving disables the timer for staff preview and explicit re-enabling.
+- Both changes share the delivery queue and preserve attempt history. Added tests for permissions, invalid values, channel identity, restart persistence, interval behavior and active-delivery ordering.
+- Updated the command reference to 191 paths across 25 roots. Re-register commands after upgrading. No store migration is required; live Discord validation remains pending.
+
 ## 0.26.0 - 2026-10-11
 
 - Added thirteen read-only utility command paths for member banners, server icons/banners, boost status, roles, emojis, stickers, asset inspection, Discord ID decoding, timestamps, hex colors and arithmetic. Replies are private, expression inventories are paginated and external asset URLs are built only from validated IDs/hashes.

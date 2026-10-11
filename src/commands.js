@@ -226,6 +226,14 @@ commands.push({
       option(3, 'text', 'Recurring message text; mentions are suppressed.', { required: true, min_length: 1, max_length: 1800 })
     ])),
     subcommand('list', 'List recurring message states, intervals and last results.'),
+    subcommand('reschedule', 'Change the next attempt without changing the recurring interval.', [
+      option(3, 'name', 'Enabled timer name.', { required: true, max_length: 32 }),
+      option(4, 'minutes', 'Delay from now, from 5 minutes to 30 days.', { required: true, min_value: 5, max_value: 43200 })
+    ]),
+    subcommand('move', 'Move a timer to another text channel and disable it for review.', [
+      option(3, 'name', 'Timer name.', { required: true, max_length: 32 }),
+      option(7, 'channel', 'Destination text channel in this server.', { required: true, channel_types: [0] })
+    ]),
     ...['info', 'preview', 'enable', 'disable', 'delete'].map((action) => subcommand(action, `${action} a saved recurring message.`, [option(3, 'name', 'Timer name.', { required: true, max_length: 32 })]))
   ]
 });

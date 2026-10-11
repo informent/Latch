@@ -1,11 +1,13 @@
 # Recurring channel messages
 
-Eight `/timer` commands manage recurring text messages. Manage Server or Administrator is required, checked in every signed interaction. This suite does not need Gateway or Message Content access. Keep the HTTP interaction endpoint configured and run one bot process per store set.
+Ten `/timer` commands manage recurring text messages. Manage Server or Administrator is required, checked in every signed interaction. This suite does not need Gateway or Message Content access. Keep the HTTP interaction endpoint configured and run one bot process per store set.
 
 ## Commands
 
 - `create name minutes text`: save a disabled timer for the current ordinary server text channel.
 - `update name minutes text`: replace text and interval in the assigned channel, then disable the timer for review. It does not move the timer to another channel.
+- `reschedule name minutes`: change only the next attempt of an enabled timer to 5-43200 minutes from now. Its regular interval and delivery history stay unchanged.
+- `move name channel`: select another ordinary text channel in the configured server. The timer is disabled for preview and explicit re-enabling; message text, interval and delivery history stay intact.
 - `list`: privately list timers, channels, intervals and last results.
 - `info name`: privately show state, next attempt, last attempt and result.
 - `preview name`: privately preview the text without posting it publicly.
@@ -25,7 +27,7 @@ The scheduler validates the channel's guild and ordinary text type on each attem
 
 Failed attempts consume that occurrence. There is no immediate retry, backfill or guarantee of exactly one delivered message. The next scheduled interval is independent and can attempt delivery again. A network error can mean Discord accepted a message without a successful acknowledgement. Repeated failures require staff to inspect channel permissions and disable or repair the timer.
 
-Configuration changes and timer delivery are serialized through the same service queue. A disable, update or delete waits for an already running delivery and cannot retract a message. Shutdown stops scheduling and drains tracked timer work within the server's existing shutdown window; the process manager should allow at least 45 seconds.
+Configuration changes and timer delivery are serialized through the same service queue. A disable, update, move, reschedule or delete waits for an already running delivery and cannot retract a message. Shutdown stops scheduling and drains tracked timer work within the server's existing shutdown window; the process manager should allow at least 45 seconds.
 
 ## Storage and backups
 
