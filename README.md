@@ -28,6 +28,7 @@ No npm package installation or database server is required. The bot supports **o
 | Configure XP, ignored channels and earned roles | [Leveling](docs/LEVELING.md) / [Level rewards](docs/LEVEL-REWARDS.md) |
 | Use coins, professions and staff balance controls | [Economy](docs/ECONOMY.md) / [Economy administration](docs/ECONOMY-ADMIN.md) |
 | Run polls, reminders and giveaways | [Polls](docs/POLLS.md) / [Reminders](docs/REMINDERS.md) / [Giveaways](docs/GIVEAWAYS.md) |
+| Reuse announcements and reorganize saved embeds | [Templates](docs/TEMPLATES.md) |
 | Inspect server assets, create timestamps or calculate | [Utilities](docs/UTILITIES.md) |
 | Create temporary voice rooms or a virtual shop | [Voice rooms](docs/VOICE.md) / [Shop](docs/SHOP.md) |
 | Deploy, monitor or troubleshoot the process | [Operations](docs/OPERATIONS.md) / [Verification](docs/VERIFICATION.md) |

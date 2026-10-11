@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.28.0 - 2026-10-11
+
+- Added `/template clone` and `/template rename` for reusing and organizing saved embeds. Both require Manage Messages and reply privately without publishing or altering existing announcements.
+- Preserved atomic writes, guild binding and name uniqueness. Copying needs a free slot; renaming works at the 50-template limit. Failed writes retain prior state.
+- Added regression checks for independent copies, restart persistence, invalid names, collisions, capacity, concurrent changes, permissions and recovery after a write failure.
+- The generated reference now has 193 command paths. Run command registration after upgrading; no data migration is required.
+
 ## 0.27.1 - 2026-10-11
 
 - Fixed silent truncation in responder and recurring-message lists. Both now accept an optional page, show ten entries in stable name order, and report total counts and page ranges.

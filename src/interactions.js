@@ -91,6 +91,11 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
             if (!item) throw new Error();
             const embed = { title: item.title, description: item.description, color: item.color };
             if (action === 'delete') { await templates.change('delete', { name }); content = 'Template deleted. Previously published messages remain in Discord.'; }
+            else if (action === 'clone' || action === 'rename') {
+              const destination = findOption(options, 'destination');
+              await templates.change(action, { name, destination });
+              content = `Template ${safeText(name)} ${action === 'clone' ? 'copied' : 'renamed'} to ${safeText(destination)}. Previously published messages are unchanged.`;
+            }
             else if (action === 'info') content = `Name: ${item.name}\nTitle: ${safeText(item.title)}\nBody length: ${item.description.length}\nColor: #${item.color.toString(16).padStart(6, '0')}`;
             else if (action === 'preview') { content = `Private preview: ${item.name}`; embeds = [embed]; }
             else if (action === 'send') {
@@ -103,7 +108,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), embeds, allowed_mentions: { parse: [] } });
         } catch {
           logger('template_action_failed', { action });
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Template action failed. Check the name, title/body, color, 50-template limit and channel permissions. Create needs a new name; update needs an existing name. Delivery failures require checking the channel before sending again.', allowed_mentions: { parse: [] } }).catch(() => {});
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Template action failed. Check the name, title/body, color, 50-template limit and channel permissions. Create needs a new name; update needs an existing name. Clone and rename need an existing source and an unused valid destination name. Delivery failures require checking the channel before sending again.', allowed_mentions: { parse: [] } }).catch(() => {});
         }
       } };
     }

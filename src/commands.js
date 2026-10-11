@@ -199,6 +199,10 @@ commands.push({
       option(3, 'color', 'Six-digit hex color; defaults to 5865f2.', { max_length: 7 })
     ])),
     subcommand('list', 'List saved embed names.'),
+    ...['clone', 'rename'].map((action) => subcommand(action, `${action} a template without publishing or overwriting another.`, [
+      option(3, 'name', 'Existing template name.', { required: true, min_length: 1, max_length: 32 }),
+      option(3, 'destination', 'Unused lowercase name with letters, numbers, underscores or hyphens.', { required: true, min_length: 1, max_length: 32 })
+    ])),
     ...['info', 'preview', 'send', 'delete'].map((action) => subcommand(action, `${action} a saved embed; send publishes in this channel.`, [option(3, 'name', 'Saved template name.', { required: true, max_length: 32 })]))
   ]
 });
