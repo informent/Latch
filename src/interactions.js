@@ -133,7 +133,12 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
             const menu = await roleMenus.create({ id, channelId: interaction.channel_id, title: findOption(options, 'title') });
             content = `Draft role menu ${menu.id} saved. Add roles, then publish it.`;
           } else if (action === 'list') {
-            content = roleMenus.list().map((menu) => `${menu.id}: ${safeText(menu.title).slice(0, 60)} | ${menu.state} | ${menu.roles.length} roles${menu.pending ? ' | update pending' : ''}`).join('\n') || 'No role menus configured.';
+            const menus = roleMenus.list().slice().sort((a, b) => BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0);
+            const page = findOption(options, 'page') ?? 1;
+            const pages = Math.max(1, Math.ceil(menus.length / 5));
+            content = !Number.isInteger(page) || page < 1 || page > pages
+              ? `Choose a page from 1 to ${pages}.`
+              : `Role menus: ${menus.length} | Page ${page}/${pages}\n` + (menus.slice((page - 1) * 5, page * 5).map((menu) => `${menu.id}: ${safeText(menu.title).replace(/[\r\n]+/g, ' ')} | ${menu.state} | ${menu.roles.length} roles${menu.pending ? ' | update pending' : ''}`).join('\n') || 'No role menus configured.');
           } else if (action === 'info') {
             const menu = roleMenus.get(id);
             if (!menu) throw new Error('Unknown role menu.');

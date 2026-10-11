@@ -39,3 +39,7 @@ Stopping drains queued panel work and stops retry timers. If a ticket is saved b
 The new eleventh store is `TICKET_PANEL_STORE_PATH`, default `./data/ticket-panels.json`. It holds guild, panel/channel/message IDs, configured descriptions, topic/category IDs, state and retry metadata. It does not store credentials, interaction tokens or member conversations. Its version 1 format is guild-bound and capped at 1 MiB. Include it in complete stopped-process backups. Run one bot process per store set.
 
 Run `npm run register` after upgrading. Doctor inspects this store and rejects overlapping store paths. Docker Compose and Linux service templates include its persistent path. No Docker/service execution or live Discord validation was performed here. Automated tests exercise signed local HTTP requests and simulated Discord responses, including restart, failed writes, private channel creation, closure and reopening.
+
+## Browse every saved entry
+
+`/ticketpanel list` shows five entries per page, ordered by numeric ID. Use `/ticketpanel list page:2` for the next page. Responses show totals, page counts, full titles and pending publication status. Empty lists show page 1/1; unavailable pages return the valid range. Re-register commands after upgrading to expose the optional page argument.

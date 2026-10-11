@@ -176,7 +176,7 @@ commands.push({
     subcommand('create', 'Create an unpublished menu in this channel.', [option(3, 'title', 'Menu title.', { required: true, min_length: 1, max_length: 200 })]),
     subcommand('add', 'Add a permission-free role below your role and the bot.', [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 }), option(8, 'role', 'Role to offer.', { required: true }), option(3, 'label', 'Button label.', { required: true, min_length: 1, max_length: 60 })]),
     subcommand('remove', 'Remove a role from a menu.', [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 }), option(8, 'role', 'Role to remove.', { required: true })]),
-    subcommand('list', 'List stored role menus.'),
+    subcommand('list', 'List stored role menus, five per page.', [option(4, 'page', 'Page number, ordered by menu ID.', { min_value: 1, max_value: 4 })]),
     ...['publish', 'disable', 'delete', 'info'].map((action) => subcommand(action, `${action} a role menu by ID.`, [option(3, 'id', 'Menu ID.', { required: true, max_length: 25 })]))
   ]
 }, {
@@ -282,7 +282,7 @@ commands.push({
     subcommand('create', 'Create an unpublished panel in this text channel.', [option(3, 'title', 'Panel title.', { required: true, min_length: 1, max_length: 200 }), option(3, 'description', 'Explain what members should select.', { max_length: 1000 })]),
     subcommand('add', 'Add one of five topic/category buttons.', [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 }), option(3, 'topic', 'Lowercase topic ID: letters, digits, hyphens; up to 20.', { required: true, min_length: 1, max_length: 20 }), option(3, 'label', 'Button label.', { required: true, min_length: 1, max_length: 60 }), option(7, 'category', 'Category for private tickets.', { required: true, channel_types: [4] })]),
     subcommand('remove', 'Remove a topic button.', [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 }), option(3, 'topic', 'Topic ID.', { required: true, max_length: 20 })]),
-    subcommand('list', 'List stored panels and publication state.'),
+    subcommand('list', 'List stored panels and publication state, five per page.', [option(4, 'page', 'Page number, ordered by panel ID.', { min_value: 1, max_value: 4 })]),
     ...['info', 'publish', 'disable', 'delete'].map((action) => subcommand(action, `${action} a ticket panel.`, [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 })]))
   ]
 });

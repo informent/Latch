@@ -52,3 +52,4 @@ require('./timer-controls.test');
 require('./automation-pagination.test');
 
 require('./template-management.test');
+require('./panel-pagination.test');

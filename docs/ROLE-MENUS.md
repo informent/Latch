@@ -54,3 +54,7 @@ New human joins receive eligible configured roles once. Bots and pending-screeni
 Reaction roles, emoji configuration, toggle buttons, mutually exclusive selections, booster/vanity roles, custom permission-role policies and persistent join retries remain unfinished. See [command coverage](COMMAND-COVERAGE.md).
 
 References: [Discord button components](https://docs.discord.com/developers/components/reference#button), [guild role endpoints](https://docs.discord.com/developers/resources/guild#add-guild-member-role), [Bleed button-role documentation](https://docs.bleed.bot/configuration/roles/button).
+
+## Browse every saved entry
+
+`/rolemenu list` shows five entries per page, ordered by numeric ID. Use `/rolemenu list page:2` for the next page. Responses show totals, page counts, full titles and pending publication status. Empty lists show page 1/1; unavailable pages return the valid range. Re-register commands after upgrading to expose the optional page argument.
