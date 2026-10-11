@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 202 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 203 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -58,6 +58,16 @@ Create a native Discord community poll.
 Create or close a private support ticket.
 
 Default command visibility: all members; individual staff actions require runtime permission checks.
+
+### /ticket transcript
+
+Privately export up to 100 recent messages as text or JSON.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| count | integer | no | Recent messages, 1 to 100; defaults to 50.; Minimum: 1; Maximum: 100 |
+| format | text | no | Download format; defaults to text.; Choices: Text = text, JSON = json |
+| channel | channel | no | Ticket; defaults to this channel.; Allowed Discord channel type IDs: 0 |
 
 ### /ticket guest add
 

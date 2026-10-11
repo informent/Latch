@@ -263,6 +263,18 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
         }
       } };
     }
+    if (commandName === 'ticket' && subcommand?.name === 'transcript') {
+      return { immediate: defer(), work: async () => {
+        try {
+          const result = await tickets.transcript({ channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0', limit: findOption(subcommand.options || [], 'count') ?? 50, format: findOption(subcommand.options || [], 'format') ?? 'text' });
+          const content = result.ok ? `Private snapshot: ${result.file.count} of up to ${result.file.limit} recent messages. Older/deleted messages and attachment bytes are excluded. Discord content access can limit this export. Keep the downloaded file private.` : result.reason;
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } }, result.ok ? result.file : undefined);
+        } catch {
+          try { logger('ticket_transcript_failed', {}); } catch {}
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not export this ticket. Check membership, bot View Channel/Read Message History and Message Content access, or request fewer messages. No local transcript was saved.', allowed_mentions: { parse: [] }, attachments: [] }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'ticket' && subcommand?.name === 'guest') {
       const guestAction = subcommand.options?.[0];
       return { immediate: defer(), work: async () => {

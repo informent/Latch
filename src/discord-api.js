@@ -1,6 +1,7 @@
 'use strict';
 
 const API = 'https://discord.com/api/v10';
+const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 const REQUEST_BUDGET_MS = 12_000;
 const MAX_RATE_LIMIT_RETRIES = 2;
 
@@ -11,13 +12,20 @@ class DiscordApi {
     this.globalRetryAt = 0;
   }
 
-  async request(method, path, body, { botAuth = true, auditReason } = {}) {
+  async request(method, path, body, { botAuth = true, auditReason, file } = {}) {
     const headers = { 'Content-Type': 'application/json' };
     if (botAuth) headers.Authorization = `Bot ${this.token}`;
     if (auditReason) headers['X-Audit-Log-Reason'] = encodeURIComponent(auditReason);
     const deadline = Date.now() + REQUEST_BUDGET_MS;
     const signal = AbortSignal.timeout(REQUEST_BUDGET_MS);
-    const serializedBody = body === undefined ? undefined : JSON.stringify(body);
+    let serializedBody = body === undefined ? undefined : JSON.stringify(body);
+    if (file !== undefined) {
+      if (!file || typeof file.filename !== 'string' || !/^[a-zA-Z0-9_-]{1,90}\.(?:txt|json)$/.test(file.filename) || !['text/plain; charset=utf-8', 'application/json'].includes(file.contentType) || !Buffer.isBuffer(file.data) || file.data.length === 0 || file.data.length > MAX_UPLOAD_BYTES) throw new Error('Invalid or oversized Discord export file.');
+      serializedBody = new FormData();
+      serializedBody.append('payload_json', JSON.stringify({ ...body, attachments: [{ id: 0, filename: file.filename }] }));
+      serializedBody.append('files[0]', new Blob([file.data], { type: file.contentType }), file.filename);
+      delete headers['Content-Type'];
+    }
     for (let attempt = 0; ; attempt++) {
       if (botAuth) await this.#waitUntil(this.globalRetryAt, deadline);
       let response;
@@ -82,9 +90,9 @@ class DiscordApi {
   setMemberOverwrite(channelId, userId, data) {
     return this.request('PUT', `/channels/${channelId}/permissions/${userId}`, data);
   }
-  editOriginalResponse(appId, token, data) {
-    return this.request('PATCH', `/webhooks/${appId}/${encodeURIComponent(token)}/messages/@original`, data, { botAuth: false });
+  editOriginalResponse(appId, token, data, file) {
+    return this.request('PATCH', `/webhooks/${appId}/${encodeURIComponent(token)}/messages/@original`, data, { botAuth: false, file });
   }
 }
 
-module.exports = { DiscordApi, REQUEST_BUDGET_MS, MAX_RATE_LIMIT_RETRIES };
+module.exports = { DiscordApi, REQUEST_BUDGET_MS, MAX_RATE_LIMIT_RETRIES, MAX_UPLOAD_BYTES };
