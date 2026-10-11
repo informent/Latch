@@ -1310,7 +1310,9 @@ update a disabled responder in this text channel.
 
 List responder states, channels and automation status.
 
-Options: none.
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page of ten responders, ordered by name.; Minimum: 1; Maximum: 5 |
 
 ### /responder info
 
@@ -1382,7 +1384,9 @@ update a disabled recurring message in this text channel.
 
 List recurring message states, intervals and last results.
 
-Options: none.
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page of ten timers, ordered by name.; Minimum: 1; Maximum: 3 |
 
 ### /timer reschedule
 

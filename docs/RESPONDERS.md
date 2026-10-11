@@ -17,7 +17,7 @@ All eight commands require Manage Server or Administrator. Latch checks the perm
 
 - `/responder create name trigger reply cooldown`: save a disabled rule for the current server text channel.
 - `/responder update name trigger reply cooldown`: replace the rule text and cooldown in its assigned channel, then disable it for review. Omitting cooldown resets it to 30 seconds. The channel cannot be moved through update.
-- `/responder list`: privately list states, channels and environment status.
+- `/responder list page`: privately list states, channels and environment status, ten per page in name order. Page defaults to 1.
 - `/responder info name`: privately inspect the normalized trigger, state and cooldown.
 - `/responder preview name`: privately preview the reply without sending a public message.
 - `/responder enable name`: enable a reviewed rule; the environment feature must also be enabled.
@@ -45,3 +45,5 @@ There is no automatic retry or history backfill. A crash after claiming but befo
 Run one process per store set. Stop the bot and back up all twelve stores together using the [backup and recovery guide](BACKUPS.md). `npm run doctor` inspects responder data without modifying it. Setting the environment feature to false leaves configuration intact and stops response processing; staff can still inspect, create, update, disable or delete rules.
 
 CI runs responder store, interaction and automatic-response regression tests. These use simulated Discord responses. Live Discord behavior remains unverified. Recurring messages are a separate [timer suite](TIMERS.md). Rich matching policies, embed replies and full competitor parity remain unfinished.
+
+Lists show the total rule count and current page. An unavailable page returns the valid range. Each request reads current configuration; concurrent edits can shift entries between pages. Listing never changes state, consumes a cooldown or sends a public message.

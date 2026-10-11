@@ -8,7 +8,7 @@ Ten `/timer` commands manage recurring text messages. Manage Server or Administr
 - `update name minutes text`: replace text and interval in the assigned channel, then disable the timer for review. It does not move the timer to another channel.
 - `reschedule name minutes`: change only the next attempt of an enabled timer to 5-43200 minutes from now. Its regular interval and delivery history stay unchanged.
 - `move name channel`: select another ordinary text channel in the configured server. The timer is disabled for preview and explicit re-enabling; message text, interval and delivery history stay intact.
-- `list`: privately list timers, channels, intervals and last results.
+- `list page`: privately list timers, channels, intervals and last results, ten per page in name order. Page defaults to 1.
 - `info name`: privately show state, next attempt, last attempt and result.
 - `preview name`: privately preview the text without posting it publicly.
 - `enable name`: schedule the first attempt after one complete interval. Enabling an already enabled timer preserves its deadline.
@@ -34,3 +34,5 @@ Configuration changes and timer delivery are serialized through the same service
 `TIMER_STORE_PATH` defaults to `./data/timers.json`, the tenth store. It holds configured names, channel IDs, text, intervals, enabled states, deadlines and attempt/result/nonce metadata. The schema is versioned, guild-bound and capped at 1 MiB. Existing invalid data stops startup instead of being overwritten. Writes use an exclusive temporary file and rename before updating in-memory state. Stop the bot and back up all twelve stores together using the [backup and recovery guide](BACKUPS.md). `npm run doctor` inspects the timer store without changing it.
 
 CI runs timer store, interaction and scheduler regression tests, including persisted deadlines, failed delivery and in-flight shutdown behavior. Live Discord operation remains unverified. Activity thresholds, embed templates, richer scheduling and full competitor parity remain unfinished.
+
+Lists show the total rule count and current page. An unavailable page returns the valid range. Each request reads current configuration; concurrent edits can shift entries between pages. Listing never changes state, consumes a cooldown or sends a public message.

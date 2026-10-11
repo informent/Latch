@@ -18,7 +18,14 @@ function createTimerHandler({ config, timers, discord, logger }, { response, def
           await timers.change(action, { name, channelId: interaction.channel_id, text: findOption(options, 'text'), interval: findOption(options, 'minutes') });
           content = `Timer ${name} saved and disabled. Review its preview, then enable it.`;
         } else if (action === 'list') {
-          content = timers.list().map((item) => `${item.name}: ${item.enabled ? 'enabled' : 'disabled'} | <#${item.channelId}> | ${item.interval}m | ${item.lastResult}`).join('\n') || 'No recurring messages configured.';
+          const items = timers.list().sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+          const page = findOption(options, 'page') ?? 1;
+          const pages = Math.max(1, Math.ceil(items.length / 10));
+          if (!Number.isInteger(page) || page < 1 || page > pages) {
+            content = `Choose a page from 1 to ${pages}.`;
+          } else {
+            content = `Timers: ${items.length} | Page ${page}/${pages}\n` + (items.slice((page - 1) * 10, page * 10).map((item) => `${item.name}: ${item.enabled ? 'enabled' : 'disabled'} | <#${item.channelId}> | ${item.interval}m | ${item.lastResult}`).join('\n') || 'No recurring messages configured.');
+          }
         } else {
           const item = timers.get(name);
           if (!item) throw new Error();

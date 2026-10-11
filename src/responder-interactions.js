@@ -18,7 +18,14 @@ function createResponderHandler({ config, responders, discord, logger }, { respo
           await responders.change(action, { name, channelId: interaction.channel_id, trigger: findOption(options, 'trigger'), reply: findOption(options, 'reply'), cooldown: findOption(options, 'cooldown') ?? 30 });
           content = `Responder ${name} saved and disabled. Review with info or preview, then enable it.`;
         } else if (action === 'list') {
-          content = `Message automation: ${config.respondersEnabled ? 'enabled' : 'disabled in environment'}\n` + (responders.list().map((rule) => `${rule.name}: ${rule.enabled ? 'enabled' : 'disabled'} | <#${rule.channelId}> | ${rule.cooldown}s`).join('\n') || 'No responders configured.');
+          const rules = responders.list().sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+          const page = findOption(options, 'page') ?? 1;
+          const pages = Math.max(1, Math.ceil(rules.length / 10));
+          if (!Number.isInteger(page) || page < 1 || page > pages) {
+            content = `Choose a page from 1 to ${pages}.`;
+          } else {
+            content = `Message automation: ${config.respondersEnabled ? 'enabled' : 'disabled in environment'}\nResponders: ${rules.length} | Page ${page}/${pages}\n` + (rules.slice((page - 1) * 10, page * 10).map((rule) => `${rule.name}: ${rule.enabled ? 'enabled' : 'disabled'} | <#${rule.channelId}> | ${rule.cooldown}s`).join('\n') || 'No responders configured.');
+          }
         } else {
           const rule = responders.get(name);
           if (!rule) throw new Error();
