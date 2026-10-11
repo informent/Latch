@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.28.1 - 2026-10-11
+
+- Paginate ticket-panel and role-menu lists, five entries per page, so Discord response limits no longer hide later entries.
+- Show complete saved titles, exact numeric ID ordering, totals, page counts and pending publication status. Normalize title line breaks for readable rows.
+- Validate page requests and keep staff permissions and private responses. Re-register commands to expose the optional page argument.
+- Add 24 regression checks covering maximum-capacity lists, 25-digit IDs, empty/partial pages, invalid input and access checks.
+
+
 ## 0.28.0 - 2026-10-11
 
 - Added `/template clone` and `/template rename` for reusing and organizing saved embeds. Both require Manage Messages and reply privately without publishing or altering existing announcements.

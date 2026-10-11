@@ -1140,9 +1140,11 @@ Remove a role from a menu.
 
 ### /rolemenu list
 
-List stored role menus.
+List stored role menus, five per page.
 
-Options: none.
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page number, ordered by menu ID.; Minimum: 1; Maximum: 4 |
 
 ### /rolemenu publish
 
@@ -1627,9 +1629,11 @@ Remove a topic button.
 
 ### /ticketpanel list
 
-List stored panels and publication state.
+List stored panels and publication state, five per page.
 
-Options: none.
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page number, ordered by panel ID.; Minimum: 1; Maximum: 4 |
 
 ### /ticketpanel info
 

@@ -17,7 +17,12 @@ function createTicketPanelHandler({ config, ticketPanels, discord, logger = () =
           const panel = await ticketPanels.create({ id: interaction.id, channelId: interaction.channel_id, title: get('title'), description: get('description') ?? '' });
           content = `Draft panel ${panel.id} created. Add up to five topic/category buttons, then publish it. Nothing has been posted yet.`;
         } else if (action === 'list') {
-          content = '**Ticket panels**\n' + (ticketPanels.list().map((panel) => `${panel.id}: ${safeText(panel.title)} | ${panel.state} | ${panel.topics.length} topics${panel.pending ? ' | publication pending' : ''}`).join('\n') || 'No panels yet.');
+          const panels = ticketPanels.list().slice().sort((a, b) => BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0);
+          const page = get('page') ?? 1;
+          const pages = Math.max(1, Math.ceil(panels.length / 5));
+          content = !Number.isInteger(page) || page < 1 || page > pages
+            ? `Choose a page from 1 to ${pages}.`
+            : `Ticket panels: ${panels.length} | Page ${page}/${pages}\n` + (panels.slice((page - 1) * 5, page * 5).map((panel) => `${panel.id}: ${safeText(panel.title).replace(/[\r\n]+/g, ' ')} | ${panel.state} | ${panel.topics.length} topics${panel.pending ? ' | publication pending' : ''}`).join('\n') || 'No panels yet.');
         } else if (action === 'info') {
           const panel = ticketPanels.get(get('id')); if (!panel) throw new Error();
           content = `**${safeText(panel.title)}**\nID: ${panel.id}\nChannel: <#${panel.channelId}>\nState: ${panel.state}\nMessage: ${panel.messageId || 'unpublished'}\nPending: ${panel.pending}\nRetry: ${panel.retryAt || 'none'}\n${panel.topics.map((topic) => `${topic.id}: ${safeText(topic.label)} -> <#${topic.categoryId}>`).join('\n')}`;
