@@ -21,6 +21,41 @@ Level bounds are inclusive integers 0-1000; omit max for no upper bound. Latch's
 
 Requirements can change only while a giveaway is draft/open and before its deadline. Existing entries are preserved and rechecked against the final saved requirements during selection. Members can leave while entry remains open even if they no longer qualify. Preview makes no entry/winner changes and reports current eligibility. Entrant lists are private, mention-suppressed and paginated at 20 per page (up to 500 pages).
 
+## Customize and review
+
+Giveaway creation accepts optional `description`, `host`, `image` and `thumbnail` arguments, so the initial message can include all details:
+
+```text
+/giveaway create prize:"Concert tickets" minutes:60 winners:2 description:"Two tickets for Saturday" host:Member image:https://example.org/prize.png
+/giveaway edit host id:GIVEAWAY_ID host:Member
+/giveaway edit description id:GIVEAWAY_ID description:"Updated event details"
+/giveaway edit image id:GIVEAWAY_ID url:https://example.org/prize.png
+/giveaway edit thumbnail id:GIVEAWAY_ID url:https://example.org/thumb.png
+/giveaway preview id:GIVEAWAY_ID
+/giveaway edit clear id:GIVEAWAY_ID field:image
+/giveaway edit clear id:GIVEAWAY_ID field:all
+```
+
+Descriptions allow up to 1500 characters, leaving room for prize, requirements and results within [Discord embed limits](https://docs.discord.com/developers/resources/message#embed-limits). Images and thumbnails accept HTTPS URLs up to 1024 characters on DNS hostnames, with no user credentials, fragment, custom port or IP host. URL syntax is checked locally; the bot never fetches these URLs. Discord renders the media, so the URL must remain accessible and point to supported content. Local validation does not prove an image will load, and signed CDN URLs can expire.
+
+The default displayed host is the creator. Assigning another host checks current human membership in the configured server. Host attribution is informational: staff still need Manage Messages, and the original creator ID remains stored. The host can enter under the same eligibility rules as any other member. Host departure after assignment does not change the record or transfer permissions.
+
+Edits require a draft/open giveaway before its deadline. They preserve entries, winner count, prize, deadline and requirements unless you explicitly edit those existing fields. Presentation is saved before the public message is refreshed. Network failures leave a retry deadline that the scheduler resumes after restart. Draft publication failures preserve the complete appearance for the next attempt.
+
+`clear` accepts `description`, `image`, `thumbnail`, `host` or `all`. Clearing the host returns attribution to the original creator. Clearing all resets only these presentation settings. An empty description is removed with clear rather than an empty edit.
+
+Preview responds privately with the saved embed and no entry buttons. It never publishes a channel message, registers an entry, selects winners or changes disk state. When an update is pending, the saved preview can differ from the public message. `/giveaway info` reports host, description length, media presence and pending updates without truncating long URLs into its metadata reply.
+
+## Browse active and recent giveaways
+
+```text
+/giveaway list
+/giveaway list page:2
+/giveaway list scope:all page:1
+```
+
+Lists are private and show five complete prizes and exact IDs per page, newest first. Page counts, total records, state and pending message updates remain visible. Omitted scope shows active jobs, including undelivered results/cancellations. `all` includes retained completed/cancelled jobs from this server. Completed records are pruned seven days after delivery while the scheduler runs; this is recent history rather than a permanent audit archive.
+
 ## Entry and selection
 
 Each member has one entry, bound to the saved guild/channel/message IDs. Copied or stale message buttons cannot register entries. New entries check current member identity, screening, bot status, roles and level before the durable write.
@@ -41,12 +76,12 @@ At 10,000 entrants, a full review needs at least 400 passes (about 100 minutes),
 
 ## Storage, migration and limits
 
-Community jobs share `COMMUNITY_STORE_PATH` (default `./data/community.json`) with reminders. Successful mutations now write version 2; version 1 loads without modification. Existing legacy giveaways without saved requirements retain their original entry/draw behavior. Use `/giveaway requirements clear` on an active legacy job to adopt current membership checks without role/level gates.
+Community jobs share `COMMUNITY_STORE_PATH` (default `./data/community.json`) with reminders. Successful mutations now write version 3; versions 1 and 2 load without modification. Existing legacy giveaways without saved requirements retain their original entry/draw behavior. Use `/giveaway requirements clear` on an active legacy job to adopt current membership checks without role/level gates.
 
-Back up all twelve stores together while the bot is stopped. Older releases reject community version 2; restore a compatible complete backup to roll back. No additional store is introduced. Selection state stores remaining, eligible and previous-winner exclusion IDs plus a start time; no interaction tokens or member message content are captured.
+Back up all twelve stores together while the bot is stopped. Releases before 0.29.0 reject community version 3; restore a compatible complete backup to roll back. No additional store is introduced. Selection state stores remaining, eligible and previous-winner exclusion IDs plus a start time; no interaction tokens or member message content are captured.
 
-Limits remain 20 active giveaways per server, 10,000 entrants per giveaway, 1-20 winners, 200 prize characters, 1-43,200 minutes, 5,000 total retained community jobs and 32 MiB. Completed/cancelled records are pruned seven days after delivery. Run one process per store. Failed writes preserve committed entries, requirements and selection progress; readers see the previous committed state until atomic replacement succeeds.
+Limits remain 20 active giveaways per server, 10,000 entrants per giveaway, 1-20 winners, 200 prize characters, 1-43,200 minutes, 5,000 total retained community jobs and 32 MiB. Completed/cancelled records are pruned seven days after delivery. Run one process per store. Failed writes preserve committed entries, requirements, presentation and selection progress; readers see the previous committed state until atomic replacement succeeds.
 
 ## Verification boundary
 
-Tests cover temporary files, simulated Discord membership/API calls, signed local HTTP, current requirements, selection bounds, restart checkpoints, corrupt schemas, migration failures and lost result replies. Live Discord permissions, rate limits, transport and real prize distribution remain unverified. Host/description/image editing and additional eligibility policies remain planned.
+Tests cover temporary files, simulated Discord membership/API calls, signed local HTTP, current requirements, selection bounds, restart checkpoints, corrupt schemas, migration failures and lost result replies. Live Discord permissions, rate limits, transport and real prize distribution remain unverified. Host/description/image editing is implemented with the limits below. Additional eligibility policies remain planned.

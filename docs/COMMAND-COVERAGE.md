@@ -31,8 +31,8 @@ Only command names and independently authored implementation notes are recorded 
 | level role rewards | `/levelreward add`, `remove`, `list`, `info`, `enable`, `disable`, `preview`, `reconcile` | Accumulating permission-free milestones, durable retries and existing-XP backfill; no role removal or exclusive policy |
 | leveling settings | `/levelconfig show`, `tune`, `reset`, `ignore`, `unignore`, `ignored`, `enable`, `disable` | Free per-guild settings, exact channel ignores and pause/resume; rewards/rank cards/voice XP remain unfinished |
 | leaderboards | `/leaderboard coins`, `/leaderboard levels` | Only Latch coin/XP records |
-| giveaway start | `/giveaway create` | Current channel; limited options |
-| giveaway end, list | `/giveaway end`, `/giveaway list` | Latch IDs instead of message links |
+| giveaway start | `/giveaway create` | Current channel; optional description, host and media; Latch limits |
+| giveaway end, list | `/giveaway end`, `/giveaway list` | Latch IDs; optional retained history lasts seven days after delivery |
 | giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
 | tickets close | `/ticket close` | Private tickets with persistent category panels and staff reopening; per-option claim policies remain missing |
 | tickets list | `/ticket list` | Staff see all active tickets; others see only their own; ten per page |
@@ -41,7 +41,7 @@ Only command names and independently authored implementation notes are recorded 
 | tickets move, reason | `/ticket move`, `/ticket reason` | Open stored tickets only; staff checks; explicit overwrite preservation/read-back; reason visible to owner and support |
 | ticket information | `/ticket info` | Stored metadata only; owner or support staff; no conversation export |
 | tickets rename | `/ticket rename` | Open Latch tickets only; staff-only; no arbitrary text-channel rename |
-| giveaway edit prize, duration, winners | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline only; lifetime limited to 30 days |
+| giveaway edit prize, duration, winners, host, description, image, thumbnail | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline; human host attribution and bounded HTTPS media; lifetime limited to 30 days |
 | giveaway reroll | `/giveaway reroll` | Finished giveaways only; excludes immediately previous winners; same interaction ID reuses saved result |
 | voicemaster setup | `/voice setup` | Configures existing lobby/category; no generated lobby or interface panel |
 | voicemaster rename, limit | `/voice rename`, `/voice limit` | Owner must be in their managed room; slash syntax |
@@ -62,7 +62,7 @@ Thirteen additional command paths provide member banners, server artwork, boost 
 These are concrete gaps from the sources above; the list will expand as further official pages are inventoried.
 
 - Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
-- Giveaways: edit host, description, thumbnail, image, requiredroles, minlevel, maxlevel.
+- Giveaways: exact competitor syntax and aliases remain different. Publicly documented host/description/media edits and role/level gates now have independent Latch implementations. Cancellation retains the message; retained history is limited to seven days after delivery.
 - Tickets: resend, form, advanced options, blacklist, profiles, profile, delete, transcript, allow, allow list, deny, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
 - Music: play, queue, skip, volume, loop. No audio transport or provider integration exists yet.
@@ -99,3 +99,7 @@ Persistent public-channel reminders with private list/info/cancel, owner-only te
 5. Report exact remaining gaps; claim parity only when none remain.
 
 Giveaways add six paths for role/level requirements, clearing requirements, current eligibility previews and private entrant pages. New giveaways use durable batched selection with current member checks and final candidate rechecks. Older giveaways retain their original behavior until requirements are configured; see [giveaway operations](GIVEAWAYS.md).
+
+## Giveaway presentation added in 0.29.0
+
+Six additional paths add host/description/image/thumbnail editing, presentation resets and private saved-embed previews. Creation accepts optional presentation settings, and list now supports five-entry pages with complete prizes and retained history. The [Bleed giveaway guide](https://docs.bleed.bot/miscellaneous/giveaway) was checked again on 2026-10-11 for these documented capabilities. This implements the named behaviors with Latch syntax and limits; it does not prove full competitor parity or live Discord operation.

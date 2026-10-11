@@ -1,4 +1,5 @@
 'use strict';
+const { defaultPresentation } = require('./giveaway-presentation');
 
 const TICK_MS = 15_000;
 
@@ -7,8 +8,10 @@ function giveawayMessage(job) {
   const selecting = job.state === 'selecting';
   const summary = selecting ? `Checking current member eligibility: ${job.selection.remaining.length} entries remain.` : job.state === 'cancelled' ? 'Cancelled by staff.' : ended ? (job.winners.length ? `Winners: ${job.winners.map((id) => `<@${id}>`).join(', ')}` : 'No eligible entries were received.') : `Ends <t:${Math.floor(Date.parse(job.dueAt) / 1000)}:R>\nWinners: ${job.winnerCount}\nUse the buttons below to enter or leave.`;
   const requirements = job.requirements ? `\nRequired roles (all): ${job.requirements.roles.map((id) => `<@&${id}>`).join(', ') || 'none'}\nLevel range: ${job.requirements.minLevel}-${job.requirements.maxLevel ?? 'unlimited'}\nHuman membership and screening are checked at entry and during selection.` : '';
+  const appearance = job.presentation;
+  const details = appearance ? `\nHost: <@${appearance.hostId}>${appearance.description ? `\n\n${appearance.description}` : ''}` : '';
   return {
-    embeds: [{ title: job.state === 'cancelled' ? 'Giveaway cancelled' : ended ? 'Giveaway ended' : 'Community giveaway', description: `**Prize:** ${job.text}\n\n${summary}${requirements}${ended ? `\nEntries: ${job.entrants.length}` : ''}`, color: ended ? 0x747f8d : 0x5865f2, footer: { text: `Giveaway ID: ${job.id}` } }],
+    embeds: [{ title: job.state === 'cancelled' ? 'Giveaway cancelled' : ended ? 'Giveaway ended' : 'Community giveaway', description: `**Prize:** ${job.text}\n\n${summary}${requirements}${details}${ended ? `\nEntries: ${job.entrants.length}` : ''}`, color: ended ? 0x747f8d : 0x5865f2, footer: { text: `Giveaway ID: ${job.id}` }, ...(appearance?.image ? { image: { url: appearance.image } } : {}), ...(appearance?.thumbnail ? { thumbnail: { url: appearance.thumbnail } } : {}) }],
     components: ended || selecting ? [] : [{ type: 1, components: [{ type: 2, style: 3, label: 'Enter giveaway', custom_id: `giveaway:enter:${job.id}` }, { type: 2, style: 2, label: 'Leave giveaway', custom_id: `giveaway:leave:${job.id}` }] }],
     allowed_mentions: { parse: [] }
   };
@@ -62,7 +65,9 @@ class CommunityService {
   createGiveaway(data) {
     const input = structuredClone(data);
     return this.#serialize(async () => {
-      const job = await this.store.create({ ...input, requirements: input.requirements ?? { roles: [], minLevel: 0, maxLevel: null }, guildId: this.config.guildId, kind: 'giveaway' }, this.now());
+      if (input.hostId !== undefined) await this.#verifyHost(input.hostId);
+      const presentation = { ...defaultPresentation(input.userId), description: input.description ?? '', image: input.image ?? null, thumbnail: input.thumbnail ?? null, hostId: input.hostId ?? input.userId };
+      const job = await this.store.create({ ...input, presentation, requirements: input.requirements ?? { roles: [], minLevel: 0, maxLevel: null }, guildId: this.config.guildId, kind: 'giveaway' }, this.now());
       if (job.state === 'draft') await this.#attempt(job);
       return this.store.get(job.id);
     });
@@ -131,10 +136,15 @@ class CommunityService {
     });
   }
 
-  list(kind, userId) { return this.store.list(this.config.guildId, { kind, userId }); }
+  list(kind, userId, active = true) { return this.store.list(this.config.guildId, { kind, userId, active }); }
 
   editGiveaway(id, field, value) {
     return this.#serialize(async () => {
+      if (field === 'host') {
+        const current = this.getGiveaway(id);
+        if (!current || !['draft', 'open'].includes(current.state) || Date.parse(current.dueAt) <= this.now().getTime()) throw new Error('Only active giveaways can be edited.');
+        await this.#verifyHost(value);
+      }
       const job = await this.store.editGiveaway({ id, guildId: this.config.guildId, field, value }, this.now());
       await this.#attempt(job);
       return this.store.get(id);
@@ -153,6 +163,18 @@ class CommunityService {
   getGiveaway(id) {
     const job = this.store.get(id);
     return job?.guildId === this.config.guildId && job.kind === 'giveaway' ? job : null;
+  }
+
+  previewGiveaway(id) {
+    const job = this.getGiveaway(id);
+    if (!job) throw new Error('Giveaway not found.');
+    return { embeds: giveawayMessage(job).embeds, allowed_mentions: { parse: [] } };
+  }
+
+  async #verifyHost(userId) {
+    if (typeof userId !== 'string' || !/^\d{5,25}$/.test(userId)) throw new Error('Invalid giveaway host.');
+    const member = await this.discord.getGuildMember(this.config.guildId, userId);
+    if (member?.user?.id !== userId || member.user.bot) throw new Error('The giveaway host must be a current human server member.');
   }
 
   tick() {

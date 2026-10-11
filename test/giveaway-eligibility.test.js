@@ -40,7 +40,7 @@ test('requirements persist, respect role limits, and can remove deleted referenc
   await f.community.configureRequirements(ids.menu, 'role-add', { roleId: '100000' }); assert.equal(f.store.get(ids.menu).requirements.roles.length, 5);
   await assert.rejects(f.community.configureRequirements(ids.menu, 'role-add', { roleId: ids.role })); await assert.rejects(f.community.configureRequirements(ids.menu, 'role-add', { roleId: ids.guild })); await assert.rejects(f.community.configureRequirements(ids.menu, 'role-add', { roleId: ids.owner }));
   f.roles.splice(f.roles.findIndex((role) => role.id === '100000'), 1); await f.community.configureRequirements(ids.menu, 'role-remove', { roleId: '100000' });
-  const reload = new CommunityStore(f.config.communityStorePath); await reload.load(); assert.equal(reload.get(ids.menu).requirements.roles.length, 4); assert.equal(JSON.parse(await fs.readFile(f.config.communityStorePath)).version, 2);
+  const reload = new CommunityStore(f.config.communityStorePath); await reload.load(); assert.equal(reload.get(ids.menu).requirements.roles.length, 4); assert.equal(JSON.parse(await fs.readFile(f.config.communityStorePath)).version, 3);
 });
 for (const [name, value] of [['minimum negative', { minLevel: -1, maxLevel: null }], ['inverted range', { minLevel: 3, maxLevel: 2 }], ['fraction', { minLevel: 1.5, maxLevel: 2 }], ['too high', { minLevel: 0, maxLevel: 1001 }]]) test(`giveaway requirement validation refuses ${name}`, async (t) => {
   const f = await fixture(t); const before = await fs.readFile(f.config.communityStorePath, 'utf8'); await assert.rejects(f.community.configureRequirements(ids.menu, 'levels', value)); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), before);
@@ -111,9 +111,9 @@ test('one scheduler tick services at most one selection and coalesces concurrent
   const first = f.community.tick(); assert.equal(first, f.community.tick()); await first; assert.equal(f.store.get(ids.menu).selection.remaining.length, 5); assert.equal(f.store.get(other.id).state, 'selecting');
 });
 test('version 1 jobs load untouched and migrate only on a successful atomic write', async (t) => {
-  const f = await fixture(t); const job = f.store.get(ids.menu); delete job.requirements; const raw = JSON.stringify({ version: 1, jobs: [job] }); await fs.writeFile(f.config.communityStorePath, raw); await f.store.load(); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), raw);
+  const f = await fixture(t); const job = f.store.get(ids.menu); delete job.requirements; delete job.presentation; const raw = JSON.stringify({ version: 1, jobs: [job] }); await fs.writeFile(f.config.communityStorePath, raw); await f.store.load(); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), raw);
   const rename = fs.rename; fs.rename = async () => { throw new Error(); }; t.after(() => { fs.rename = rename; }); await assert.rejects(f.community.configureRequirements(ids.menu, 'clear')); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), raw);
-  fs.rename = rename; await f.community.configureRequirements(ids.menu, 'clear'); assert.equal(JSON.parse(await fs.readFile(f.config.communityStorePath)).version, 2); assert.ok(f.store.get(ids.menu).requirements);
+  fs.rename = rename; await f.community.configureRequirements(ids.menu, 'clear'); assert.equal(JSON.parse(await fs.readFile(f.config.communityStorePath)).version, 3); assert.ok(f.store.get(ids.menu).requirements);
 });
 test('community readers keep committed entries, requirements and selection during replacement', async (t) => {
   const f = await fixture(t), rename = fs.rename; let arrive, release; const entered = new Promise((r) => { arrive = r; }), gate = new Promise((r) => { release = r; });
@@ -124,7 +124,7 @@ for (const [name, mutate] of [
   ['duplicate required role', (job) => { job.requirements.roles = [ids.role, ids.role]; }], ['everyone requirement', (job) => { job.requirements.roles = [ids.guild]; }], ['wrong policy fields', (job) => { job.requirements.extra = true; }], ['inverted range', (job) => { job.requirements.minLevel = 2; job.requirements.maxLevel = 1; }],
   ['duplicate selection member', (job) => job.selection.eligible.push(job.selection.remaining[0])], ['unknown selection member', (job) => job.selection.remaining.push(ids.owner)], ['missing selection snapshot', (job) => { delete job.selection; }], ['wrong selection state', (job) => { job.state = 'open'; }], ['invalid selection clock', (job) => { job.selection.startedAt = 'bad'; }]
 ]) test(`giveaway store refuses ${name} without rewriting original data`, async (t) => {
-  const f = await fixture(t, 2); await f.store.beginSelection({ id: ids.menu, guildId: ids.guild, force: true }, f.now()); const job = f.store.get(ids.menu); mutate(job); const raw = JSON.stringify({ version: 2, jobs: [job] }); await fs.writeFile(f.config.communityStorePath, raw); await assert.rejects(new CommunityStore(f.config.communityStorePath).load()); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), raw);
+  const f = await fixture(t, 2); await f.store.beginSelection({ id: ids.menu, guildId: ids.guild, force: true }, f.now()); const job = f.store.get(ids.menu); mutate(job); const raw = JSON.stringify({ version: 3, jobs: [job] }); await fs.writeFile(f.config.communityStorePath, raw); await assert.rejects(new CommunityStore(f.config.communityStorePath).load()); assert.equal(await fs.readFile(f.config.communityStorePath, 'utf8'), raw);
 });
 test('selection methods reject invalid checkpoints, raw draws and incomplete winner commits', async (t) => {
   const f = await fixture(t, 2); await assert.rejects(f.store.draw(ids.menu, f.now(), true)); await assert.rejects(f.store.reroll({ id: ids.menu, guildId: ids.guild, requestId: ids.message }));
