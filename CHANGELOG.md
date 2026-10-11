@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.23.0 - 2026-10-10
+
+- Added five economyadmin commands: grant/remove/set/history/receipt. The generated reference now lists 176 paths across 25 suites.
+- Staff controls check current guild roles and membership, reject revoked permission, bot/screening/timed-out staff and require current human screened targets for adjustments. All commands require Manage Server in the interaction and return private responses with mentions suppressed.
+- Balances and audit receipts save atomically. Records preserve actor, target, reason, action, amount, timestamp and original before/after balances. Retained interaction IDs deduplicate exact retries and refuse conflicting reuse across restarts.
+- Adjustments preserve inventory, professions and reward cooldowns; overdrafts, global balance overflow and invalid amounts/reasons are refused. Private history pages five records and full receipt lookup shows saved reasons.
+- Economy load accepts formats 1/2/3; successful writes now use version 3 with a bounded adjustments ledger. Audit records older than seven days prune on new adjustments, within the existing 32 MiB file limit.
+- Added 36 tests including signed HTTP integration and complete-backup verification. All 535 tests pass locally: 93.30% lines, 85.40% branches and 88.23% functions.
+
+Stop the bot and back up all twelve stores before upgrading. Run command registration after upgrade. Older versions reject economy format 3; rollback requires a compatible complete backup. A new slash-command interaction represents a new adjustment, so inspect history after a lost reply before submitting again. Local audit files are not tamper-proof. Live Discord validation and full competitor parity remain unfinished.
+
 ## 0.22.0 - 2026-10-10
 
 - Added npm run backup create/verify for complete portable snapshots of all twelve configured stores, with explicit missing entries, source version/guild/timestamp, byte counts and SHA256.

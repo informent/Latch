@@ -1,6 +1,6 @@
 # OpenDesk command reference
 
-All 171 registered command paths across 24 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
+All 176 registered command paths across 25 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.
 
@@ -34,6 +34,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 - [/levelconfig](#levelconfig): Configure free server XP awards and ignored channels.
 - [/ticketpanel](#ticketpanel): Build persistent support panels with category buttons.
 - [/pollmanage](#pollmanage): Inspect and end native polls created by OpenDesk.
+- [/economyadmin](#economyadmin): Adjust server coins with a durable staff audit ledger.
 
 ## poll
 
@@ -1553,3 +1554,56 @@ Privately list up to 25 voters for one poll answer.
 | message | text | yes | Poll message ID in this channel.; Minimum text length: 5; Maximum text length: 25 |
 | answer | integer | yes | Answer ID from pollmanage info.; Minimum: 1; Maximum: 2147483647 |
 | after | text | no | User ID cursor from the previous page.; Minimum text length: 5; Maximum text length: 25 |
+
+## economyadmin
+
+Adjust server coins with a durable staff audit ledger.
+
+Default command visibility: Manage Server (32).
+
+### /economyadmin grant
+
+grant a member balance with an audit reason.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Current human server member. |
+| amount | integer | yes | Coin amount; set accepts zero.; Minimum: 1; Maximum: 1000000000 |
+| reason | text | yes | Required reason stored in the staff audit ledger.; Minimum text length: 1; Maximum text length: 400 |
+
+### /economyadmin remove
+
+remove a member balance with an audit reason.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Current human server member. |
+| amount | integer | yes | Coin amount; set accepts zero.; Minimum: 1; Maximum: 1000000000 |
+| reason | text | yes | Required reason stored in the staff audit ledger.; Minimum text length: 1; Maximum text length: 400 |
+
+### /economyadmin set
+
+set a member balance with an audit reason.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Current human server member. |
+| amount | integer | yes | Coin amount; set accepts zero.; Minimum: 0; Maximum: 1000000000 |
+| reason | text | yes | Required reason stored in the staff audit ledger.; Minimum text length: 1; Maximum text length: 400 |
+
+### /economyadmin history
+
+Privately list staff coin adjustments, five per page.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | no | Filter adjustments to this member. |
+| page | integer | no | History page.; Minimum: 1; Maximum: 10000 |
+
+### /economyadmin receipt
+
+Inspect a saved staff adjustment and full reason.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Adjustment receipt ID.; Minimum text length: 5; Maximum text length: 25 |

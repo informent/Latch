@@ -13,12 +13,12 @@ async function fixture(t) {
   await store.claim(ids.guild, ids.user, 'daily', new Date(epoch)); await store.saveItem('create', item()); await store.enableItem(ids.guild, 'cookie', true);
   return { store, file };
 }
-test('shop migration preserves v1 balances, cooldowns and professions until an atomic v2 write', async (t) => {
+test('shop migration preserves v1 balances, cooldowns and professions until an atomic v3 write', async (t) => {
   const file = path.join(await directory(t), 'economy.json');
   const old = { version: 1, accounts: [{ guildId: ids.guild, userId: ids.user, balance: 75, lastDaily: new Date(epoch).toISOString(), lastWork: null, profession: { name: 'artist', works: 12, changedAt: new Date(epoch).toISOString() } }] };
   await fs.writeFile(file, JSON.stringify(old)); const store = new EconomyStore(file); await store.load();
   assert.equal(JSON.parse(await fs.readFile(file)).version, 1); await store.saveItem('create', item());
-  const saved = JSON.parse(await fs.readFile(file)); assert.equal(saved.version, 2); assert.deepEqual(saved.accounts, old.accounts);
+  const saved = JSON.parse(await fs.readFile(file)); assert.equal(saved.version, 3); assert.deepEqual(saved.accounts, old.accounts);
   const reloaded = new EconomyStore(file); await reloaded.load(); assert.equal(reloaded.profile(ids.guild, ids.user).profession.rank, 2);
 });
 test('failed migration preserves the original v1 file and all in-memory state', async (t) => {
@@ -89,7 +89,7 @@ for (const [label, edit] of [
   ['duplicate item', (s) => s.items.push(s.items[0])], ['negative price', (s) => { s.items[0].price = -1; }],
   ['unknown inventory reference', (s) => { s.accounts[0].inventory[0].itemId = 'missing'; }], ['duplicate inventory', (s) => s.accounts[0].inventory.push(s.accounts[0].inventory[0])],
   ['invalid receipt', (s) => { s.receipts[0].total = -1; }], ['duplicate receipt', (s) => s.receipts.push(s.receipts[0])], ['unknown outer field', (s) => { s.extra = true; }],
-  ['unsupported version', (s) => { s.version = 3; }]
+  ['unsupported version', (s) => { s.version = 4; }]
 ]) test(`shop load refuses ${label} without replacing the original`, async (t) => {
   const { store, file } = await fixture(t); await store.transactItem(request(), new Date(epoch)); const saved = JSON.parse(await fs.readFile(file)); edit(saved); const original = JSON.stringify(saved); await fs.writeFile(file, original);
   await assert.rejects(new EconomyStore(file).load()); assert.equal(await fs.readFile(file, 'utf8'), original);

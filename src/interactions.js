@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { createEconomyAdminHandler } = require('./economy-admin-interactions');
 const { createPollHandler } = require('./poll-interactions');
 const { createLevelRewardHandler } = require('./level-reward-interactions');
 const { createLevelHandler } = require('./level-interactions');
@@ -44,6 +45,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
+  const handleEconomyAdmin = createEconomyAdminHandler({ config, economy, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handlePoll = createPollHandler({ config, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handleLevelReward = createLevelRewardHandler({ config, levelRewards, discord, logger }, { response, defer, hasPermission, findOption });
   const handleLevel = createLevelHandler({ config, levels, discord, logger }, { response, defer, hasPermission, findOption });
@@ -161,6 +163,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
       } };
     }
     if (interaction.type === 3 || ['reminder', 'giveaway'].includes(commandName)) return handleCommunity(interaction, user);
+    if (commandName === 'economyadmin') return handleEconomyAdmin(interaction, user);
     if (commandName === 'pollmanage') return handlePoll(interaction);
     if (commandName === 'poll') {
       if (!hasPermission(interaction.member?.permissions, 8192n)) return { immediate: response('You need Manage Messages to publish a poll.') };

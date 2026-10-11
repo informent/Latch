@@ -39,3 +39,5 @@ require('./reminder-management.test');
 require('./poll-management.test');
 
 require('./backup.test');
+
+require('./economy-admin.test');

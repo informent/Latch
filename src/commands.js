@@ -271,3 +271,12 @@ commands.push({
     subcommand('voters', 'Privately list up to 25 voters for one poll answer.', [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 }), option(4, 'answer', 'Answer ID from pollmanage info.', { required: true, min_value: 1, max_value: 2147483647 }), option(3, 'after', 'User ID cursor from the previous page.', { min_length: 5, max_length: 25 })])
   ]
 });
+
+commands.push({
+  name: 'economyadmin', description: 'Adjust server coins with a durable staff audit ledger.', type: 1, default_member_permissions: '32',
+  options: [
+    ...['grant', 'remove', 'set'].map((action) => subcommand(action, `${action} a member balance with an audit reason.`, [option(6, 'user', 'Current human server member.', { required: true }), option(4, 'amount', 'Coin amount; set accepts zero.', { required: true, min_value: action === 'set' ? 0 : 1, max_value: 1000000000 }), option(3, 'reason', 'Required reason stored in the staff audit ledger.', { required: true, min_length: 1, max_length: 400 })])),
+    subcommand('history', 'Privately list staff coin adjustments, five per page.', [option(6, 'user', 'Filter adjustments to this member.'), option(4, 'page', 'History page.', { min_value: 1, max_value: 10000 })]),
+    subcommand('receipt', 'Inspect a saved staff adjustment and full reason.', [option(3, 'id', 'Adjustment receipt ID.', { required: true, min_length: 5, max_length: 25 })])
+  ]
+});

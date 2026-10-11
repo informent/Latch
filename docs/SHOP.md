@@ -43,8 +43,8 @@ If a transaction commits but its Discord response fails, inspect `/shop history`
 
 ## Storage, upgrade and rollback
 
-The existing `economy.json` contains the entire shop together with accounts. Version 1 files load without changes and migrate to version 2 on the next successful write, including ordinary reward claims or transfers. Balances, cooldowns and profession progress are preserved. Migration failures keep the original file intact.
+The existing `economy.json` contains the entire shop together with accounts. Versions 1 and 2 load without changes; successful writes in v0.23.0 migrate to version 3, including ordinary claims, transfers and shop operations. Balances, cooldowns, professions, catalog, inventory and receipts are preserved. Migration failures keep the original file intact.
 
-Version 2 strictly validates accounts, catalog items, inventory references and receipt records. Files are capped at 32 MiB. Run one bot process per store set. Stop the bot and back up all stores before upgrading. Earlier releases cannot read version 2; rolling back requires restoring a compatible complete version 1 backup and discards later transactions. Never manually change the version field to downgrade.
+Version 3 validates accounts, catalog items, inventory references, shop receipts and the additional staff adjustment ledger. Files are capped at 32 MiB. Run one bot process per store set. Stop the bot and back up all twelve stores before upgrading. Earlier releases cannot read version 3; rollback requires a compatible complete backup and discards later transactions. Never manually change the version field to downgrade. See the [administration guide](ECONOMY-ADMIN.md).
 
 Run `npm run register` after upgrading to register the new suite. Shop configuration needs no new environment variables or data path. Automated tests cover migration, concurrency, rollback, retries, permission checks and signed HTTP requests. Live Discord operation remains unverified.

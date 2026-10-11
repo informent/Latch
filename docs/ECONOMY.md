@@ -25,8 +25,12 @@ There are no job fees, purchases, premium roles or subscriptions. Professions do
 
 ## Data and recovery
 
-The existing `economy.json` accepts version 1 accounts and migrates to version 2 on the next successful write, keeping coins, cooldowns and professions. Version 2 adds shop items, inventory and transaction receipts. Older releases refuse this format; restore a complete version 1 backup to roll back. New optional fields are a begging timestamp and a strict profession object containing name, completed work count and last-change time. The profile's derived rank is not persisted. Older bot versions cannot read accounts containing these fields; stop the bot and restore a compatible complete store backup when rolling back.
+The existing `economy.json` accepts account format 1 and shop format 2 without modifying their files on load. Successful writes in v0.23.0 migrate to format 3, preserving coins, cooldowns, professions, catalog, inventory and receipts while adding the staff adjustment ledger. Earlier releases reject format 3; rollback requires a compatible complete backup. New profession/beg account fields also require compatible releases. Stop the bot and back up all twelve stores together before upgrades or rollback.
 
 Run `npm run register` after upgrading. Run one bot process per store set, keep all store files private and back up all stores together while stopped. Private replies suppress mentions. The machine clock controls cooldowns; clock changes can affect readiness. Saved timestamps prevent ordinary concurrent claims from bypassing cooldowns, but this is not a permanent interaction receipt ledger. A successful save followed by a lost response can leave a granted reward without confirmation; inspect your profile before retrying.
 
 Dedicated tests cover beg/profile/profession workflows, shops and legacy migration; CI runs these tests. Live Discord validation remains unverified. Full competitor parity remains unfinished.
+
+## Staff balance controls
+
+Version 0.23.0 adds audited grant/remove/set, paginated history and full receipt lookup. Successful economy writes now use format 3, while load accepts formats 1 and 2. See the [administration guide](ECONOMY-ADMIN.md) for permissions, atomic saves, duplicate handling and required backup/rollback steps.

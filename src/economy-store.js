@@ -14,12 +14,22 @@ const PROFESSION_COOLDOWN_MS = DAILY_COOLDOWN_MS;
 const PROFESSIONS = Object.freeze(['developer', 'artist', 'builder']);
 const rankOf = (works) => Math.min(5, 1 + Math.floor(works / 10));
 
+function validAdjustment(entry) {
+  return exact(entry, 'id,guildId,actorId,userId,action,amount,reason,before,after,createdAt') && [entry.id, entry.guildId, entry.actorId, entry.userId].every(validId)
+    && ['grant', 'remove', 'set'].includes(entry.action) && integer(entry.amount, entry.action === 'set' ? 0 : 1, 1000000000)
+    && typeof entry.reason === 'string' && entry.reason.trim().length > 0 && entry.reason.length <= 400
+    && integer(entry.before, 0, MAX_BALANCE) && integer(entry.after, 0, MAX_BALANCE)
+    && entry.after === (entry.action === 'set' ? entry.amount : entry.before + (entry.action === 'grant' ? entry.amount : -entry.amount))
+    && typeof entry.createdAt === 'string' && Number.isFinite(Date.parse(entry.createdAt)) && new Date(entry.createdAt).toISOString() === entry.createdAt;
+}
+
 class EconomyStore {
   constructor(filePath, { rollWork = () => randomInt(25, 101), rollBeg = () => randomInt(0, 26) } = {}) {
     this.filePath = filePath;
     this.accounts = new Map();
     this.items = new Map();
     this.receipts = new Map();
+    this.adjustments = new Map();
     this.queue = Promise.resolve();
     this.rollWork = rollWork;
     this.rollBeg = rollBeg;
@@ -29,7 +39,7 @@ class EconomyStore {
     try {
       if ((await fs.stat(this.filePath)).size > LIMITS.bytes) throw new Error('Economy store exceeds its size limit.');
       const parsed = JSON.parse(await fs.readFile(this.filePath, 'utf8'));
-      if (!(exact(parsed, 'version,accounts') && parsed.version === 1 || exact(parsed, 'version,accounts,items,receipts') && parsed.version === 2) || !Array.isArray(parsed.accounts) || parsed.accounts.length > MAX_ACCOUNTS
+      if (!(exact(parsed, 'version,accounts') && parsed.version === 1 || exact(parsed, 'version,accounts,items,receipts') && parsed.version === 2 || exact(parsed, 'version,accounts,items,receipts,adjustments') && parsed.version === 3) || !Array.isArray(parsed.accounts) || parsed.accounts.length > MAX_ACCOUNTS
         || parsed.accounts.some((account) => !this.#valid(account))) {
         throw new Error('Economy store contains invalid records; refusing to modify it.');
       }
@@ -40,7 +50,7 @@ class EconomyStore {
         accounts.set(key, Object.freeze({ ...account, ...(account.profession ? { profession: Object.freeze({ ...account.profession }) } : {}), ...(account.inventory ? { inventory: Object.freeze(account.inventory.map((entry) => Object.freeze({ ...entry }))) } : {}) }));
       }
       const items = new Map(); const receipts = new Map();
-      if (parsed.version === 2) {
+      if (parsed.version >= 2) {
         if (!Array.isArray(parsed.items) || !Array.isArray(parsed.receipts) || parsed.items.length > MAX_ACCOUNTS || parsed.receipts.length > LIMITS.receipts) throw new Error('Invalid shop records.');
         for (const item of parsed.items) {
           const key = this.#key(item?.guildId, item?.id);
@@ -52,7 +62,16 @@ class EconomyStore {
           receipts.set(receipt.id, Object.freeze({ ...receipt }));
         }
       }
+      const adjustments = new Map();
+      if (parsed.version === 3) {
+        if (!Array.isArray(parsed.adjustments) || parsed.adjustments.length > LIMITS.receipts) throw new Error('Invalid economy adjustment ledger.');
+        for (const adjustment of parsed.adjustments) {
+          if (!validAdjustment(adjustment) || adjustments.has(adjustment.id) || receipts.has(adjustment.id)) throw new Error('Invalid or duplicate economy adjustment.');
+          adjustments.set(adjustment.id, Object.freeze({ ...adjustment }));
+        }
+      }
       this.#validateShop(accounts, items, receipts);
+      this.adjustments = adjustments;
       this.accounts = accounts; this.items = items; this.receipts = receipts;
     } catch (error) {
       if (error.code === 'ENOENT') return;
@@ -78,6 +97,34 @@ class EconomyStore {
       if (changed && now.getTime() - changed < PROFESSION_COOLDOWN_MS) return { claimed: false, nextAt: new Date(changed + PROFESSION_COOLDOWN_MS).toISOString() };
       accounts.set(key, Object.freeze({ ...account, profession: Object.freeze({ name, works: 0, changedAt: now.toISOString() }) }));
       return { changed: true, name };
+    });
+  }
+
+  adjustment(guildId, id) { const entry = this.adjustments.get(id); return entry?.guildId === guildId ? { ...entry } : null; }
+  adjustmentHistory(guildId, userId) {
+    return [...this.adjustments.values()].filter((entry) => entry.guildId === guildId && (!userId || entry.userId === userId))
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id.localeCompare(a.id)).map((entry) => ({ ...entry }));
+  }
+  adjustCoins(data, now = new Date()) {
+    const input = structuredClone(data), at = now.getTime();
+    if (![input.id, input.guildId, input.actorId, input.userId].every(validId) || !['grant', 'remove', 'set'].includes(input.action)
+      || !integer(input.amount, input.action === 'set' ? 0 : 1, 1000000000) || typeof input.reason !== 'string' || !input.reason.trim() || input.reason.length > 400 || !Number.isFinite(at)) throw new Error('Invalid coin adjustment.');
+    input.reason = input.reason.trim();
+    return this.#transaction((accounts, items, receipts, adjustments) => {
+      const previous = adjustments.get(input.id);
+      if (previous) {
+        if (['guildId', 'actorId', 'userId', 'action', 'amount', 'reason'].some((key) => previous[key] !== input[key])) throw new Error('Adjustment ID conflict.');
+        return { claimed: false, ...previous, duplicate: true };
+      }
+      if (receipts.has(input.id)) throw new Error('Adjustment ID conflict.');
+      for (const [id, entry] of adjustments) if (at - Date.parse(entry.createdAt) > LIMITS.retention) adjustments.delete(id);
+      if (adjustments.size >= LIMITS.receipts) throw new Error('Adjustment ledger limit reached.');
+      const key = this.#key(input.guildId, input.userId), account = accounts.get(key) || this.#empty(input.guildId, input.userId);
+      const balance = input.action === 'set' ? input.amount : account.balance + (input.action === 'grant' ? input.amount : -input.amount);
+      if (!integer(balance, 0, MAX_BALANCE)) throw new Error('Adjustment would exceed balance limits or remove more coins than available.');
+      const record = Object.freeze({ id: input.id, guildId: input.guildId, actorId: input.actorId, userId: input.userId, action: input.action, amount: input.amount, reason: input.reason, before: account.balance, after: balance, createdAt: new Date(at).toISOString() });
+      accounts.set(key, Object.freeze({ ...account, balance })); adjustments.set(input.id, record);
+      return { ...record, duplicate: false };
     });
   }
 
@@ -230,19 +277,20 @@ class EconomyStore {
   async #transaction(update) {
     const task = this.queue.then(async () => {
       const accounts = new Map(this.accounts);
-      const items = new Map(this.items); const receipts = new Map(this.receipts);
-      const result = update(accounts, items, receipts);
+      const items = new Map(this.items); const receipts = new Map(this.receipts); const adjustments = new Map(this.adjustments);
+      const result = update(accounts, items, receipts, adjustments);
       if (result.claimed === false) return result;
       if (accounts.size > MAX_ACCOUNTS || [...accounts.values()].some((account) => !this.#valid(account))) throw new Error('Invalid economy account update.');
       this.#validateShop(accounts, items, receipts);
+      if (adjustments.size > LIMITS.receipts || [...adjustments.values()].some((entry) => !validAdjustment(entry) || receipts.has(entry.id))) throw new Error('Invalid adjustment ledger.');
       const tempPath = `${this.filePath}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
       try {
         await fs.mkdir(path.dirname(path.resolve(this.filePath)), { recursive: true });
-        const contents = `${JSON.stringify({ version: 2, accounts: [...accounts.values()], items: [...items.values()], receipts: [...receipts.values()] }, null, 2)}\n`;
+        const contents = `${JSON.stringify({ version: 3, accounts: [...accounts.values()], items: [...items.values()], receipts: [...receipts.values()], adjustments: [...adjustments.values()] }, null, 2)}\n`;
         if (Buffer.byteLength(contents) > LIMITS.bytes) throw new Error('Economy store exceeds its size limit.');
         await fs.writeFile(tempPath, contents, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
         await fs.rename(tempPath, this.filePath);
-        this.accounts = accounts; this.items = items; this.receipts = receipts;
+        this.accounts = accounts; this.items = items; this.receipts = receipts; this.adjustments = adjustments;
         return result;
       } catch (error) {
         await fs.rm(tempPath, { force: true }).catch(() => {});

@@ -31,6 +31,8 @@ Native polls now support private results, cursor-paginated voter lists and confi
 
 Reminders include private owner-only details, text editing and rescheduling for future jobs without delivery attempts. See the [reminder guide](docs/REMINDERS.md) for limits, retry behavior and public-message visibility.
 
+Staff can grant, remove or set game coins with current permission checks and atomic audit receipts. Private history and receipt lookup support recovery from lost replies. See the [economy administration guide](docs/ECONOMY-ADMIN.md) for format 3 migration and limits.
+
 Economy now includes durable 15-minute begging rewards, profiles and free profession progression with bounded work bonuses. See the [economy guide](docs/ECONOMY.md) for cooldowns, rank rules and rollback limits.
 
 Tickets support private owner/staff information, staff-set reasons and category moves. Closing preserves unrelated owner permissions and confirms the complete overwrite set before committing; renaming verifies privacy and unchanged permissions. See the [ticket guide](docs/TICKETS.md).
