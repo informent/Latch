@@ -38,7 +38,18 @@ const commands = [
   },
   {
     name: 'utility', description: 'Useful server information and bot health.', type: 1,
-    options: [subcommand('ping', 'Check whether Latch is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('role', 'Privately inspect a server role and its permission bits.', [option(8, 'role', 'Server role to inspect.', { required: true })]), subcommand('help', 'Show available feature suites and configuration status.')]
+    options: [subcommand('ping', 'Check whether Latch is responding.'), subcommand('server', 'Show basic information about this server.'), subcommand('user', 'Show account and server membership information.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('avatar', 'Show a member avatar.', [option(6, 'user', 'Member to inspect; defaults to yourself.')]), subcommand('role', 'Privately inspect a server role and its permission bits.', [option(8, 'role', 'Server role to inspect.', { required: true })]), subcommand('help', 'Show available feature suites and configuration status.'),
+      subcommand('banner', 'Show a member banner from this server.', [option(6, 'user', 'Current member; defaults to yourself.'), option(3, 'profile', 'Server profile falls back to the global banner.', { choices: [{ name: 'Server profile', value: 'server' }, { name: 'Global profile', value: 'global' }] })]),
+      subcommand('servericon', 'Show the server icon and its original image link.'),
+      subcommand('serverbanner', 'Show the server banner and its original image link.'),
+      subcommand('boosts', 'Show the current server boost level and boost count.'),
+      ...['roles', 'emojis', 'stickers'].map((name) => subcommand(name, `Browse server ${name}, 15 per page.`, [option(4, 'page', 'Page number; defaults to 1.', { min_value: 1, max_value: 1000 })])),
+      ...['emoji', 'sticker'].map((name) => subcommand(name, `Inspect a server ${name} and open its original asset.`, [option(3, 'id', `ID of a ${name} in this server.`, { required: true, min_length: 5, max_length: 20 })])),
+      subcommand('snowflake', 'Decode a Discord ID creation time and bit fields.', [option(3, 'id', 'Decimal Discord ID; this does not look up an object.', { required: true, min_length: 5, max_length: 20 })]),
+      subcommand('timestamp', 'Create a copyable Discord timestamp.', [option(3, 'seconds', 'Unix seconds; omit for the current time.', { min_length: 1, max_length: 12 }), option(3, 'style', 'Display style; defaults to full date and time.', { choices: [{ name: 'Short time', value: 't' }, { name: 'Long time', value: 'T' }, { name: 'Short date', value: 'd' }, { name: 'Long date', value: 'D' }, { name: 'Date and time', value: 'f' }, { name: 'Full date and time', value: 'F' }, { name: 'Relative time', value: 'R' }] })]),
+      subcommand('color', 'Inspect a hex color and its RGB and decimal values.', [option(3, 'hex', 'Three or six hex digits, optionally prefixed with #.', { required: true, min_length: 3, max_length: 7 })]),
+      subcommand('calculate', 'Calculate arithmetic with parentheses and powers.', [option(3, 'expression', 'Numbers and + - * / % ^; ^ means exponentiation.', { required: true, min_length: 1, max_length: 200 })])
+    ]
   },
   {
     name: 'economy', description: 'Earn, save, and share server coins.', type: 1,

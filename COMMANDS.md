@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 176 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 189 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -286,6 +286,106 @@ Privately inspect a server role and its permission bits.
 Show available feature suites and configuration status.
 
 Options: none.
+
+### /utility banner
+
+Show a member banner from this server.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | no | Current member; defaults to yourself. |
+| profile | text | no | Server profile falls back to the global banner.; Choices: Server profile = server, Global profile = global |
+
+### /utility servericon
+
+Show the server icon and its original image link.
+
+Options: none.
+
+### /utility serverbanner
+
+Show the server banner and its original image link.
+
+Options: none.
+
+### /utility boosts
+
+Show the current server boost level and boost count.
+
+Options: none.
+
+### /utility roles
+
+Browse server roles, 15 per page.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page number; defaults to 1.; Minimum: 1; Maximum: 1000 |
+
+### /utility emojis
+
+Browse server emojis, 15 per page.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page number; defaults to 1.; Minimum: 1; Maximum: 1000 |
+
+### /utility stickers
+
+Browse server stickers, 15 per page.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Page number; defaults to 1.; Minimum: 1; Maximum: 1000 |
+
+### /utility emoji
+
+Inspect a server emoji and open its original asset.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | ID of a emoji in this server.; Minimum text length: 5; Maximum text length: 20 |
+
+### /utility sticker
+
+Inspect a server sticker and open its original asset.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | ID of a sticker in this server.; Minimum text length: 5; Maximum text length: 20 |
+
+### /utility snowflake
+
+Decode a Discord ID creation time and bit fields.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Decimal Discord ID; this does not look up an object.; Minimum text length: 5; Maximum text length: 20 |
+
+### /utility timestamp
+
+Create a copyable Discord timestamp.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| seconds | text | no | Unix seconds; omit for the current time.; Minimum text length: 1; Maximum text length: 12 |
+| style | text | no | Display style; defaults to full date and time.; Choices: Short time = t, Long time = T, Short date = d, Long date = D, Date and time = f, Full date and time = F, Relative time = R |
+
+### /utility color
+
+Inspect a hex color and its RGB and decimal values.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| hex | text | yes | Three or six hex digits, optionally prefixed with #.; Minimum text length: 3; Maximum text length: 7 |
+
+### /utility calculate
+
+Calculate arithmetic with parentheses and powers.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| expression | text | yes | Numbers and + - * / % ^; ^ means exponentiation.; Minimum text length: 1; Maximum text length: 200 |
 
 ## economy
 

@@ -2,7 +2,7 @@
 
 # Command coverage
 
-Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus Latch additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-10, not a complete competitor command count.
+Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus Latch additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-11, not a complete competitor command count.
 
 Latch currently uses slash commands. Competitor prefix commands, aliases, argument syntax, permission policies, and nested settings are separate requirements. A similar slash command is not proof of identical behavior. No placeholders count as implemented commands. Source implementation also does not establish live Discord validation.
 
@@ -10,7 +10,8 @@ Latch currently uses slash commands. Competitor prefix commands, aliases, argume
 
 - [Bleed command directory](https://bleed.bot/commands): the public frontend requires JavaScript; its complete command data was not obtained.
 - [Bleed documentation index](https://docs.bleed.bot/llms.txt): accessible index; individual documentation pages below were read directly.
-- [Greed introduction](https://greed.sh/docs/introduction/) and [moderation](https://www.greed.sh/docs/moderation/): publicly indexed documentation was available through search. Direct requests returned HTTP 403, so freshness and completeness remain unverified.
+- [Current Greed utility documentation](https://greed.best/docs/miscellaneous/utility): accessible on 2026-10-11. It outlines profile, expression and utility categories. Its interactive [command directory](https://greed.best/commands) has not been fully inventoried, so exact command parity is still unverified.
+- [Older Greed introduction](https://greed.sh/docs/introduction/) and [moderation](https://www.greed.sh/docs/moderation/): publicly indexed documentation was available through search. Direct requests returned HTTP 403, so freshness and completeness remain unverified.
 - [Greed command directory](https://greed.sh/commands): HTTP 403. A help export or accessible official command list is required before asserting complete coverage.
 
 Only command names and independently authored implementation notes are recorded here. Source links establish where requirements came from; they do not imply endorsement or affiliation.
@@ -51,6 +52,10 @@ Only command names and independently authored implementation notes are recorded 
 | Join roles | `/autorole add`, `/autorole remove`, `/autorole list`, `/autorole apply` | Human joins only; permission-free roles; pending screening and failed joins require staff apply |
 
 Sources: [Greed introduction](https://greed.sh/docs/introduction/), [Greed moderation](https://www.greed.sh/docs/moderation/), [Bleed giveaways](https://docs.bleed.bot/miscellaneous/giveaway), [Bleed tickets](https://docs.bleed.bot/configuration/tickets/commands), [Bleed moderation](https://docs.bleed.bot/security/moderation).
+
+## Latch information utilities added in 0.26.0
+
+Thirteen additional command paths provide member banners, server artwork, boost status, paginated roles/emojis/stickers, individual expression inspection, snowflake decoding, timestamps, hex colors and bounded arithmetic. See the [utility guide](UTILITIES.md). These are working read-only tools; they do not implement competitor expression creation/deletion, channel monitoring, message history or AI features.
 
 ## Documented commands still missing
 

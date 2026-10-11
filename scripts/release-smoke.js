@@ -17,7 +17,7 @@ async function runSmoke({ container = false } = {}) {
     // This adapter never contacts Discord. Unexpected calls fail the smoke test.
     const discord = {
       getCurrentUser: async () => ({ id: ids.bot }),
-      getGuild: async () => ({ id: ids.guild, owner_id: ids.owner }),
+      getGuild: async () => ({ id: ids.guild, owner_id: ids.owner, name: 'Smoke guild', icon: 'a'.repeat(32) }),
       getGuildMember: async (_guild, userId) => { assert.ok([ids.actor, ids.target].includes(userId)); return { user: { id: userId }, roles: userId === ids.actor ? [ids.role] : [] }; },
       request: async (method, route) => { assert.equal(method, 'GET'); assert.equal(route, `/guilds/${ids.guild}/roles`); return [{ id: ids.guild, permissions: '0' }, { id: ids.role, permissions: '32' }]; },
       editOriginalResponse: async (_application, _token, body) => { responses.push(body); }
@@ -35,10 +35,16 @@ async function runSmoke({ container = false } = {}) {
     const command = { id: ids.request, type: 2, guild_id: ids.guild, channel_id: ids.channel, token: 'smoke-interaction-placeholder', member: { user: { id: ids.actor }, roles: [ids.role], permissions: '32' }, data: { name: 'economyadmin', options: [{ name: 'grant', options: [{ name: 'user', value: ids.target }, { name: 'amount', value: 100 }, { name: 'reason', value: 'Isolated release smoke check' }] }] } };
     assert.deepEqual(await send(command), { type: 5, data: { flags: 64 } }); assert.match(responses.at(-1).content, /Adjustment saved/); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
     await send(command); assert.match(responses.at(-1).content, /Previously saved/); assert.equal(economy.balance(ids.guild, ids.target), 100);
+    const utility = (name, options = []) => ({ ...command, id: (BigInt(ids.request) + (name === 'calculate' ? 1n : 2n)).toString(), data: { name: 'utility', options: [{ name, options }] } });
+    const calculated = await send(utility('calculate', [{ name: 'expression', value: '2^8 + 4' }]));
+    assert.equal(calculated.type, 4); assert.equal(calculated.data.flags, 64); assert.match(calculated.data.content, /260/); assert.deepEqual(calculated.data.allowed_mentions, { parse: [] });
+    assert.deepEqual(await send(utility('servericon')), { type: 5, data: { flags: 64 } });
+    assert.equal(responses.at(-1).embeds[0].image.url, `https://cdn.discordapp.com/icons/${ids.guild}/${'a'.repeat(32)}.png?size=1024`);
+    assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
     await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
     const backup = path.join(root, 'backup'), created = await createBackup(config, backup); assert.equal(created.present, 1); assert.equal(created.missing.length, 11); assert.equal((await verifyBackup(backup, ids.guild)).ok, true);
     const recovered = new EconomyStore(path.join(backup, 'economy.json')); await recovered.load(); assert.equal(recovered.balance(ids.guild, ids.target), 100); assert.equal(recovered.adjustmentHistory(ids.guild).length, 1);
-    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery'] };
+    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery', 'signed-calculator', 'signed-server-artwork'] };
   } finally {
     if (server) {
       await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);

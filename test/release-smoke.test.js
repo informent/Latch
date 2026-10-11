@@ -2,7 +2,7 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const { runSmoke, main } = require('../scripts/release-smoke');
 test('isolated release smoke covers startup, signed runtime, duplicate handling and backup recovery', async () => {
-  const result = await runSmoke(); assert.equal(result.ok, true); assert.equal(result.container, false); assert.equal(result.checks.length, 11);
+  const result = await runSmoke(); assert.equal(result.ok, true); assert.equal(result.container, false); assert.equal(result.checks.length, 13);
 });
 test('release smoke CLI rejects unknown or duplicate options', async () => {
   await assert.rejects(main(['--live']), /Usage/); await assert.rejects(main(['--container', '--container']), /Usage/);

@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { createInformationHandler, INFORMATION_ACTIONS } = require('./information-interactions');
 const { createEconomyAdminHandler } = require('./economy-admin-interactions');
 const { createPollHandler } = require('./poll-interactions');
 const { createLevelRewardHandler } = require('./level-reward-interactions');
@@ -45,6 +46,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
+  const handleInformation = createInformationHandler({ config, discord, logger, now }, { response, defer, findOption });
   const handleEconomyAdmin = createEconomyAdminHandler({ config, economy, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handlePoll = createPollHandler({ config, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handleLevelReward = createLevelRewardHandler({ config, levelRewards, discord, logger }, { response, defer, hasPermission, findOption });
@@ -61,6 +63,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
     if (!user?.id || !interaction.channel_id || !interaction.token) return { immediate: response('This command requires a server channel.') };
     const [subcommand] = optionsOf(interaction);
     const commandName = interaction.data?.name;
+    if (interaction.type === 2 && commandName === 'utility' && INFORMATION_ACTIONS.includes(subcommand?.name)) return handleInformation(interaction);
     if (interaction.type === 2 && commandName === 'levelreward') return handleLevelReward(interaction);
     if (interaction.type === 2 && commandName === 'levelconfig') return handleLevel(interaction);
     if (interaction.type === 2 && commandName === 'ticketpanel' || interaction.type === 3 && interaction.data?.custom_id?.startsWith('ticketpanel:')) return handleTicketPanel(interaction);
@@ -426,7 +429,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           }
         } };
       }
-      if (subcommand?.name === 'help') return { immediate: response(`**Latch features**\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
+      if (subcommand?.name === 'help') return { immediate: response(`**Latch features**\n/utility: profiles, banners, server artwork, roles, emojis, stickers, boosts, ID decoding, timestamps, colors and arithmetic\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
       if (subcommand?.name === 'ping') return { immediate: response('Latch is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {
         try {
