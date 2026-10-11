@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.26.0 - 2026-10-11
+
+- Added thirteen read-only utility command paths for member banners, server icons/banners, boost status, roles, emojis, stickers, asset inspection, Discord ID decoding, timestamps, hex colors and arithmetic. Replies are private, expression inventories are paginated and external asset URLs are built only from validated IDs/hashes.
+- Added an independent arithmetic parser with finite numeric limits, operator precedence, powers and bounded input. No JavaScript evaluation or third-party runtime dependencies are used.
+- Expanded signed HTTP and container smoke coverage to exercise immediate calculator responses and deferred server artwork. Added regression coverage for scope, API identity mismatches, invalid inputs, CDN formats, output limits and private errors.
+- Updated the generated command reference to 189 paths across 25 roots. Re-register commands after upgrading. No data store migration is required. Live Discord validation and full Bleed/Greed parity remain incomplete.
+
 ## 0.25.0 - 2026-10-11
 
 - Renamed OpenDesk to Latch, including visible bot messages, command documentation and Windows launchers. Existing data formats, backup version keys and deployed state paths remain compatible. Owned legacy AutoMod rules are still accepted; new rules use the Latch name.
