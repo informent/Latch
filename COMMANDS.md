@@ -1,6 +1,6 @@
 # OpenDesk command reference
 
-All 159 registered command paths across 23 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
+All 165 registered command paths across 23 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.
 
@@ -681,6 +681,60 @@ Set time remaining, within a total lifetime of 30 days.
 | --- | --- | --- | --- |
 | id | text | yes | Giveaway ID.; Maximum text length: 25 |
 | minutes | integer | yes | Minutes remaining from now.; Minimum: 1; Maximum: 43200 |
+
+### /giveaway requirements role-add
+
+Require a current server role; all required roles must be held.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| role | role | yes | Required server role other than everyone. |
+
+### /giveaway requirements role-remove
+
+Remove a required role, including a deleted reference.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| role | text | yes | Role ID.; Minimum text length: 5; Maximum text length: 25 |
+
+### /giveaway requirements levels
+
+Set an inclusive level range; omit max for no upper bound.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| min | integer | yes | Minimum level.; Minimum: 0; Maximum: 1000 |
+| max | integer | no | Maximum level, at least min.; Minimum: 0; Maximum: 1000 |
+
+### /giveaway requirements clear
+
+Clear role/level requirements; membership checks remain.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+
+### /giveaway eligibility
+
+Preview current member eligibility without entering.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| user | user | yes | Member to inspect. |
+
+### /giveaway entrants
+
+Privately list entries and selection progress.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| page | integer | no | Page of 20 entries.; Minimum: 1; Maximum: 500 |
 
 ### /giveaway end
 

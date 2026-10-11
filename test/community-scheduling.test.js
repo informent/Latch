@@ -98,7 +98,7 @@ test('winners are selected without replacement and persist before failed result 
   let fail = true;
   const edits = [];
   const logs = [];
-  const discord = { createMessage: async () => ({ id: messageId }), editMessage: async (...args) => { edits.push(args); if (fail) throw new Error('secret should not be logged'); } };
+  const discord = { getGuildMember: async (guild, user) => ({ user: { id: user }, roles: [] }), createMessage: async () => ({ id: messageId }), editMessage: async (...args) => { edits.push(args); if (fail) throw new Error('secret should not be logged'); } };
   const service = new CommunityService({ config, store, discord, now: () => clock, logger: (...args) => logs.push(args) });
   await service.createGiveaway({ ...data, winnerCount: 2 });
   for (const entrant of [userId, otherUserId, '923456789012345678']) await service.enter({ id, channelId, messageId, userId: entrant });
@@ -223,7 +223,7 @@ test('reminder commands create publicly disclosed schedules and keep lists and c
 test('staff can inspect and end giveaways early without redrawing on a repeated end', async (t) => {
   const { store } = await setup(t, { pick: () => 0 });
   const edits = [];
-  const discord = { createMessage: async () => ({ id: messageId }), editMessage: async () => {}, editOriginalResponse: async (...args) => edits.push(args) };
+  const discord = { getGuildMember: async (guild, user) => ({ user: { id: user }, roles: [] }), createMessage: async () => ({ id: messageId }), editMessage: async () => {}, editOriginalResponse: async (...args) => edits.push(args) };
   const community = new CommunityService({ config, store, discord, now: () => start });
   await community.createGiveaway(data);
   await community.enter({ id, channelId, messageId, userId });
@@ -244,7 +244,7 @@ test('staff can inspect and end giveaways early without redrawing on a repeated 
 test('giveaway interactions enforce staff access, human entry and persisted message binding', async (t) => {
   const { store } = await setup(t);
   const edits = [];
-  const discord = { createMessage: async () => ({ id: messageId }), editOriginalResponse: async (...args) => edits.push(args), editMessage: async () => {} };
+  const discord = { getGuildMember: async (guild, user) => ({ user: { id: user }, roles: [] }), createMessage: async () => ({ id: messageId }), editOriginalResponse: async (...args) => edits.push(args), editMessage: async () => {} };
   const community = new CommunityService({ config, store, discord, now: () => start });
   const handler = createInteractionHandler({ config, community, discord });
   const base = { type: 2, id, guild_id: guildId, channel_id: channelId, token: 'transient-secret', member: { user: { id: userId }, permissions: '0' } };

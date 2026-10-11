@@ -230,7 +230,7 @@ test('signed HTTP giveaway buttons record durable human entries and server close
   const userId = '523456789012345678';
   const messageId = '623456789012345678';
   const edits = [];
-  const discord = { getCurrentUser: async () => ({ id: '723456789012345678' }), createMessage: async () => ({ id: messageId }), editMessage: async () => {}, editOriginalResponse: async (...args) => edits.push(args) };
+  const discord = { getGuildMember: async (guild, user) => ({ user: { id: user }, roles: [] }), getCurrentUser: async () => ({ id: '723456789012345678' }), createMessage: async () => ({ id: messageId }), editMessage: async () => {}, editOriginalResponse: async (...args) => edits.push(args) };
   const server = await createServerRuntime({ config, publicKey: publicKeyFromHex(publicRaw.toString('hex')), discord, store: new TicketStore(config.storePath), communityStore });
   t.after(async () => { await server.community.stop(); if (server.listening) await new Promise((resolve) => server.close(resolve)); });
   await once(server, 'listening');

@@ -16,7 +16,7 @@ All OpenDesk features are intended to be available without subscriptions or prem
 | Embeds | Custom announcements, persistent templates, private previews and staff publication | Variables, scripting, editing previously published copies, webhook branding |
 | Welcome | Optional member welcome messages | Goodbye, templates, autoroles, configurable greetings |
 | Games | Coin flips, dice and eight ball | Tic-tac-toe, trivia, word games, multiplayer state |
-| Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved draws/rerolls, prize/duration/winner editing, cancellation, delivery retries | Role eligibility, departure checks, host and embed editing |
+| Giveaways | Durable entry/leave buttons, scheduled and staff-triggered endings, saved draws/rerolls, prize/duration/winner editing, role/level requirements, current membership checks, resumable selection, cancellation and delivery retries | Host and embed editing, additional eligibility policies and live validation |
 | Community | Native polls; durable personal reminders; opt-in exact-match autoresponders; persistent recurring channel messages | Starboard, counters, richer responder/timer policies, bump reminders |
 | VoiceMaster | Optional temporary rooms, ownership/transfer/claim, rename/limit, access controls and delayed cleanup | Live validation, default settings, generated interface, role grants, bitrate/region and audio |
 | Music and TTS | Planned | Voice transport, queue, source adapters, volume/loop, effects, licensed provider support |

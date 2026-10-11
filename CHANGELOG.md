@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.19.0 - 2026-10-10
+
+- Added six giveaway paths: requirements role-add/role-remove/levels/clear, eligibility and entrants. The generated reference lists all 165 command paths across 23 suites.
+- Added up to five required roles, inclusive level ranges, current human membership/screening checks, private eligibility previews and paginated entry lists. Requirements persist before public message refreshes.
+- Added durable selecting state with saved remaining/eligible/excluded IDs, bounded progress checkpoints, departure handling and transient API retries. Entry closes before selection work starts.
+- Selection attempts perform at most 25 member lookups, including fresh proposed-winner checks. The scheduler handles at most one selection per pass; candidates who become ineligible are removed before a later replacement attempt.
+- Added resumable rerolls with saved request IDs, cancellation during selection and persisted winners before result publication. Delivery retries preserve the committed draw.
+- Reworked all community mutations to isolated snapshots and committed reads. Failed writes preserve entries, requirements, selection and legacy source files; queued creation copies caller data before awaiting work.
+- Added 40 tests for requirements, screening, identity, departure, bounded selection, restart/progress recovery, failed saves, candidate rechecks, rerolls, cancellation, schema/migration and the signed HTTP workflow. All 395 tests pass locally: 92.72% lines, 83.91% branches and 87.57% functions.
+
+Community writes now migrate version 1 to version 2. Back up all twelve stores together before upgrading; older releases reject version 2, so rollback requires a compatible complete backup. Legacy giveaways without requirements retain their previous behavior until an active requirements command upgrades them. Large selections take time and member state can change after the final check. Live Discord validation, host/embed editing and full competitor parity remain unfinished.
+
 ## 0.18.0 - 2026-10-10
 
 - Added a complete generated COMMANDS.md reference for all 159 command paths across 23 suites, including options, choices, bounds, channel restrictions and default permissions. Linked it from README and added a CI freshness check.

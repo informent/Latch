@@ -92,3 +92,5 @@ Persistent public-channel reminders with private list/cancel, signed interaction
 3. Implement persistent behavior and recovery for each applicable command.
 4. Verify authorization, failure behavior, restart recovery, and live Discord operation.
 5. Report exact remaining gaps; claim parity only when none remain.
+
+Giveaways add six paths for role/level requirements, clearing requirements, current eligibility previews and private entrant pages. New giveaways use durable batched selection with current member checks and final candidate rechecks. Older giveaways retain their original behavior until requirements are configured; see [giveaway operations](GIVEAWAYS.md).

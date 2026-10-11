@@ -114,6 +114,14 @@ const commands = [
         subcommand('winners', 'Change how many winners will be selected.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'winners', 'Number of winners.', { required: true, min_value: 1, max_value: 20 })]),
         subcommand('duration', 'Set time remaining, within a total lifetime of 30 days.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'minutes', 'Minutes remaining from now.', { required: true, min_value: 1, max_value: 43200 })])
       ] },
+      { type: 2, name: 'requirements', description: 'Configure entry and selection eligibility.', options: [
+        subcommand('role-add', 'Require a current server role; all required roles must be held.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(8, 'role', 'Required server role other than everyone.', { required: true })]),
+        subcommand('role-remove', 'Remove a required role, including a deleted reference.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(3, 'role', 'Role ID.', { required: true, min_length: 5, max_length: 25 })]),
+        subcommand('levels', 'Set an inclusive level range; omit max for no upper bound.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'min', 'Minimum level.', { required: true, min_value: 0, max_value: 1000 }), option(4, 'max', 'Maximum level, at least min.', { min_value: 0, max_value: 1000 })]),
+        subcommand('clear', 'Clear role/level requirements; membership checks remain.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 })])
+      ] },
+      subcommand('eligibility', 'Preview current member eligibility without entering.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(6, 'user', 'Member to inspect.', { required: true })]),
+      subcommand('entrants', 'Privately list entries and selection progress.', [option(3, 'id', 'Giveaway ID.', { required: true, max_length: 25 }), option(4, 'page', 'Page of 20 entries.', { min_value: 1, max_value: 500 })]),
       ...['end', 'cancel', 'info', 'reroll'].map((action) => subcommand(action, `${action} a giveaway by ID.`, [option(3, 'id', 'Giveaway ID shown in its message footer.', { required: true, max_length: 25 })]))
     ]
   },

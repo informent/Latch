@@ -139,7 +139,7 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   await ticketPanelStore.load();
   const ticketPanels = new TicketPanelService({ config, store: ticketPanelStore, tickets, discord, botUserId: botUser.id, logger });
   const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
-  const community = new CommunityService({ config, store: communityStore, discord, logger });
+  const community = new CommunityService({ config, store: communityStore, discord, levels, logger });
   const voiceStore = new VoiceStore(config.voiceStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'voice.json'), config.guildId);
   await voiceStore.load();
   const voice = new VoiceService({ config, store: voiceStore, discord, botUserId: botUser.id, logger, connection: () => gateway?.running && gateway.socket?.readyState === 1 ? gateway.socket : null });

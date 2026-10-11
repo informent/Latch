@@ -1,5 +1,15 @@
 # Verification
 
+## Version 0.19.0
+
+All 395 tests pass locally. Coverage is 92.72% lines, 83.91% branches and 87.57% functions with existing floors enforced. The generated [command reference](../COMMANDS.md) lists all 165 command paths across 23 roots and remains checked in CI.
+
+Forty new tests cover role/level gates, current membership/screening, copied message rejection, departure versus transient errors, requirement limits, private previews/pages, entry closure, bounded/coalesced selection, restart checkpoints, failed progress writes, committed reads, fresh proposed-winner checks, result retry stability, reroll request recovery, cancellation, invalid schemas and version 1 migration failures. A queued-creation test verifies caller mutations cannot change saved prize/reminder text or role arrays.
+
+A signed HTTP test runs requirement configuration, eligibility preview, entry, entrant listing and early end through the actual server runtime. It loses a result reply after publication, reloads the store and confirms the same saved winner is delivered. Discord membership and API calls are simulated. Live Discord validation remains unfinished.
+
+Community version 2 adds saved requirements and selection state in the existing file. Back up all twelve stores before upgrade. Older releases reject version 2; see [giveaway operations](GIVEAWAYS.md) for legacy behavior, rollback and bounded selection limits.
+
 ## Version 0.18.0
 
 All 355 tests pass locally. Coverage is 91.88% lines, 83.57% branches and 86.59% functions with the existing floors enforced. The catalog contains 159 command paths across 23 roots, all listed with options in the generated [command reference](../COMMANDS.md). CI checks reference freshness.
@@ -70,7 +80,7 @@ Failing tests reproduced template input aliasing, concurrent responder guard byp
 
 The suite uses temporary local files, a local HTTP server where applicable and simulated Discord API/Gateway responses. It does not prove live Discord delivery, real permission configuration, platform rate-limit behavior or production hosting. This checkout has no Discord configuration and no available Docker executable. No live server validation was performed for this release.
 
-Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 159 command paths across 23 slash command roots.
+Coverage is not complete: main interaction routes and some Gateway/recovery branches still have untested paths. Full Bleed/Greed command parity remains unfinished. The current OpenDesk catalog has 165 command paths across 23 slash command roots.
 
 ## Repeat the checks
 
