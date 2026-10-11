@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.21.0 - 2026-10-10
+
+- Added pollmanage info/end/voters. The generated complete reference now lists 171 command paths across 24 suites, preserving the existing poll creation command.
+- Poll management validates current channel/guild/type, bot identity, message ID/channel/author and bounded poll/result structures before using Discord's poll endpoints.
+- Private information distinguishes unavailable, provisional and finalized counts and uses actual answer IDs. Voter queries fetch at most 25 users with a validated explicit cursor and suppress mentions; no voter history is persisted.
+- Early ending confirms expired or finalized poll state through message readback. Already ended polls avoid repeated expiration; operations on the same channel/message serialize, and lost response retries inspect Discord's current state.
+- Added 26 tests including signed HTTP runtime integration, ownership boundaries, malformed API responses, concurrency, cursor paging and lost responses. All 469 tests pass locally: 93.05% lines, 84.63% branches and 87.91% functions.
+
+Run command registration after upgrading. No new store or schema migration is added. Polls remain in Discord and final vote tallying can lag expiry. Live Discord validation and full competitor parity remain unfinished.
+
 ## 0.20.0 - 2026-10-10
 
 - Added `/reminder info`, `/reminder edit` and `/reminder reschedule`. The generated complete reference now lists 168 command paths across 23 suites.

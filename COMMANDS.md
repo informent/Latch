@@ -1,6 +1,6 @@
 # OpenDesk command reference
 
-All 168 registered command paths across 23 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
+All 171 registered command paths across 24 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.
 
@@ -33,6 +33,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 - [/levelreward](#levelreward): Manage free earned role rewards with durable retries.
 - [/levelconfig](#levelconfig): Configure free server XP awards and ignored channels.
 - [/ticketpanel](#ticketpanel): Build persistent support panels with category buttons.
+- [/pollmanage](#pollmanage): Inspect and end native polls created by OpenDesk.
 
 ## poll
 
@@ -1520,3 +1521,35 @@ delete a ticket panel.
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | id | text | yes | Panel ID.; Maximum text length: 25 |
+
+## pollmanage
+
+Inspect and end native polls created by OpenDesk.
+
+Default command visibility: Manage Messages (8192).
+
+### /pollmanage info
+
+info an OpenDesk poll in this text channel.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| message | text | yes | Poll message ID in this channel.; Minimum text length: 5; Maximum text length: 25 |
+
+### /pollmanage end
+
+end an OpenDesk poll in this text channel.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| message | text | yes | Poll message ID in this channel.; Minimum text length: 5; Maximum text length: 25 |
+
+### /pollmanage voters
+
+Privately list up to 25 voters for one poll answer.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| message | text | yes | Poll message ID in this channel.; Minimum text length: 5; Maximum text length: 25 |
+| answer | integer | yes | Answer ID from pollmanage info.; Minimum: 1; Maximum: 2147483647 |
+| after | text | no | User ID cursor from the previous page.; Minimum text length: 5; Maximum text length: 25 |

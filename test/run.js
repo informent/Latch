@@ -35,3 +35,5 @@ require('./level-rewards.test');
 require('./command-catalog.test');
 require('./giveaway-eligibility.test');
 require('./reminder-management.test');
+
+require('./poll-management.test');

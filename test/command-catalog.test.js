@@ -7,7 +7,7 @@ const { commands } = require('../src/commands');
 const { leaves, catalog, markdown, main } = require('../scripts/command-catalog');
 const file = path.resolve(__dirname, '../COMMANDS.md');
 test('command reference lists every registered leaf exactly once, with every option', () => {
-  const reference = markdown(); assert.equal(catalog.length, 168); assert.equal(commands.length, 23); assert.equal(new Set(catalog.map((entry) => entry.command)).size, catalog.length);
+  const reference = markdown(); assert.equal(catalog.length, 171); assert.equal(commands.length, 24); assert.equal(new Set(catalog.map((entry) => entry.command)).size, catalog.length);
   assert.equal((reference.match(/^### \//gm) || []).length, catalog.length);
   for (const entry of catalog) {
     assert.equal(reference.split(`### ${entry.command}\n`).length - 1, 1);
@@ -35,6 +35,6 @@ test('catalog leaf traversal handles grouped commands and root options', () => {
 });
 test('catalog JSON retains all command options and rejects unsupported CLI arguments', (t) => {
   const write = process.stdout.write; let output = ''; process.stdout.write = (value) => { output += value; return true; }; t.after(() => { process.stdout.write = write; });
-  main(['--json']); const data = JSON.parse(output); assert.equal(data.commands.length, 168); assert.equal(data.commands.find((entry) => entry.command === '/levelreward add').options.length, 2);
+  main(['--json']); const data = JSON.parse(output); assert.equal(data.commands.length, 171); assert.equal(data.commands.find((entry) => entry.command === '/levelreward add').options.length, 2);
   output = ''; main(['--markdown']); assert.equal(output, markdown()); assert.throws(() => main(['--invalid']), /Usage/); assert.throws(() => main(['--json', '--check']), /Usage/);
 });

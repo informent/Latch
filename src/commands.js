@@ -263,3 +263,11 @@ commands.push({
     ...['info', 'publish', 'disable', 'delete'].map((action) => subcommand(action, `${action} a ticket panel.`, [option(3, 'id', 'Panel ID.', { required: true, max_length: 25 })]))
   ]
 });
+
+commands.push({
+  name: 'pollmanage', description: 'Inspect and end native polls created by OpenDesk.', type: 1, default_member_permissions: '8192',
+  options: [
+    ...['info', 'end'].map((action) => subcommand(action, `${action} an OpenDesk poll in this text channel.`, [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 })])),
+    subcommand('voters', 'Privately list up to 25 voters for one poll answer.', [option(3, 'message', 'Poll message ID in this channel.', { required: true, min_length: 5, max_length: 25 }), option(4, 'answer', 'Answer ID from pollmanage info.', { required: true, min_value: 1, max_value: 2147483647 }), option(3, 'after', 'User ID cursor from the previous page.', { min_length: 5, max_length: 25 })])
+  ]
+});
