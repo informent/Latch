@@ -4,15 +4,11 @@ OpenDesk is free MIT-licensed source software. The current application serves on
 
 ## Local installation
 
-1. Download or clone the repository into a folder you own. Install Node 22.9+ or Node 24.
-2. Run `npm run setup`. It creates a blank `.env` and data directory while preserving an existing `.env`.
-3. Edit `.env` locally with your Discord application ID, public key, guild ID, and bot credential. A token can instead be loaded from `DISCORD_BOT_TOKEN_FILE`; leave `DISCORD_BOT_TOKEN` empty when using a file. Do not put secrets in command arguments or Git.
-4. Run `npm run doctor` for offline, read-only configuration and store inspection. `npm run doctor -- --json` returns a report for automation. A failure sets exit code 1. Warnings describe remaining manual steps. No files are repaired or changed, and no Discord requests are made. Filesystem access is advisory; it cannot guarantee a later atomic write will succeed.
-5. Run `npm run invite` for community and ticket permissions, or `npm run invite -- all` for all implemented feature areas. You can choose `community,tickets,moderation,roles,automod,voice` individually. The command prints a Discord installation link without opening a browser. Review the requested permissions and bot role position. Selecting permissions does not disable command suites.
-6. Run `npm run register` to add/update commands in the configured guild. This makes Discord API changes. Set the Discord application's Interactions Endpoint URL to your public HTTPS `/interactions` endpoint.
-7. Run `npm start` under a process manager that restarts failures and allows at least 45 seconds for shutdown.
+Start with the [beginner setup guide](GETTING-STARTED.md). `npm run setup` opens a guided terminal wizard with hidden token entry, existing-setting preservation, local checks and optional command registration. Windows also includes setup/start launchers. Use `--plain` for an unattended blank template.
 
-No npm package installation is required: OpenDesk currently uses only built-in Node modules. Doctor output excludes credential values and raw store contents. It cannot establish guild membership, channel permissions, privileged intent approval, HTTPS routing, or live-server correctness.
+A token can be loaded from `DISCORD_BOT_TOKEN_FILE`; leave `DISCORD_BOT_TOKEN` empty when using a file. Do not put secrets in command arguments or Git. Run `npm run doctor` for offline inspection or `npm run doctor:live` for GET-only Discord preflight. Both support `--json` and set exit code 1 on failed required checks.
+
+For production, run `npm start` under a process manager that restarts failures and allows at least 45 seconds for shutdown. Configure a permanent HTTPS endpoint ending in `/interactions`. No npm package installation is required. Doctor checks do not establish actual command execution, channel access or production-host readiness.
 
 ## Docker Compose
 

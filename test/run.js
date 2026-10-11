@@ -44,3 +44,4 @@ require('./economy-admin.test');
 
 require('./release-smoke.test');
 require('./doctor-live.test');
+require('./setup-wizard.test');
