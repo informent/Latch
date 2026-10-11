@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.30.0 - 2026-10-11
+
+- Add staff-only ticket guest add, remove and list commands, with up to 20 current screened human guests per open ticket.
+- Preserve unrelated permissions, verify complete channel overwrites and keep failed grants/removals retryable after restart.
+- Revoke saved guests before closing, clear invitations only after confirmed closure and leave former guests revoked after reopening.
+- Read ticket formats 1 and 2; the next successful ticket mutation writes format 2. Older releases need a complete compatible backup for rollback. Back up all twelve stores while stopped before upgrading.
+- Add 40 guest regression tests and signed HTTP plus guest/closure backup recovery smoke checks. Re-register commands; the reference contains 202 command paths.
+
 ## 0.29.1 - 2026-10-11
 
 - Add one automated release verification command with test/coverage gates, all JavaScript syntax checks, command reference freshness, publication checks, signed runtime smoke and backup recovery.

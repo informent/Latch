@@ -56,3 +56,5 @@ require('./panel-pagination.test');
 require('./giveaway-presentation.test');
 require('./server-errors.test');
 require('./release-verify.test');
+
+require('./ticket-guests.test');

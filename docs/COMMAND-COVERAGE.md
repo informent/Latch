@@ -40,6 +40,7 @@ Only command names and independently authored implementation notes are recorded 
 | tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
 | tickets move, reason | `/ticket move`, `/ticket reason` | Open stored tickets only; staff checks; explicit overwrite preservation/read-back; reason visible to owner and support |
 | ticket information | `/ticket info` | Stored metadata only; owner or support staff; no conversation export |
+| tickets guests | `/ticket guest add`, `/ticket guest remove`, `/ticket guest list` | Staff-only, 20 screened human guests, persistent intent and permission verification; closure revokes, reopening does not reinvite |
 | tickets rename | `/ticket rename` | Open Latch tickets only; staff-only; no arbitrary text-channel rename |
 | giveaway edit prize, duration, winners, host, description, image, thumbnail | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline; human host attribution and bounded HTTPS media; lifetime limited to 30 days |
 | giveaway reroll | `/giveaway reroll` | Finished giveaways only; excludes immediately previous winners; same interaction ID reuses saved result |

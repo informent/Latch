@@ -12,7 +12,7 @@ const execute = async (args) => ({ status: 0, stdout: args.includes('test/run.js
 
 test('release verification combines every required gate and never marks simulated checks as live proof', async () => {
   const report = await verifyRelease({ execute }); assert.equal(report.ok, true); assert.equal(report.checks.length, 6);
-  assert.ok(report.checks.every(check => check.passed)); assert.equal(report.tests.passed, 3); assert.equal(report.commandPaths, 199);
+  assert.ok(report.checks.every(check => check.passed)); assert.equal(report.tests.passed, 3); assert.equal(report.commandPaths, 202);
   assert.equal(report.liveDiscordValidated, false); assert.equal(report.stableReady, false); assert.match(report.sourceSha256, /^[a-f0-9]{64}$/);
 });
 test('a failed test process stops later gates and keeps remote error text out of evidence', async () => {

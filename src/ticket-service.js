@@ -1,5 +1,7 @@
 'use strict';
 
+const { MAX_GUESTS } = require('./ticket-store');
+
 const PERMISSIONS = Object.freeze({
   VIEW_CHANNEL: 1n << 10n,
   SEND_MESSAGES: 1n << 11n,
@@ -92,6 +94,14 @@ class TicketService {
       expected.push({ id: ticket.ownerId, ...overwrite });
       if (ticket.status === 'open') await this.store.markClosing(channelId);
       await this.discord.setMemberOverwrite(channelId, ticket.ownerId, overwrite);
+      for (const guestId of ticket.guests || []) {
+        const guest = entries.find(entry => entry.id === guestId && entry.type === 1);
+        const revoked = { type: 1, allow: asString(BigInt(guest?.allow || '0') & ~CHAT), deny: asString(BigInt(guest?.deny || '0') | CHAT) };
+        const index = expected.findIndex(entry => entry.id === guestId && entry.type === 1);
+        if (index >= 0) expected.splice(index, 1);
+        expected.push({ id: guestId, ...revoked });
+        await this.discord.setMemberOverwrite(channelId, guestId, revoked);
+      }
       const name = `closed-${channelId.slice(-8)}`;
       await this.discord.editChannel(channelId, { name });
       const confirmed = await this.discord.request('GET', `/channels/${channelId}`);
@@ -160,6 +170,40 @@ class TicketService {
     const ticket = this.store.getByChannel(channelId);
     if (!ticket || ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Ticket information is available only to its owner or the support team.' };
     return { ok: true, ticket: { ...ticket } };
+  }
+
+  async guests({ action, channelId, targetId, userId, roles = [], permissions = '0' }) {
+    if (!this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the server support team can manage ticket guests.' };
+    if (!['add', 'remove', 'list'].includes(action) || typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket and guest action.' };
+    return this.store.withChannelLock(channelId, async () => {
+      const ticket = this.store.getByChannel(channelId);
+      if (!ticket) return { ok: false, reason: 'Choose an Latch ticket.' };
+      if (action === 'list') return { ok: true, guests: [...(ticket.guests || [])], status: ticket.status };
+      if (ticket.status !== 'open') return { ok: false, reason: 'Finish closing or reopening before managing guests on an open ticket.' };
+      if (typeof targetId !== 'string' || !/^\d{5,25}$/.test(targetId) || [ticket.ownerId, this.botUserId, this.config.guildId].includes(targetId)) return { ok: false, reason: 'Choose a guest other than the ticket owner or bot.' };
+      const saved = (ticket.guests || []).includes(targetId);
+      if (action === 'remove' && !saved) return { ok: false, reason: 'That member is not a saved ticket guest. Existing manual permissions were preserved.' };
+      if (action === 'add') {
+        if (!saved && (ticket.guests || []).length >= MAX_GUESTS) return { ok: false, reason: `Each ticket supports at most ${MAX_GUESTS} guests.` };
+        const member = await this.discord.getGuildMember(this.config.guildId, targetId);
+        if (member?.user?.id !== targetId || member.user.bot || member.pending) return { ok: false, reason: 'Guests must be current human members who completed screening.' };
+        if (this.config.supportRoleId && member.roles?.includes(this.config.supportRoleId)) return { ok: false, reason: 'Support team members already have staff access; choose another member.' };
+      }
+      const channel = await this.discord.request('GET', `/channels/${channelId}`);
+      const entries = privateChannel(channel, channelId, this.config.guildId);
+      const current = entries.find(entry => entry.id === targetId && entry.type === 1);
+      const overwrite = { type: 1, allow: asString(action === 'add' ? BigInt(current?.allow || '0') | CHAT : BigInt(current?.allow || '0') & ~CHAT), deny: asString(action === 'add' ? BigInt(current?.deny || '0') & ~CHAT : BigInt(current?.deny || '0') | CHAT) };
+      const expected = entries.filter(entry => entry.id !== targetId || entry.type !== 1).map(entry => ({ ...entry }));
+      expected.push({ id: targetId, ...overwrite });
+      // Save access intent before granting; a failed or ambiguous API call remains retryable after restart.
+      if (action === 'add' && !saved) await this.store.setGuest(channelId, targetId, true);
+      await this.discord.setMemberOverwrite(channelId, targetId, overwrite);
+      const confirmed = await this.discord.request('GET', `/channels/${channelId}`);
+      if (permissionSnapshot(privateChannel(confirmed, channelId, this.config.guildId)) !== permissionSnapshot(expected)) throw new Error('Guest permissions could not be confirmed. Retry the same action after inspecting the channel.');
+      // Forget guests only after denial is confirmed, so close can still revoke failed removals.
+      if (action === 'remove') await this.store.setGuest(channelId, targetId, false);
+      return { ok: true, content: action === 'add' ? 'Guest access saved and channel overwrites verified.' : 'Guest access revoked and channel overwrites verified. Administrator access cannot be revoked by channel overwrites.' };
+    });
   }
 
   async manage({ action, channelId, userId, roles = [], permissions = '0', name, categoryId, reason }) {

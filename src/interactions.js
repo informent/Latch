@@ -263,6 +263,19 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
         }
       } };
     }
+    if (commandName === 'ticket' && subcommand?.name === 'guest') {
+      const guestAction = subcommand.options?.[0];
+      return { immediate: defer(), work: async () => {
+        try {
+          const result = await tickets.guests({ action: guestAction?.name, channelId: findOption(guestAction?.options || [], 'channel') || interaction.channel_id, targetId: findOption(guestAction?.options || [], 'user'), userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0' });
+          const content = !result.ok ? result.reason : guestAction.name === 'list' ? `**Saved ticket guests (${result.guests.length}/20)**\nState: ${result.status}\n${result.guests.map(id => `<@${id}>`).join('\n') || 'No saved guests.'}\nSaved grants can require retrying after an API failure. Closing revokes guests; reopening does not invite them again.` : result.content;
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
+        } catch {
+          try { logger('ticket_guest_failed', { action: guestAction?.name }); } catch {}
+          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Guest access could not be confirmed. Inspect the ticket permissions and retry the same action. Saved guests remain available through /ticket guest list.', allowed_mentions: { parse: [] } }).catch(() => {});
+        }
+      } };
+    }
     if (commandName === 'ticket' && subcommand?.name === 'create') {
       return { immediate: defer(), work: async () => {
         try {
