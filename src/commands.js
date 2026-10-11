@@ -101,6 +101,9 @@ const commands = [
     options: [
       subcommand('create', 'Schedule a reminder posted publicly in this channel.', [option(4, 'minutes', 'Minutes from now (up to 30 days).', { required: true, min_value: 1, max_value: 43200 }), option(3, 'text', 'Reminder text visible to this channel.', { required: true, max_length: 500 })]),
       subcommand('list', 'List your pending reminders privately.'),
+      subcommand('info', 'Privately inspect one of your saved reminders.', [option(3, 'id', 'Your reminder ID.', { required: true, max_length: 25 })]),
+      subcommand('edit', 'Change the text of your future reminder.', [option(3, 'id', 'Your reminder ID.', { required: true, max_length: 25 }), option(3, 'text', 'Replacement text posted publicly when due.', { required: true, max_length: 500 })]),
+      subcommand('reschedule', 'Move your future reminder to a new time from now.', [option(3, 'id', 'Your reminder ID.', { required: true, max_length: 25 }), option(4, 'minutes', 'Minutes from now, up to 30 days.', { required: true, min_value: 1, max_value: 43200 })]),
       subcommand('cancel', 'Cancel one of your pending reminders.', [option(3, 'id', 'Reminder ID from /reminder list.', { required: true, max_length: 25 })])
     ]
   },

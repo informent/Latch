@@ -25,6 +25,8 @@ You also need a public HTTPS interaction endpoint configured in Discord. The set
 
 All upstream OpenDesk features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required OpenDesk hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
 
+Reminders include private owner-only details, text editing and rescheduling for future jobs without delivery attempts. See the [reminder guide](docs/REMINDERS.md) for limits, retry behavior and public-message visibility.
+
 Economy now includes durable 15-minute begging rewards, profiles and free profession progression with bounded work bonuses. See the [economy guide](docs/ECONOMY.md) for cooldowns, rank rules and rollback limits.
 
 Tickets support private owner/staff information, staff-set reasons and category moves. Closing preserves unrelated owner permissions and confirms the complete overwrite set before committing; renaming verifies privacy and unchanged permissions. See the [ticket guide](docs/TICKETS.md).

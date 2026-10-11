@@ -1,6 +1,6 @@
 # OpenDesk command reference
 
-All 165 registered command paths across 23 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
+All 168 registered command paths across 23 slash command roots are listed below. Every OpenDesk feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented OpenDesk declarations, not a claim of full Bleed/Greed parity.
 
@@ -624,6 +624,32 @@ Schedule a reminder posted publicly in this channel.
 List your pending reminders privately.
 
 Options: none.
+
+### /reminder info
+
+Privately inspect one of your saved reminders.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Your reminder ID.; Maximum text length: 25 |
+
+### /reminder edit
+
+Change the text of your future reminder.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Your reminder ID.; Maximum text length: 25 |
+| text | text | yes | Replacement text posted publicly when due.; Maximum text length: 500 |
+
+### /reminder reschedule
+
+Move your future reminder to a new time from now.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Your reminder ID.; Maximum text length: 25 |
+| minutes | integer | yes | Minutes from now, up to 30 days.; Minimum: 1; Maximum: 43200 |
 
 ### /reminder cancel
 

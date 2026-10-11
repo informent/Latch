@@ -77,6 +77,24 @@ class CommunityStore {
     });
   }
 
+  editReminder({ id, guildId, userId, field, value }, now = new Date()) {
+    if (!Number.isFinite(now.getTime())) throw new Error('Invalid reminder edit time.');
+    return this.#mutate((jobs) => {
+      const job = jobs.get(id);
+      if (!job || job.kind !== 'reminder' || job.guildId !== guildId || job.userId !== userId || job.state !== 'scheduled' || job.deliveredAt || job.attempts !== 0 || job.retryAt !== null || Date.parse(job.dueAt) <= now.getTime()) throw new Error('Only your future reminders without delivery attempts can be edited.');
+      const updated = { ...job };
+      if (field === 'text') {
+        if (typeof value !== 'string' || !value.trim() || value.length > 500) throw new Error('Use 1 to 500 characters of reminder text.');
+        updated.text = value.trim();
+      } else if (field === 'minutes') {
+        if (!Number.isInteger(value) || value < 1 || value > 43200) throw new Error('Use 1 to 43200 minutes from now.');
+        updated.dueAt = new Date(now.getTime() + value * 60000).toISOString();
+      } else throw new Error('Choose a reminder edit field.');
+      jobs.set(id, updated);
+      return { value: structuredClone(updated) };
+    });
+  }
+
   activate(id, messageId) {
     if (typeof messageId !== 'string' || !ID.test(messageId)) throw new Error('Invalid giveaway message ID.');
     return this.#mutate((jobs) => {

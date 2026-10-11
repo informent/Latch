@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.20.0 - 2026-10-10
+
+- Added `/reminder info`, `/reminder edit` and `/reminder reschedule`. The generated complete reference now lists 168 command paths across 23 suites.
+- Private owner-only details show saved text, channel, state, due time, delivery attempts and pending retry time. Retained sent/cancelled records remain inspectable until pruning.
+- Future reminders can change text or move to 1-43200 minutes from the operation time. Edits preserve identity, original channel, ownership and creation time. Due reminders and any reminder with delivery attempts cannot be edited or rescheduled.
+- Edits serialize with creation, cancellation and scheduler delivery, capture caller input and use atomic community-store snapshots. Failed saves preserve committed memory and the original file; updated text and deadlines survive restart.
+- Added 27 tests for validation, authorization, guild/kind boundaries, retries, in-flight delivery, failed saves, input/snapshot isolation, mention suppression, scheduling and signed HTTP persistence. All 443 tests pass locally: 92.96% lines, 84.33% branches and 87.76% functions.
+
+Run command registration after upgrading. No additional store schema migration is introduced beyond version 2 from v0.19.0; stop the bot and back up all twelve stores together. Existing reminder delivery uses nonce-based retry protection but does not guarantee exactly-once delivery indefinitely. Time is measured when the serialized operation executes. Live Discord validation and full competitor parity remain unfinished.
+
 ## 0.19.1 - 2026-10-10
 
 - Closing validates the tracked channel identity, configured guild, text type, bounded unique permission overwrites and explicit everyone visibility protection before saving intent or changing Discord.

@@ -83,7 +83,7 @@ Antinuke, antiraid, reaction/booster/vanity roles, additional button-role polici
 
 ## OpenDesk additions already implemented
 
-Persistent public-channel reminders with private list/cancel, signed interaction handling, native Discord polls, offline configuration diagnostics, permission-based invite generation, token-file configuration, deployment examples, bounded REST retries, and reconnect recovery. `/utility user` and `/utility avatar` provide server member details and Discord CDN avatars. These additions do not offset missing competitor commands when evaluating parity.
+Persistent public-channel reminders with private list/info/cancel, owner-only text editing and rescheduling, signed interaction handling, native Discord polls, offline configuration diagnostics, permission-based invite generation, token-file configuration, deployment examples, bounded REST retries, and reconnect recovery. `/utility user` and `/utility avatar` provide server member details and Discord CDN avatars. These additions do not offset missing competitor commands when evaluating parity.
 
 ## Completion requirements
 

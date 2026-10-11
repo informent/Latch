@@ -48,6 +48,17 @@ class CommunityService {
     return this.#serialize(() => this.store.create({ ...input, guildId: this.config.guildId, kind: 'reminder' }, this.now()));
   }
 
+  getReminder(id, userId) {
+    const job = this.store.get(id);
+    if (!job || job.kind !== 'reminder' || job.guildId !== this.config.guildId || job.userId !== userId) throw new Error('Reminder is unavailable or belongs to another member.');
+    return job;
+  }
+
+  editReminder(data) {
+    const input = structuredClone(data);
+    return this.#serialize(() => this.store.editReminder({ ...input, guildId: this.config.guildId }, this.now()));
+  }
+
   createGiveaway(data) {
     const input = structuredClone(data);
     return this.#serialize(async () => {
