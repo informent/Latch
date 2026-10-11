@@ -46,3 +46,5 @@ require('./release-smoke.test');
 require('./doctor-live.test');
 require('./setup-wizard.test');
 require('./information-utilities.test');
+
+require('./timer-controls.test');

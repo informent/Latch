@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 189 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 191 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -1383,6 +1383,24 @@ update a disabled recurring message in this text channel.
 List recurring message states, intervals and last results.
 
 Options: none.
+
+### /timer reschedule
+
+Change the next attempt without changing the recurring interval.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | Enabled timer name.; Maximum text length: 32 |
+| minutes | integer | yes | Delay from now, from 5 minutes to 30 days.; Minimum: 5; Maximum: 43200 |
+
+### /timer move
+
+Move a timer to another text channel and disable it for review.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | Timer name.; Maximum text length: 32 |
+| channel | channel | yes | Destination text channel in this server.; Allowed Discord channel type IDs: 0 |
 
 ### /timer info
 

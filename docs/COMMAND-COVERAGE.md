@@ -78,7 +78,7 @@ Native AutoMod now adds preset wordsets, private rule inspection, role/channel e
 
 The new `/shop` suite adds 11 paths for staff catalog management, purchases, inventories, gifts, consumption and private receipts. These virtual items have no Discord role or permission effects. See the [shop guide](SHOP.md); this is independently implemented functionality and does not establish competitor shop parity.
 
-Recurring messages now have eight `/timer` paths with durable deadlines, private previews and bounded scheduled attempts. Activity thresholds, embed integration and advanced scheduling remain absent. See the [timer guide](TIMERS.md).
+Recurring messages now have ten `/timer` paths with durable deadlines, private previews and bounded scheduled attempts. Moving channels disables a timer for review; rescheduling changes only the next attempt. Activity thresholds, embed integration and calendar scheduling remain absent. See the [timer guide](TIMERS.md).
 
 Autoresponders now have eight `/responder` paths with persistent, disabled-by-default channel rules and exact case-insensitive matching. Regex, substring matching, embed replies, variables and broader competitor policies remain absent. See the [responder guide](RESPONDERS.md).
 

@@ -66,6 +66,11 @@ class TimerStore {
         if (action === 'update') Object.assign(item, { text: input.text, interval: input.interval, enabled: false, nextAt: 0 });
         else if (action === 'enable') { if (!item.enabled) { item.enabled = true; item.nextAt = now + item.interval * 60000; } }
         else if (action === 'disable') { item.enabled = false; item.nextAt = 0; }
+        else if (action === 'reschedule') {
+          if (!item.enabled || !Number.isInteger(input.minutes) || input.minutes < 5 || input.minutes > 43200 || !timestamp(now)) throw new Error('Rescheduling requires an enabled timer and 5-43200 minutes.');
+          item.nextAt = now + input.minutes * 60000;
+        }
+        else if (action === 'move') { item.channelId = input.channelId; item.enabled = false; item.nextAt = 0; }
         else if (action === 'delete') state.timers.splice(index, 1);
         else throw new Error('Unknown timer action.');
       }
