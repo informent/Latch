@@ -3,6 +3,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomInt } = require('node:crypto');
+const { defaultPresentation, validPresentation } = require('./giveaway-presentation');
 const MAX_JOBS = 5000;
 const MAX_ENTRANTS = 10_000;
 const RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -27,10 +28,10 @@ class CommunityStore {
       if (Buffer.byteLength(content) > 32 * 1024 * 1024) throw new Error('Community store exceeds the size limit.');
       try { parsed = JSON.parse(content); }
       catch { throw new Error('Community store is not valid JSON; refusing to modify it.'); }
-      if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).sort().join(',') !== 'jobs,version' || ![1, 2].includes(parsed.version) || !Array.isArray(parsed.jobs) || parsed.jobs.length > MAX_JOBS) throw new Error('Community store contains invalid records.');
+      if (!parsed || typeof parsed !== 'object' || Object.keys(parsed).sort().join(',') !== 'jobs,version' || ![1, 2, 3].includes(parsed.version) || !Array.isArray(parsed.jobs) || parsed.jobs.length > MAX_JOBS) throw new Error('Community store contains invalid records.');
       const records = new Map();
       for (const record of parsed.jobs) {
-        if (!this.#valid(record) || records.has(record.id) || parsed.version === 1 && (Object.hasOwn(record, 'requirements') || Object.hasOwn(record, 'selection'))) throw new Error('Community store contains invalid or duplicate records; refusing to modify it.');
+        if (!this.#valid(record) || records.has(record.id) || parsed.version < 3 && Object.hasOwn(record, 'presentation') || parsed.version === 1 && (Object.hasOwn(record, 'requirements') || Object.hasOwn(record, 'selection'))) throw new Error('Community store contains invalid or duplicate records; refusing to modify it.');
         records.set(record.id, record);
       }
       this.jobs = records;
@@ -54,13 +55,15 @@ class CommunityStore {
     });
   }
 
-  async create({ id, kind, guildId, channelId, userId, text, minutes, winnerCount = 1, requirements }, now = new Date()) {
+  async create({ id, kind, guildId, channelId, userId, text, minutes, winnerCount = 1, requirements, presentation }, now = new Date()) {
     if (![id, guildId, channelId, userId].every((value) => typeof value === 'string' && ID.test(value)) || !['reminder', 'giveaway'].includes(kind)
       || typeof text !== 'string' || !text.trim() || text.length > (kind === 'reminder' ? 500 : 200)
       || !Number.isInteger(minutes) || minutes < 1 || minutes > 43_200
       || !Number.isInteger(winnerCount) || winnerCount < 1 || winnerCount > 20 || !Number.isFinite(now.getTime())) throw new Error('Invalid community job.');
     const policy = requirements === undefined ? undefined : structuredClone(requirements);
     if (policy !== undefined && (kind !== 'giveaway' || !this.#validRequirements(policy))) throw new Error('Invalid giveaway requirements.');
+    const appearance = presentation === undefined ? undefined : structuredClone(presentation);
+    if (appearance !== undefined && (kind !== 'giveaway' || !validPresentation(appearance))) throw new Error('Invalid giveaway presentation.');
     return this.#mutate((jobs) => {
       const existing = jobs.get(id);
       if (existing) {
@@ -71,7 +74,7 @@ class CommunityStore {
       if (jobs.size >= MAX_JOBS) throw new Error('Community job limit reached.');
       const active = this.list(guildId, { kind, ...(kind === 'reminder' ? { userId } : {}) });
       if (active.length >= (kind === 'reminder' ? 10 : 20)) throw new Error('Active job limit reached.');
-      const job = { id, kind, guildId, channelId, userId, text: text.trim(), createdAt: now.toISOString(), dueAt: new Date(now.getTime() + minutes * 60_000).toISOString(), state: kind === 'reminder' ? 'scheduled' : 'draft', messageId: null, entrants: [], winnerCount: kind === 'giveaway' ? winnerCount : 0, winners: [], deliveredAt: null, attempts: 0, retryAt: null, ...(policy === undefined ? {} : { requirements: policy }) };
+      const job = { id, kind, guildId, channelId, userId, text: text.trim(), createdAt: now.toISOString(), dueAt: new Date(now.getTime() + minutes * 60_000).toISOString(), state: kind === 'reminder' ? 'scheduled' : 'draft', messageId: null, entrants: [], winnerCount: kind === 'giveaway' ? winnerCount : 0, winners: [], deliveredAt: null, attempts: 0, retryAt: null, ...(policy === undefined ? {} : { requirements: policy }), ...(appearance === undefined ? {} : { presentation: appearance }) };
       jobs.set(id, job);
       return { value: structuredClone(job) };
     });
@@ -140,6 +143,7 @@ class CommunityStore {
   }
 
   editGiveaway({ id, guildId, field, value }, now = new Date()) {
+    if (!Number.isFinite(now.getTime())) throw new Error('Invalid giveaway edit time.');
     return this.#mutate((jobs) => {
       const job = jobs.get(id);
       if (!job || job.kind !== 'giveaway' || job.guildId !== guildId || !['draft', 'open'].includes(job.state) || Date.parse(job.dueAt) <= now.getTime()) throw new Error('Only active giveaways can be edited.');
@@ -155,6 +159,17 @@ class CommunityStore {
         const dueAt = now.getTime() + value * 60_000;
         if (!Number.isFinite(dueAt) || dueAt - Date.parse(job.createdAt) > 43_200 * 60_000) throw new Error('Total giveaway lifetime cannot exceed 30 days.');
         updated.dueAt = new Date(dueAt).toISOString();
+      } else if (['host', 'description', 'image', 'thumbnail', 'clear'].includes(field)) {
+        if (field === 'description' && (typeof value !== 'string' || !value.trim())) throw new Error('Use nonempty details or clear the description.');
+        const presentation = { ...(job.presentation || defaultPresentation(job.userId)) };
+        if (field === 'clear') {
+          if (!['host', 'description', 'image', 'thumbnail', 'all'].includes(value)) throw new Error('Unknown presentation field.');
+          const defaults = defaultPresentation(job.userId);
+          if (value === 'all') Object.assign(presentation, defaults);
+          else { const key = value === 'host' ? 'hostId' : value; presentation[key] = defaults[key]; }
+        } else presentation[field === 'host' ? 'hostId' : field] = value;
+        if (!validPresentation(presentation)) throw new Error('Invalid giveaway presentation.');
+        updated.presentation = presentation;
       } else throw new Error('Unknown giveaway field.');
       // An open job with retryAt is also a durable pending message refresh.
       // Saving happens before Discord is updated, so a restart cannot lose the edit.
@@ -348,7 +363,7 @@ class CommunityStore {
   }
 
   #valid(job) {
-    if (!job || typeof job !== 'object' || Array.isArray(job) || Object.keys(job).filter((key) => !['rerollRequestId', 'requirements', 'selection'].includes(key)).sort().join(',') !== keys
+    if (!job || typeof job !== 'object' || Array.isArray(job) || Object.keys(job).filter((key) => !['rerollRequestId', 'requirements', 'selection', 'presentation'].includes(key)).sort().join(',') !== keys
       || (Object.hasOwn(job, 'rerollRequestId') && (job.kind !== 'giveaway' || typeof job.rerollRequestId !== 'string' || !ID.test(job.rerollRequestId) || !['selecting', 'drawn', 'finished'].includes(job.state)))
       || !['id', 'guildId', 'channelId', 'userId'].every((key) => typeof job[key] === 'string' && ID.test(job[key]))
       || !['reminder', 'giveaway'].includes(job.kind) || typeof job.text !== 'string' || !job.text.trim() || job.text.length > (job.kind === 'reminder' ? 500 : 200)
@@ -359,6 +374,7 @@ class CommunityStore {
       || [...job.entrants, ...job.winners].some((id) => typeof id !== 'string' || !ID.test(id))
       || new Set(job.entrants).size !== job.entrants.length || new Set(job.winners).size !== job.winners.length || job.winners.some((id) => !job.entrants.includes(id))) return false;
     if (Object.hasOwn(job, 'requirements') && (job.kind !== 'giveaway' || !this.#validRequirements(job.requirements) || job.requirements.roles.includes(job.guildId))) return false;
+    if (Object.hasOwn(job, 'presentation') && (job.kind !== 'giveaway' || !validPresentation(job.presentation))) return false;
     if (Object.hasOwn(job, 'selection') ? job.state !== 'selecting' || !job.requirements || !this.#validSelection(job) : job.state === 'selecting') return false;
     if (job.kind === 'reminder') return ['scheduled', 'sent', 'cancelled'].includes(job.state) && job.messageId === null && job.winnerCount === 0 && !job.entrants.length && !job.winners.length && (job.state === 'scheduled' ? job.deliveredAt === null : job.deliveredAt !== null);
     return Number.isInteger(job.winnerCount) && job.winnerCount >= 1 && job.winnerCount <= 20 && job.winners.length <= job.winnerCount
@@ -376,7 +392,7 @@ class CommunityStore {
         const result = update(jobs);
         if (result.changed === false) return result.value;
         if (jobs.size > MAX_JOBS || [...jobs.values()].some((job) => !this.#valid(job))) throw new Error('Invalid community store update.');
-        const data = `${JSON.stringify({ version: 2, jobs: [...jobs.values()] })}\n`;
+        const data = `${JSON.stringify({ version: 3, jobs: [...jobs.values()] })}\n`;
         if (Buffer.byteLength(data) > 32 * 1024 * 1024) throw new Error('Community store exceeds the size limit.');
         await fs.mkdir(path.dirname(path.resolve(this.filePath)), { recursive: true });
         await fs.writeFile(temporary, data, { encoding: 'utf8', flag: 'wx', mode: 0o600 });

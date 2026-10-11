@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 193 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 199 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -776,12 +776,27 @@ Create a giveaway in this channel.
 | prize | text | yes | Prize supplied by the giveaway host.; Maximum text length: 200 |
 | minutes | integer | yes | Entry period in minutes (up to 30 days).; Minimum: 1; Maximum: 43200 |
 | winners | integer | no | Number of winners (default 1).; Minimum: 1; Maximum: 20 |
+| description | text | no | Additional giveaway details.; Maximum text length: 1500 |
+| host | user | no | Current human server member; defaults to you. |
+| image | text | no | HTTPS image URL without credentials or fragments.; Maximum text length: 1024 |
+| thumbnail | text | no | HTTPS thumbnail URL without credentials or fragments.; Maximum text length: 1024 |
 
 ### /giveaway list
 
-List active giveaways in this server.
+Browse active or retained giveaways, five per page.
 
-Options: none.
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| page | integer | no | Results page, newest first.; Minimum: 1; Maximum: 1000 |
+| scope | text | no | Active by default; all includes retained completed/cancelled records.; Choices: Active = active, All retained = all |
+
+### /giveaway preview
+
+Privately preview the saved embed without entry buttons.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
 
 ### /giveaway edit prize
 
@@ -809,6 +824,51 @@ Set time remaining, within a total lifetime of 30 days.
 | --- | --- | --- | --- |
 | id | text | yes | Giveaway ID.; Maximum text length: 25 |
 | minutes | integer | yes | Minutes remaining from now.; Minimum: 1; Maximum: 43200 |
+
+### /giveaway edit host
+
+Change displayed host attribution, preserving staff access rules.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| host | user | yes | Current human server member. |
+
+### /giveaway edit description
+
+Change additional giveaway details.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| description | text | yes | Replacement details; use clear to remove.; Minimum text length: 1; Maximum text length: 1500 |
+
+### /giveaway edit image
+
+Change the giveaway image.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| url | text | yes | HTTPS URL without credentials, fragments or IP hosts.; Minimum text length: 1; Maximum text length: 1024 |
+
+### /giveaway edit thumbnail
+
+Change the giveaway thumbnail.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| url | text | yes | HTTPS URL without credentials, fragments or IP hosts.; Minimum text length: 1; Maximum text length: 1024 |
+
+### /giveaway edit clear
+
+Reset presentation fields; preserve prize, entries and requirements.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Giveaway ID.; Maximum text length: 25 |
+| field | text | yes | Field to reset; host returns to the creator.; Choices: description = description, image = image, thumbnail = thumbnail, host = host, all = all |
 
 ### /giveaway requirements role-add
 

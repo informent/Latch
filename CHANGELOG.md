@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.29.0 - 2026-10-11
+
+- Add descriptions, current human host attribution, HTTPS images and thumbnails when creating giveaways and through four new edit commands.
+- Add private saved-embed previews and field resets, preserving prize, entries, requirements, winner selection and staff permission rules.
+- Browse complete prizes and exact IDs with five-entry pages; optional retained history includes completed and cancelled giveaways until normal pruning.
+- Persist presentation before Discord updates, retry failed refreshes after restart, and include version 3 details in verified backups.
+- Read community store versions 1 and 2 without rewriting on load. The next successful community mutation writes version 3. Back up all twelve stores while stopped before upgrading; older releases need a compatible complete backup to roll back.
+- Expand isolated signed HTTP smoke checks to create, edit, preview and clear giveaways, then recover their saved details from a verified backup.
+- Add 31 feature regression tests. Re-register Discord commands after upgrading; the complete command reference now covers 199 paths.
+
+
 ## 0.28.1 - 2026-10-11
 
 - Paginate ticket-panel and role-menu lists, five entries per page, so Discord response limits no longer hide later entries.

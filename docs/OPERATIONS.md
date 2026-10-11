@@ -48,7 +48,7 @@ Report the source version/commit, Node version, affected command, whether doctor
 
 Level rewards add a twelfth guild-bound store at `LEVEL_REWARD_STORE_PATH` (default `./data/level-rewards.json`). Keep rules and pending/completed member records in the same stopped-process backup as XP. Rewards start paused; see [reward operations](LEVEL-REWARDS.md). The [command reference](../COMMANDS.md) is checked in CI with `npm run commands:check`; regenerate it after editing declarations with `npm run commands:write`.
 
-Version 0.19.0 writes community.json version 2 on the next successful community mutation. Version 1 loads without modification. Back up all twelve stores with the service stopped; older releases reject version 2, so rollback needs a compatible complete backup. Pending giveaway selection survives restart. Check `/giveaway info` for remaining checks and retry state; use [giveaway operations](GIVEAWAYS.md) for requirements and migration details.
+Version 0.29.0 writes community.json version 3 on the next successful community mutation. Versions 1 and 2 load without modification. Back up all twelve stores with the service stopped; older releases reject version 3, so rollback needs a compatible complete backup. Pending giveaway selection survives restart. Check `/giveaway info` for remaining checks and retry state; use [giveaway operations](GIVEAWAYS.md) for requirements and migration details.
 
 ## Verified backup snapshots
 
