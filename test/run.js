@@ -43,3 +43,4 @@ require('./backup.test');
 require('./economy-admin.test');
 
 require('./release-smoke.test');
+require('./doctor-live.test');

@@ -62,3 +62,9 @@ Use a disposable private guild for disruptive checks. Never put bot tokens, inte
 A stable release requires the live checks above, resolved critical failures, and exact-commit automated CI/artifact verification. Pin the source commit and verify downloaded ZIP bytes against SHA256SUMS. Keep release notes honest about supported scope, migrations and remaining features. Re-register after command changes. Economy format 3 and community format 2 require compatible complete backups for rollback.
 
 No live account/server access is bundled or automatically provisioned by the candidate. Further feature development can continue while these release checks are completed.
+
+## Online preflight from the current main branch
+
+After configuring .env locally, run `npm run doctor:live -- --json` before live acceptance testing. This command is available on main after v0.24.0, so the v0.24.0 source archive does not contain it. It makes authenticated GET requests only, checks identity, membership, guild permission masks, configured support role and channels, and compares registered command definitions with the local version. It never registers commands or changes Discord objects. Output omits credentials, IDs, response bodies and remote error text. A nonzero exit code means a required check failed. Warnings explain permissions and behavior that still need live validation.
+
+Guild permission masks do not include channel overwrites or target role hierarchy. A successful preflight does not prove HTTPS signatures, Gateway events, actual command execution or production persistence. Keep using the stable release checklist above. Command registration reads use the official [Get Guild Application Commands endpoint](https://docs.discord.com/developers/interactions/application-commands#get-guild-application-commands).

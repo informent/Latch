@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added doctor:live, a GET-only Discord preflight for bot identity, guild membership, guild permission masks, support role, configured channels and exact registered command definitions. Errors and reports exclude credentials and raw Discord responses. This does not execute commands or satisfy the stable live validation gate.
+
 ## 0.24.0 - 2026-10-10
 
 - Added release:smoke with isolated real HTTP/runtime startup, health, signature rejection, signed ping/command, duplicate protection, private responses, scheduler shutdown, complete backup verification and economy recovery. It uses simulated Discord and temporary stores; it never reads local credentials or contacts Discord.
