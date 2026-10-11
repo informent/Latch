@@ -6,49 +6,46 @@ Latch is a free, open-source, self-hosted Discord server bot. Its feature suites
 
 ## Start here
 
-The [release-readiness guide](docs/RELEASE.md) explains installation, automated Windows/Linux/container checks and the remaining live Discord gate. `npm run release:smoke` runs an isolated runtime and backup/recovery check without using your credentials.
+**Status: source prerelease.** Automated Windows, Linux and container checks pass, but live Discord acceptance testing is still pending. Full Bleed/Greed command parity, music and automatic join-raid response remain unfinished. See [release readiness](docs/RELEASE.md) and the [roadmap](ROADMAP.md).
 
-The [complete command reference](COMMANDS.md) lists every command, option, limit and permission default. It is generated from the registration payload and checked in CI.
+### First installation
 
-Command-for-command coverage is tracked in the [coverage inventory](docs/COMMAND-COVERAGE.md). Full Bleed/Greed parity remains unfinished. Run `npm run commands` for the actual registered Latch command paths, or `npm run commands -- --json` for a machine-readable catalog.
+1. Install Node 24, download the source ZIP from [Releases](https://github.com/informent/Latch/releases), and extract it.
+2. Double-click **Latch-Setup.cmd** on Windows, or run `npm run setup` from the extracted folder. The wizard explains the four Discord values, hides your token, checks settings and offers command registration.
+3. Install the bot in your test server using the link from setup. Start **Latch-Start.cmd** or run `npm start`.
+4. Connect a public HTTPS interaction endpoint, then try `/utility ping`. The [beginner guide](docs/GETTING-STARTED.md) walks through the Discord settings, a temporary test URL and common errors.
 
-For a first installation, follow the [beginner setup guide](docs/GETTING-STARTED.md). Install Node 24, extract the source ZIP, then double-click **Latch-Setup.cmd** on Windows or run:
+No npm package installation or database server is required. The bot supports **one configured server per process**. Hosting needs a machine and network access; external providers may have their own costs. All upstream features are MIT-licensed, with no subscription, license key or premium command gate.
+
+### Find a feature
+
+| Task | Guide |
+| --- | --- |
+| Find a command, its options and permissions | [Complete command reference](COMMANDS.md) |
+| Moderate members and configure message filters | [Moderation](docs/MODERATION.md) / [AutoMod](docs/AUTOMOD.md) |
+| Set up support tickets and topic buttons | [Tickets](docs/TICKETS.md) / [Ticket panels](docs/TICKET-PANELS.md) |
+| Manage member roles, self-service menus and nicknames | [Member management](docs/MEMBER-MANAGEMENT.md) / [Role menus](docs/ROLE-MENUS.md) |
+| Configure XP, ignored channels and earned roles | [Leveling](docs/LEVELING.md) / [Level rewards](docs/LEVEL-REWARDS.md) |
+| Use coins, professions and staff balance controls | [Economy](docs/ECONOMY.md) / [Economy administration](docs/ECONOMY-ADMIN.md) |
+| Run polls, reminders and giveaways | [Polls](docs/POLLS.md) / [Reminders](docs/REMINDERS.md) / [Giveaways](docs/GIVEAWAYS.md) |
+| Inspect server assets, create timestamps or calculate | [Utilities](docs/UTILITIES.md) |
+| Create temporary voice rooms or a virtual shop | [Voice rooms](docs/VOICE.md) / [Shop](docs/SHOP.md) |
+| Deploy, monitor or troubleshoot the process | [Operations](docs/OPERATIONS.md) / [Verification](docs/VERIFICATION.md) |
+
+The command reference is generated from the registration payload and checked in CI. Run `npm run commands` for the current command paths or `npm run commands -- --json` for a machine-readable catalog. The [coverage inventory](docs/COMMAND-COVERAGE.md) tracks remaining competitor coverage.
+
+### Upgrade safely
+
+Stop the bot, then create and verify a backup before replacing files:
 
 ```sh
-npm run setup
+npm run backup -- create ../Latch-backup-before-upgrade
+npm run backup -- verify ../Latch-backup-before-upgrade
 ```
 
-The wizard explains the four required Discord values, hides the token while you enter it, checks the configuration and offers command registration after installation. Existing valid settings are preserved. Start with **Latch-Start.cmd** or `npm start`, then connect a public HTTPS interaction endpoint using the guide. No package installation is required.
+Use a new backup folder for each upgrade. Follow the [backup guide](docs/BACKUPS.md) to preserve configuration and all twelve stores. After upgrading, run `npm run doctor`, update command definitions with `npm run register`, and use `npm run doctor:live` to inspect Discord access and registration. Live checks do not replace trying commands in your test server.
 
-Before an upgrade, stop the bot and create a checked snapshot with `npm run backup -- create ../Latch-backup-2026-10-10`. Verify it with `npm run backup -- verify ../Latch-backup-2026-10-10`. See the [backup and recovery guide](docs/BACKUPS.md) for the twelve-store manifest and safe restore steps.
-
-All upstream Latch features are free and published as MIT-licensed source. There is no subscription check, license key, premium command gate, or required Latch hosted account. Self-hosting needs a machine and network access; external integrations may have provider costs. The project currently supports one configured guild per process.
-
-Native polls now support private results, cursor-paginated voter lists and confirmed early ending through `/pollmanage`. See the [poll guide](docs/POLLS.md) for result accuracy and permissions.
-
-Reminders include private owner-only details, text editing and rescheduling for future jobs without delivery attempts. See the [reminder guide](docs/REMINDERS.md) for limits, retry behavior and public-message visibility.
-
-Staff can grant, remove or set game coins with current permission checks and atomic audit receipts. Private history and receipt lookup support recovery from lost replies. See the [economy administration guide](docs/ECONOMY-ADMIN.md) for format 3 migration and limits.
-
-Economy now includes durable 15-minute begging rewards, profiles and free profession progression with bounded work bonuses. See the [economy guide](docs/ECONOMY.md) for cooldowns, rank rules and rollback limits.
-
-Tickets support private owner/staff information, staff-set reasons and category moves. Closing preserves unrelated owner permissions and confirms the complete overwrite set before committing; renaming verifies privacy and unchanged permissions. See the [ticket guide](docs/TICKETS.md).
-
-Role assignment/removal and nickname changes now verify current actor/bot permissions and member/role hierarchy. Non-admin staff cannot grant permissions they do not hold. `/utility role` privately shows role position and permission metadata. See the [member-management guide](docs/MEMBER-MANAGEMENT.md).
-
-Ban, kick, timeout and timeout removal now verify current actor/bot permissions and member role positions before sending the action. Owner, self and bot protections apply; see the [moderation guide](docs/MODERATION.md).
-
-Version 0.19.0 adds giveaway role/level requirements, eligibility previews, entry lists and resumable winner selection. New giveaways check current screened-human membership, scan entries in bounded batches and recheck proposed winners before saving the result. See the [giveaway guide](docs/GIVEAWAYS.md).
-
-Version 0.18.0 adds earned role milestones with saved retries and existing-XP backfill. Staff can configure, pause, preview and reconcile rewards. Only permission-free unmanaged roles below bot/staff are accepted. See the [level reward guide](docs/LEVEL-REWARDS.md) and [all commands](COMMANDS.md).
-
-Version 0.17.0 adds eight staff leveling configuration commands: tune XP and cooldowns, pause/resume awards, manage ignored channels and restore defaults. Settings and XP commit together, and the latest awarded message ID survives restart to suppress immediate replay. See the [leveling guide](docs/LEVELING.md).
-
-Version 0.16.0 adds a complete ticket panel workflow: draft a support panel, connect up to five topic buttons to server categories, publish it with durable retry recovery, and let members open private tickets. Staff can reopen closed tickets with saved recovery state and permission read-back verification. See the [panel guide](docs/TICKET-PANELS.md) and [ticket guide](docs/TICKETS.md).
-
-The regression suite and CI enforce coverage floors. See [verification evidence and limits](docs/VERIFICATION.md).
-
-This is an early prototype. Automated tests cover command authorization, native AutoMod configuration, embed publishing, persistent warnings, economy and XP records, ticket workflows, Gateway reconnect/event handling, role menus, temporary voice recovery, templates, responders and timers. It has not yet been exercised against a live Discord server. Native AutoMod rules provide message blocking once explicitly enabled. Join burst detection reports alerts; automatic join-raid response and music are still planned. See [the feature roadmap](ROADMAP.md) for the larger all-in-one scope.
+For an isolated runtime and recovery check without Discord credentials, run `npm run release:smoke`.
 
 ## What it stores
 
