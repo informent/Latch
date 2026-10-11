@@ -15,11 +15,12 @@ async function fixture(t) {
   await store.load();
   const calls = [];
   let channelNumber = 678;
+  const channels = new Map();
   const discord = {
-    createChannel: async (_guild, payload) => { calls.push(['createChannel', payload]); await new Promise((resolve) => setTimeout(resolve, 10)); return { id: `223456789012345${String(channelNumber++).padStart(3, '0')}` }; },
-    setMemberOverwrite: async (...args) => calls.push(['overwrite', ...args]),
-    editChannel: async (...args) => calls.push(['editChannel', ...args]),
-    request: async (...args) => calls.push(['request', ...args])
+    createChannel: async (guild, payload) => { calls.push(['createChannel', payload]); await new Promise((resolve) => setTimeout(resolve, 10)); const id = `223456789012345${String(channelNumber++).padStart(3, '0')}`; channels.set(id, { id, guild_id: guild, ...structuredClone(payload) }); return { id }; },
+    setMemberOverwrite: async (id, user, body) => { calls.push(['overwrite', id, user, body]); const channel = channels.get(id); channel.permission_overwrites = channel.permission_overwrites.filter((entry) => entry.id !== user || entry.type !== 1); channel.permission_overwrites.push({ id: user, ...body }); },
+    editChannel: async (id, body) => { calls.push(['editChannel', id, body]); Object.assign(channels.get(id), structuredClone(body)); },
+    request: async (method, route) => { calls.push(['request', method, route]); if (method === 'GET') return structuredClone(channels.get(route.split('/').pop())); if (method === 'DELETE') channels.delete(route.split('/').pop()); }
   };
   const config = { guildId: '123456789012345678', supportRoleId: '323456789012345678', categoryId: null };
   const tickets = new TicketService({ config, store, discord, botUserId: '423456789012345678', now: () => new Date('2026-10-04T00:00:00.000Z') });

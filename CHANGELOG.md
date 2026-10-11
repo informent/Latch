@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.19.1 - 2026-10-10
+
+- Closing validates the tracked channel identity, configured guild, text type, bounded unique permission overwrites and explicit everyone visibility protection before saving intent or changing Discord.
+- Owner close permissions now preserve unrelated allow/deny bits while explicitly enabling history/view and denying message sending.
+- Closing reads back the channel name and the complete overwrite snapshot before committing closed status. Ignored updates, unexpected overwrite changes, outages and failed final saves keep durable closing intent for an explicit retry after restart.
+- Staff renaming validates privacy and confirms the requested name and unchanged overwrites before reporting success. Invalid authority bits fail safely instead of throwing during authorization.
+- Added 21 regression tests; the full signed HTTP workflow now exercises actual adapter readback. All 416 tests pass locally with 92.91% lines, 84.10% branches and 87.70% functions.
+
+No store migration or command registration change is required for this patch. The complete generated reference remains 165 command paths across 23 suites. Back up all twelve stores together before upgrading. These checks confirm explicit channel overwrites at readback time; Administrator, inherited permissions, manually added guests and later external changes are outside that proof. Live Discord validation and full competitor parity remain unfinished.
+
 ## 0.19.0 - 2026-10-10
 
 - Added six giveaway paths: requirements role-add/role-remove/levels/clear, eligibility and entrants. The generated reference lists all 165 command paths across 23 suites.

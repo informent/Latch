@@ -38,3 +38,11 @@ A failure can leave the channel partially restored while its saved state remains
 ## Self-service panels
 
 See the [panel guide](TICKET-PANELS.md) for persistent topic buttons and category routing. Staff create drafts before publication; member clicks receive private links to their ticket. Panel topics are saved as ticket reasons. The configured support role applies to every topic. Setting it to the everyone role is rejected before startup or channel creation.
+
+## Confirmed closing and renaming
+
+Version 0.19.1 validates the stored channel ID, configured guild, text-channel type, unique bounded overwrites and explicit everyone View Channel denial before closing. Invalid privacy protection must be repaired by staff first; OpenDesk does not silently rewrite everyone permissions. Closing preserves unrelated owner permission bits and explicitly allows View Channel/Read Message History while denying Send Messages.
+
+After saving closing intent, OpenDesk applies the owner overwrite, renames the channel and fetches it again. Only the expected name and complete unchanged overwrite set (apart from the intended owner edit) permit committing closed status. A failed update, ignored write, changed overwrite, readback outage or failed final save leaves closing intent. Retry `/ticket close` as the owner or staff after inspection, including after restarting. The ticket continues to block duplicate creation until closing finishes. Already closed records return their saved result and do not repair later Discord edits automatically.
+
+Staff renaming also requires private channel validation and confirms the new name and unchanged overwrites. A failed confirmation can leave the channel renamed; inspect it before retrying. Permission snapshots verify explicit overwrites at one moment, not effective access for every member. Administrator, inherited roles, manually added guests, threads and external permission changes require staff review. Live Discord validation remains outstanding.

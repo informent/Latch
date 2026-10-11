@@ -35,6 +35,66 @@ async function fixture(t) {
   const actor = { userId: ids.actor, roles: [ids.actorRole], permissions: '0' };
   return { root, ...fake, config, store, tickets, panelStore, panels, publish, click, actor, advance: (ms) => { clock += ms; } };
 }
+
+for (const [label, modify] of [
+  ['channel identity', (c) => { c.id = ids.owner; }], ['foreign guild', (c) => { c.guild_id = ids.owner; }], ['channel type', (c) => { c.type = 2; }],
+  ['missing overwrites', (c) => { delete c.permission_overwrites; }], ['duplicate overwrite', (c) => c.permission_overwrites.push(c.permission_overwrites[0])],
+  ['malformed permission', (c) => { c.permission_overwrites[0].deny = 'invalid'; }], ['numeric permission', (c) => { c.permission_overwrites[0].deny = 1024; }],
+  ['missing privacy', (c) => { c.permission_overwrites[0].deny = '0'; }], ['public visibility', (c) => { c.permission_overwrites[0].allow = '1024'; }]
+]) test(`ticket close refuses ${label} before saving intent or changing Discord`, async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user }); modify(f.channels.get(ticket.channelId));
+  await assert.rejects(f.tickets.close({ channelId: ticket.channelId, userId: ids.user }));
+  assert.equal(f.store.getByChannel(ticket.channelId).status, 'open'); assert.equal(f.calls.filter((entry) => entry[0] === 'overwrite').length, 0);
+});
+
+test('ticket close preserves unrelated owner bits and every other overwrite through close and reopen', async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user }); const channel = f.channels.get(ticket.channelId);
+  const owner = channel.permission_overwrites.find((entry) => entry.id === ids.user); owner.allow = String(CHAT | 32768n); owner.deny = '8192';
+  const others = structuredClone(channel.permission_overwrites.filter((entry) => entry.id !== ids.user));
+  await f.tickets.close({ channelId: ticket.channelId, userId: ids.user });
+  const closed = channel.permission_overwrites.find((entry) => entry.id === ids.user); assert.equal(BigInt(closed.allow) & 32768n, 32768n); assert.equal(BigInt(closed.deny) & 8192n, 8192n); assert.equal(BigInt(closed.allow) & 2048n, 0n); assert.equal(BigInt(closed.deny) & 2048n, 2048n);
+  assert.deepEqual(channel.permission_overwrites.filter((entry) => entry.id !== ids.user), others);
+  await f.tickets.reopen({ ...f.actor, channelId: ticket.channelId }); const restored = channel.permission_overwrites.find((entry) => entry.id === ids.user);
+  assert.equal(BigInt(restored.allow) & CHAT, CHAT); assert.equal(BigInt(restored.allow) & 32768n, 32768n); assert.equal(BigInt(restored.deny) & 8192n, 8192n);
+});
+
+for (const failure of ['overwrite ignored', 'rename ignored', 'other permissions changed', 'readback outage', 'final save']) test(`ticket close survives ${failure} and finishes after restart`, async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user });
+  const overwrite = f.discord.setMemberOverwrite, edit = f.discord.editChannel, request = f.discord.request, mark = f.store.markClosed;
+  if (failure === 'overwrite ignored') f.discord.setMemberOverwrite = async () => {};
+  if (failure === 'rename ignored') f.discord.editChannel = async () => {};
+  if (failure === 'other permissions changed') f.discord.editChannel = async (...args) => { await edit(...args); f.channels.get(ticket.channelId).permission_overwrites.find((entry) => entry.id === ids.bot).allow = '0'; };
+  if (failure === 'readback outage') { let reads = 0; f.discord.request = async (...args) => { if (++reads === 2) throw new Error('Unavailable'); return request(...args); }; }
+  if (failure === 'final save') f.store.markClosed = async () => { throw new Error('Disk unavailable'); };
+  await assert.rejects(f.tickets.close({ channelId: ticket.channelId, userId: ids.user })); assert.equal(f.store.getByChannel(ticket.channelId).status, 'closing');
+  const loaded = new TicketStore(f.config.storePath); await loaded.load(); f.tickets.store = loaded; f.discord.setMemberOverwrite = overwrite; f.discord.editChannel = edit; f.discord.request = request; f.store.markClosed = mark;
+  assert.equal((await f.tickets.create({ id: ids.user })).created, false);
+  assert.equal((await f.tickets.close({ channelId: ticket.channelId, userId: ids.user })).ok, true); assert.equal(loaded.getByChannel(ticket.channelId).status, 'closed');
+});
+
+test('ticket close does not touch Discord when intent persistence fails', async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user }); f.store.markClosing = async () => { throw new Error('Disk unavailable'); };
+  await assert.rejects(f.tickets.close({ channelId: ticket.channelId, userId: ids.user }), /Disk unavailable/); assert.equal(f.store.getByChannel(ticket.channelId).status, 'open'); assert.equal(f.calls.filter((entry) => entry[0] === 'overwrite').length, 0);
+});
+
+test('concurrent ticket closes perform one confirmed transition and malformed authority fails safely', async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user });
+  assert.equal((await f.tickets.close({ channelId: ticket.channelId, userId: ids.owner, permissions: 'invalid' })).ok, false);
+  assert.equal((await f.tickets.close({ channelId: '../invalid', userId: ids.user })).ok, false);
+  const results = await Promise.all(Array.from({ length: 10 }, () => f.tickets.close({ channelId: ticket.channelId, userId: ids.user })));
+  assert.equal(results.filter((result) => result.alreadyClosed).length, 9); assert.equal(f.calls.filter((entry) => entry[0] === 'overwrite').length, 1);
+});
+
+for (const failure of ['rename ignored', 'permissions changed', 'foreign identity']) test(`ticket rename refuses success after ${failure}`, async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user }); const edit = f.discord.editChannel;
+  f.discord.editChannel = async (...args) => { if (failure === 'rename ignored') return; await edit(...args); const channel = f.channels.get(ticket.channelId); if (failure === 'permissions changed') channel.permission_overwrites[0].deny = '0'; else channel.id = ids.owner; };
+  await assert.rejects(f.tickets.manage({ ...f.actor, action: 'rename', channelId: ticket.channelId, name: 'support-help' })); assert.equal(f.store.getByChannel(ticket.channelId).status, 'open');
+});
+
+test('ticket rename verifies a private channel and unchanged overwrites', async (t) => {
+  const f = await fixture(t); const ticket = await f.tickets.create({ id: ids.user }); const before = structuredClone(f.channels.get(ticket.channelId).permission_overwrites);
+  const result = await f.tickets.manage({ ...f.actor, action: 'rename', channelId: ticket.channelId, name: 'support-help' }); assert.match(result.content, /verified/); assert.deepEqual(f.channels.get(ticket.channelId).permission_overwrites, before);
+});
 test('ticket panel full workflow creates privately in the chosen category, closes and reopens after restart', async (t) => {
   const f = await fixture(t); const panel = await f.publish(); assert.equal(panel.pending, false);
   const result = await f.panels.click(f.click()); const channel = f.channels.get(result.channelId);

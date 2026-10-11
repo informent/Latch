@@ -27,7 +27,7 @@ All upstream OpenDesk features are free and published as MIT-licensed source. Th
 
 Economy now includes durable 15-minute begging rewards, profiles and free profession progression with bounded work bonuses. See the [economy guide](docs/ECONOMY.md) for cooldowns, rank rules and rollback limits.
 
-Tickets now support private owner/staff information, staff-set reasons and category moves that preserve and verify explicit channel overwrites. See the [ticket guide](docs/TICKETS.md).
+Tickets support private owner/staff information, staff-set reasons and category moves. Closing preserves unrelated owner permissions and confirms the complete overwrite set before committing; renaming verifies privacy and unchanged permissions. See the [ticket guide](docs/TICKETS.md).
 
 Role assignment/removal and nickname changes now verify current actor/bot permissions and member/role hierarchy. Non-admin staff cannot grant permissions they do not hold. `/utility role` privately shows role position and permission metadata. See the [member-management guide](docs/MEMBER-MANAGEMENT.md).
 

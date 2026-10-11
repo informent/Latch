@@ -168,11 +168,13 @@ test('signed HTTP create and close flow reaches Discord adapter and persists pri
       ]);
     } finally { clearTimeout(timeout); }
   };
+  let channel;
   const discord = {
     getCurrentUser: async () => ({ id: botUserId }),
-    createChannel: async (guildId, payload) => { calls.push(['createChannel', guildId, payload]); return { id: channelId }; },
-    setMemberOverwrite: async (...args) => calls.push(['overwrite', ...args]),
-    editChannel: async (...args) => calls.push(['editChannel', ...args]),
+    createChannel: async (guildId, payload) => { calls.push(['createChannel', guildId, payload]); channel = { id: channelId, guild_id: guildId, ...structuredClone(payload) }; return { id: channelId }; },
+    setMemberOverwrite: async (id, member, body) => { calls.push(['overwrite', id, member, body]); channel.permission_overwrites = channel.permission_overwrites.filter((entry) => entry.id !== member || entry.type !== 1); channel.permission_overwrites.push({ id: member, ...body }); },
+    editChannel: async (id, body) => { calls.push(['editChannel', id, body]); Object.assign(channel, structuredClone(body)); },
+    request: async () => structuredClone(channel),
     editOriginalResponse: async (_appId, token, payload) => { calls.push(['editResponse', token, payload]); resolveEdit({ token, payload }); }
   };
   const store = new TicketStore(config.storePath);

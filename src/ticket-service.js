@@ -11,6 +11,17 @@ const CHAT = PERMISSIONS.VIEW_CHANNEL | PERMISSIONS.SEND_MESSAGES | PERMISSIONS.
 const BOT = CHAT | PERMISSIONS.MANAGE_CHANNELS | PERMISSIONS.MANAGE_ROLES;
 const asString = (bits) => bits.toString(10);
 
+function privateChannel(channel, channelId, guildId) {
+  if (channel?.id !== channelId || channel.guild_id !== guildId || channel.type !== 0) throw new Error('Ticket channel is unavailable.');
+  const entries = channel.permission_overwrites;
+  if (!Array.isArray(entries) || entries.length > 1000 || entries.some((entry) => !entry || typeof entry.id !== 'string' || !/^\d{5,25}$/.test(entry.id) || ![0, 1].includes(entry.type) || ['allow', 'deny'].some((key) => entry[key] !== undefined && typeof entry[key] !== 'string') || !/^\d{1,30}$/.test(entry.allow || '0') || !/^\d{1,30}$/.test(entry.deny || '0'))
+    || new Set(entries.map((entry) => `${entry.type}:${entry.id}`)).size !== entries.length) throw new Error('Invalid ticket permissions.');
+  const everyone = entries.find((entry) => entry.id === guildId && entry.type === 0);
+  if (!everyone || !(BigInt(everyone.deny || '0') & PERMISSIONS.VIEW_CHANNEL) || BigInt(everyone.allow || '0') & PERMISSIONS.VIEW_CHANNEL) throw new Error('Repair ticket everyone visibility protection before changing this ticket.');
+  return entries;
+}
+const permissionSnapshot = (entries) => entries.map((entry) => `${entry.type}:${entry.id}:${BigInt(entry.allow || '0')}:${BigInt(entry.deny || '0')}`).sort().join('|');
+
 function channelName(user) {
   const slug = String(user.username || 'member').normalize('NFKD').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase().slice(0, 30) || 'member';
   return `ticket-${slug}-${user.id.slice(-4)}`.slice(0, 90);
@@ -64,19 +75,28 @@ class TicketService {
   }
 
   async close({ channelId, userId, roles = [], permissions = '0' }) {
+    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId)) return { ok: false, reason: 'Choose a valid ticket channel.' };
     return this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
       if (!ticket) return { ok: false, reason: 'This channel is not an OpenDesk ticket.' };
-      const isAdmin = (BigInt(permissions || '0') & 8n) === 8n;
-      const isSupport = this.config.supportRoleId && roles.includes(this.config.supportRoleId);
-      if (ticket.ownerId !== userId && !isSupport && !isAdmin) return { ok: false, reason: 'Only the ticket owner or server support team can close this ticket.' };
+      if (ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the ticket owner or server support team can close this ticket.' };
       if (ticket.status === 'closed') return { ok: true, alreadyClosed: true };
       if (ticket.status === 'reopening') return { ok: false, reason: 'Support staff must finish reopening this ticket before closing it.' };
 
+      const channel = await this.discord.request('GET', `/channels/${channelId}`);
+      const entries = privateChannel(channel, channelId, this.config.guildId);
+      const owner = entries.find((entry) => entry.id === ticket.ownerId && entry.type === 1);
+      const read = PERMISSIONS.VIEW_CHANNEL | PERMISSIONS.READ_MESSAGE_HISTORY;
+      const overwrite = { type: 1, allow: asString((BigInt(owner?.allow || '0') | read) & ~PERMISSIONS.SEND_MESSAGES), deny: asString((BigInt(owner?.deny || '0') | PERMISSIONS.SEND_MESSAGES) & ~read) };
+      const expected = entries.filter((entry) => entry.id !== ticket.ownerId || entry.type !== 1).map((entry) => ({ ...entry }));
+      expected.push({ id: ticket.ownerId, ...overwrite });
       if (ticket.status === 'open') await this.store.markClosing(channelId);
-      const canRead = asString(PERMISSIONS.VIEW_CHANNEL | PERMISSIONS.READ_MESSAGE_HISTORY);
-      await this.discord.setMemberOverwrite(channelId, ticket.ownerId, { type: 1, allow: canRead, deny: asString(PERMISSIONS.SEND_MESSAGES) });
-      await this.discord.editChannel(channelId, { name: `closed-${channelId.slice(-8)}`.slice(0, 90) });
+      await this.discord.setMemberOverwrite(channelId, ticket.ownerId, overwrite);
+      const name = `closed-${channelId.slice(-8)}`;
+      await this.discord.editChannel(channelId, { name });
+      const confirmed = await this.discord.request('GET', `/channels/${channelId}`);
+      const confirmedEntries = privateChannel(confirmed, channelId, this.config.guildId);
+      if (confirmed.name !== name || permissionSnapshot(confirmedEntries) !== permissionSnapshot(expected)) throw new Error('Closed ticket permissions and name could not be confirmed. Retry close after inspecting the channel.');
       const closed = await this.store.markClosed(channelId, this.now().toISOString());
       return { ok: true, ticket: closed };
     });
@@ -181,9 +201,11 @@ class TicketService {
         if (typeof name !== 'string' || !/^[a-z0-9][a-z0-9-]{0,89}$/.test(name)) return { ok: false, reason: 'Use 1 to 90 lowercase letters, digits or hyphens, starting with a letter or digit.' };
         // The durable store restricts changes to channels created by this service.
         const channel = await this.discord.request('GET', `/channels/${channelId}`);
-        if (channel?.guild_id !== this.config.guildId || channel.type !== 0) return { ok: false, reason: 'This ticket channel is unavailable in the configured server.' };
+        const expectedPermissions = permissionSnapshot(privateChannel(channel, channelId, this.config.guildId));
         await this.discord.editChannel(channelId, { name });
-        return { ok: true, content: 'Ticket renamed.' };
+        const renamed = await this.discord.request('GET', `/channels/${channelId}`);
+        if (renamed.name !== name || permissionSnapshot(privateChannel(renamed, channelId, this.config.guildId)) !== expectedPermissions) throw new Error('Ticket rename could not be confirmed. Inspect the channel before retrying.');
+        return { ok: true, content: 'Ticket renamed and channel overwrites verified.' };
       }
       return { ok: false, reason: 'Choose a ticket management action.' };
     });
