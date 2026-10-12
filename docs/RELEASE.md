@@ -16,7 +16,7 @@ The verification command runs every gate in order and stops on failure. Its JSON
 
 The source fingerprint covers the public verification inputs and detects changes during the run. Different line endings can produce different fingerprints across checkouts. Verify the downloaded ZIP separately against SHA256SUMS to establish the exact release artifact.
 
-The smoke test starts the real HTTP/runtime code in a temporary directory using a simulated Discord adapter. It checks health, unsigned rejection, signed ping/command handling, immediate calculator and deferred server artwork responses, private responses, duplicate protection, scheduler shutdown, twelve-store snapshot inventory, backup verification recovery of a saved economy receipt, signed giveaway creation/edit/preview/reset, and recovery of saved giveaway details. It never reads your .env or uses your Discord credential. Temporary files are removed after shutdown. Output includes package version, Node version, platform and checks completed.
+The smoke test starts the real HTTP/runtime code in a temporary directory using a simulated Discord adapter. It checks health, unsigned rejection, signed ping/command handling, immediate calculator and deferred server artwork responses, private responses, duplicate protection, scheduler shutdown, thirteen-store snapshot inventory, backup verification recovery of a saved economy receipt, signed giveaway creation/edit/preview/reset, and recovery of saved giveaway details. It never reads your .env or uses your Discord credential. Temporary files are removed after shutdown. Output includes package version, Node version, platform and checks completed.
 
 Docker CI proves execution of the isolated workflow inside the built image. It does not prove a real bot login, Discord Gateway connection, external network permissions, production Compose volumes or actual Discord interactions.
 
@@ -67,10 +67,12 @@ After configuring .env locally, run `npm run doctor:live -- --json` before live 
 
 Guild permission masks do not include channel overwrites or target role hierarchy. A successful preflight does not prove HTTPS signatures, Gateway events, actual command execution or production persistence. Keep using the stable release checklist above. Command registration reads use the official [Get Guild Application Commands endpoint](https://docs.discord.com/developers/interactions/application-commands#get-guild-application-commands).
 
-The 0.29.0 command expansion requires re-running `npm run register` after upgrading. Run `npm run doctor:live -- --json` afterward to compare registered definitions. The next successful community mutation writes format 3. Back up all twelve stores while stopped before upgrading; older releases require a compatible complete backup for rollback.
+The 0.29.0 command expansion requires re-running `npm run register` after upgrading. Run `npm run doctor:live -- --json` afterward to compare registered definitions. The next successful community mutation writes format 3. Back up all thirteen stores while stopped before upgrading; older releases require a compatible complete backup for rollback.
 
 Version 0.30.0 adds three guest commands; re-register after upgrading. The next successful ticket mutation writes format 2. See [ticket guest migration and recovery](TICKET-GUESTS.md).
 
 Version 0.31.0 adds `/ticket transcript`; re-register after upgrading. Validate real private text/JSON uploads and Message Content access before stable release. See [export limits](TICKET-TRANSCRIPTS.md).
 
 Version 0.32.0 expands transcript count and adds before/compression options. Re-register commands and validate paged private downloads, gzip unpacking and live access revocation. Downloaded JSON snapshots use schema 2; no additional ticket store migration is introduced.
+
+The starboard release smoke covers signed configuration, synchronization, duplicate-post protection, private status and saved-receipt backup recovery. Actual Gateway reaction delivery and live Discord permissions still require acceptance testing.

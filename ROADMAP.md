@@ -37,3 +37,5 @@ All Latch features are intended to be available without subscriptions or premium
 ## Verification boundary
 
 The expanded automated suite covers voice, role menus, templates, responders, timers, shops, economy and ticket workflows, including persistence, authorization and failure recovery. Local coverage is measured and CI enforces coverage floors on Node 22 and 24. These tests simulate Discord responses; live-server proof remains unfinished. Published implementation does not establish production readiness. Music, full antinuke, and complete competitor parity remain unfinished.
+
+Starboard now includes public link highlights, staff configuration and bounded receipt recovery. Rich quotes, multiple boards, source removal, retention controls and live Discord acceptance remain unfinished.

@@ -64,3 +64,5 @@ require('./ticket-transcript.test');
 require('./transcript-history.test');
 
 require('./ticket-queue.test');
+
+require('./starboard.test');

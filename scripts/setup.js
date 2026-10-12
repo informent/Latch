@@ -87,9 +87,9 @@ async function runSetup({ root = ROOT, ui, plain = false, inherited = process.en
   ui.say('\nStep 2 of 3: Features');
   if (fresh) {
     ui.say('1. Essentials (recommended): all slash commands; optional event features stay off.');
-    ui.say('2. Community extras: enable XP, automatic replies, member events and temporary voice.');
+    ui.say('2. Community extras: enable XP, automatic replies, member events, temporary voice and public-message starboard.');
     const preset = await choice(ui, 'Choose 1 or 2 [1]: ', ['1', '2'], '1');
-    if (preset === '2') for (const key of ['DISCORD_GATEWAY_ENABLED', 'DISCORD_LEVELING_ENABLED', 'DISCORD_RESPONDERS_ENABLED', 'DISCORD_ENABLE_MEMBER_EVENTS', 'DISCORD_VOICE_ENABLED']) updates[key] = 'true';
+    if (preset === '2') for (const key of ['DISCORD_GATEWAY_ENABLED', 'DISCORD_LEVELING_ENABLED', 'DISCORD_RESPONDERS_ENABLED', 'DISCORD_ENABLE_MEMBER_EVENTS', 'DISCORD_VOICE_ENABLED', 'DISCORD_STARBOARD_ENABLED']) updates[key] = 'true';
   } else ui.say('Your existing feature settings are preserved.');
   const text = Object.keys(updates).length ? `${template}${template.endsWith('\n') ? '' : '\n'}\n# Guided setup values override earlier blank entries.\n${Object.entries(updates).map(([key, value]) => `${key}=${value}`).join('\n')}\n` : template;
   values = parseEnv(text);

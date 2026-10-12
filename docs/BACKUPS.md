@@ -38,11 +38,11 @@ The backup uses fixed portable filenames even when your configured source paths 
 | TICKET_PANEL_STORE_PATH | ticket-panels.json |
 | LEVEL_REWARD_STORE_PATH | level-rewards.json |
 
-manifest.json records the format version, source Latch version, guild ID, UTC creation timestamp and twelve entries with logical store key, fixed filename, presence, byte length and SHA256. Absolute source paths, configuration and tokens are excluded. Preserve .env securely through your own configuration backup process.
+manifest.json records the format version, source Latch version, guild ID, UTC creation timestamp and thirteen entries with logical store key, fixed filename, presence, byte length and SHA256. Absolute source paths, configuration and tokens are excluded. Preserve .env securely through your own configuration backup process.
 
 ## Verify a snapshot
 
-`npm run backup -- verify <directory>` needs no valid Discord configuration or token. It makes no network calls and writes no files. It checks the exact manifest structure, all twelve entries, expected filenames, sizes/checksums and each present store's schema. Unexpected files, path substitutions, missing required files and unexpected files for entries marked missing are rejected. Files and the manifest are checked for detectable changes while verification runs.
+`npm run backup -- verify <directory>` needs no valid Discord configuration or token. It makes no network calls and writes no files. It checks the exact manifest structure, all thirteen entries, expected filenames, sizes/checksums and each present store's schema. Unexpected files, path substitutions, missing required files and unexpected files for entries marked missing are rejected. Files and the manifest are checked for detectable changes while verification runs.
 
 Verification proves compatibility with the version performing verification and agreement with the manifest. SHA256 is not proof of origin: someone who can replace both data and manifest can generate matching checksums. Use a trusted backup location. A backup from a newer format may fail verification on an older release.
 
@@ -52,7 +52,7 @@ The tool does not automatically overwrite active stores.
 
 1. Stop the bot and every other writer. Preserve the current stores as a separate complete backup before replacing anything.
 2. Verify the chosen snapshot using a compatible Latch version. Check the reported guild ID against your configured DISCORD_GUILD_ID. A default verification does not know your intended guild; exported verifyBackup supports an explicit expected guild for integration.
-3. Prepare an empty recovery data directory. Copy each present backup file to the matching configured store path using the table above. Keep the twelve files from one snapshot together. For entries marked missing, leave the corresponding recovered store absent. Do not mix a missing backup entry with an old destination file.
+3. Prepare an empty recovery data directory. Copy each present backup file to the matching configured store path using the table above. Keep all files from one snapshot together. For entries marked missing, leave the corresponding recovered store absent. Do not mix a missing backup entry with an old destination file.
 4. Keep the existing configuration and credential files separate. Adjust configured data paths if using a new recovery directory. Never copy manifest.json into a data-store path.
 5. Run doctor against the recovery paths before starting. Preserve the previous configuration and data so you can return to them if recovery fails.
 6. Start one bot process and inspect pending work before relying on live operation.
@@ -61,4 +61,6 @@ Restoring local files does not recreate deleted Discord objects or retract alrea
 
 ## Verification evidence
 
-Automated tests cover all twelve stores, exact bytes, missing stores, existing-destination refusal, corrupt schemas, manifest validation, checksums, source changes, extra/missing files, file types, manifest changes, command arguments and shared doctor inventory. The release has no additional data schema migration and does not change Discord command registration.
+Automated tests cover all thirteen stores, exact bytes, missing stores, existing-destination refusal, corrupt schemas, manifest validation, checksums, source changes, extra/missing files, file types, manifest changes, command arguments and shared doctor inventory. Starboard adds a guild-bound format 1 store. Re-register commands after upgrading. Complete legacy twelve-store backups remain verifiable; starboard is reported as absent. Older versions cannot verify the new thirteen-store manifest.
+
+Starboard receipts: `STARBOARD_STORE_PATH`, portable filename `starboard.json`, format 1, guild-bound configuration and up to 500 highlight receipts.

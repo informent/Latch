@@ -47,9 +47,10 @@ function loadConfig(env = process.env) {
   const levelingEnabled = boolean(env, 'DISCORD_LEVELING_ENABLED');
   const memberEventsEnabled = boolean(env, 'DISCORD_ENABLE_MEMBER_EVENTS');
   const voiceEnabled = boolean(env, 'DISCORD_VOICE_ENABLED');
+  const starboardEnabled = boolean(env, 'DISCORD_STARBOARD_ENABLED');
   const respondersEnabled = boolean(env, 'DISCORD_RESPONDERS_ENABLED');
-  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled);
-  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling, member events, voice or responders are enabled.');
+  const gatewayEnabled = boolean(env, 'DISCORD_GATEWAY_ENABLED', levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled || starboardEnabled);
+  if (!gatewayEnabled && (levelingEnabled || memberEventsEnabled || voiceEnabled || respondersEnabled || starboardEnabled)) throw new Error('DISCORD_GATEWAY_ENABLED cannot be false when leveling, member events, voice, responders or starboard are enabled.');
   const storePaths = {
     storePath: env.TICKET_STORE_PATH?.trim() || './data/tickets.json',
     moderationStorePath: env.MODERATION_STORE_PATH?.trim() || './data/moderation.json',
@@ -62,6 +63,7 @@ function loadConfig(env = process.env) {
     responderStorePath: env.RESPONDER_STORE_PATH?.trim() || './data/responders.json',
     timerStorePath: env.TIMER_STORE_PATH?.trim() || './data/timers.json',
     ticketPanelStorePath: env.TICKET_PANEL_STORE_PATH?.trim() || './data/ticket-panels.json',
+    starboardStorePath: env.STARBOARD_STORE_PATH?.trim() || './data/starboard.json',
     levelRewardStorePath: env.LEVEL_REWARD_STORE_PATH?.trim() || './data/level-rewards.json'
   };
   const normalized = Object.values(storePaths).map((value) => {
@@ -76,6 +78,7 @@ function loadConfig(env = process.env) {
   });
   if (normalized.some((file) => protectedFiles.includes(file))) throw new Error('Data stores cannot overwrite configuration or token files.');
   const gatewayIntents = 1 | 512
+    | (starboardEnabled ? 1 << 10 : 0)
     | (voiceEnabled ? 1 << 7 : 0)
     | (memberEventsEnabled ? 2 : 0)
     | (boolean(env, 'DISCORD_ENABLE_MESSAGE_CONTENT') || levelingEnabled || respondersEnabled ? 1 << 15 : 0);
@@ -95,6 +98,7 @@ function loadConfig(env = process.env) {
     gatewayEnabled,
     voiceEnabled,
     respondersEnabled,
+    starboardEnabled,
     memberEventsEnabled,
     gatewayIntents,
     levelingEnabled,

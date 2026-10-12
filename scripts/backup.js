@@ -24,10 +24,11 @@ async function verifyBackup(directory, expectedGuildId) {
   if (!exact(manifest, 'version,opendeskVersion,guildId,createdAt,stores') || manifest.version !== 1 || !/^\d+\.\d+\.\d+$/.test(manifest.opendeskVersion)
     || typeof manifest.guildId !== 'string' || !/^\d{5,25}$/.test(manifest.guildId) || expectedGuildId !== undefined && manifest.guildId !== expectedGuildId
     || typeof manifest.createdAt !== 'string' || !Number.isFinite(Date.parse(manifest.createdAt)) || new Date(manifest.createdAt).toISOString() !== manifest.createdAt
-    || !Array.isArray(manifest.stores) || manifest.stores.length !== storeDefinitions.length) throw new Error('Invalid backup manifest or guild mismatch.');
+    || !Array.isArray(manifest.stores) || ![storeDefinitions.length, storeDefinitions.length - 1].includes(manifest.stores.length)) throw new Error('Invalid backup manifest or guild mismatch.');
   const expectedFiles = new Set(['manifest.json']);
   for (const definition of storeDefinitions) {
     const entries = manifest.stores.filter((record) => record.key === definition.key), record = entries[0];
+    if (definition.key === 'starboardStorePath' && entries.length === 0 && manifest.stores.length === storeDefinitions.length - 1) continue;
     if (entries.length !== 1 || !exact(record, 'key,file,present,bytes,sha256') || record.file !== definition.file || typeof record.present !== 'boolean'
       || !Number.isSafeInteger(record.bytes) || record.bytes < 0 || record.bytes > MAX_BYTES
       || (record.present ? typeof record.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(record.sha256) : record.sha256 !== null || record.bytes !== 0)) throw new Error('Invalid backup store entry.');
@@ -44,7 +45,7 @@ async function verifyBackup(directory, expectedGuildId) {
   const files = await fs.readdir(root);
   if (files.length !== expectedFiles.size || files.some((file) => !expectedFiles.has(file))) throw new Error('Backup contains unexpected files.');
   if (digest(await readFile(manifestFile, 65536)) !== digest(manifestData)) throw new Error('Manifest changed during verification.');
-  return { ok: true, guildId: manifest.guildId, opendeskVersion: manifest.opendeskVersion, present: manifest.stores.filter((record) => record.present).length, missing: manifest.stores.filter((record) => !record.present).map((record) => record.key) };
+  return { ok: true, guildId: manifest.guildId, opendeskVersion: manifest.opendeskVersion, present: manifest.stores.filter((record) => record.present).length, missing: [...manifest.stores.filter((record) => !record.present).map((record) => record.key), ...(!manifest.stores.some(record => record.key === 'starboardStorePath') ? ['starboardStorePath'] : [])] };
 }
 async function createBackup(config, directory, { now = () => new Date() } = {}) {
   const root = path.resolve(directory), sourceFiles = storeDefinitions.map((definition) => path.resolve(config[definition.key]));
