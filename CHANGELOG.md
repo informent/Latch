@@ -1,13 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.33.0 - 2026-10-11
 
 - Add in-place AutoMod keyword and mention editing, optional raid detection changes and rule renaming with existing rule IDs and enforcement settings preserved.
 
 - Add `/automod policy` with block, alert and timeout combinations, strict trigger and channel validation, extra staff timeout permission checks, serialized edits and audit reasons.
 - Preserve filters, exemptions, enable state and existing block explanations; reject unsupported actions. Show alert destinations and timeout duration in rule inspection.
-- Add 19 AutoMod regression tests and document policy replacement and alert privacy.
+- Add 39 AutoMod regression tests and document policy replacement and alert privacy.
 
+
+- Expand signed runtime smoke coverage through AutoMod creation, policy updates, filter edits, renaming and inspection. Re-register commands after upgrading; no local store migration is required.
 
 ## 0.32.0 - 2026-10-11
 
