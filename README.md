@@ -44,7 +44,7 @@ npm run backup -- create ../Latch-backup-before-upgrade
 npm run backup -- verify ../Latch-backup-before-upgrade
 ```
 
-Use a new backup folder for each upgrade. Follow the [backup guide](docs/BACKUPS.md) to preserve configuration and all twelve stores. After upgrading, run `npm run doctor`, update command definitions with `npm run register`, and use `npm run doctor:live` to inspect Discord access and registration. Live checks do not replace trying commands in your test server.
+Use a new backup folder for each upgrade. Follow the [backup guide](docs/BACKUPS.md) to preserve configuration and all thirteen stores. After upgrading, run `npm run doctor`, update command definitions with `npm run register`, and use `npm run doctor:live` to inspect Discord access and registration. Live checks do not replace trying commands in your test server.
 
 For the complete automated release gate without Discord credentials, run `npm run release:verify`. Add `-- --json --output release-evidence/verification.json` to save a new report. See [release readiness](docs/RELEASE.md) for the remaining live checks.
 
@@ -151,3 +151,5 @@ Support queues: `/ticket list` now filters active/closed history, owner, handler
 There are no third-party runtime dependencies. Run `npm run release:verify` before proposing changes. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 AutoMod staff controls: [action policies, timeout limits and alert privacy](docs/AUTOMOD-POLICIES.md).
+
+Public-message highlights: [starboard setup, reaction counting and recovery](docs/STARBOARD.md).

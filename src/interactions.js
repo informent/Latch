@@ -45,7 +45,7 @@ function safeText(value) { return String(value).replace(/[`@<>]/g, (character) =
 
 const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
 
-function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
+function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, starboard, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
   const handleInformation = createInformationHandler({ config, discord, logger, now }, { response, defer, findOption });
   const handleEconomyAdmin = createEconomyAdminHandler({ config, economy, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
   const handlePoll = createPollHandler({ config, discord, logger, now }, { response, defer, hasPermission, findOption, safeText });
@@ -228,6 +228,22 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           logger('embed_publish_failed', {});
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Could not publish the embed. Check the bot Send Messages and Embed Links permissions.', allowed_mentions: { parse: [] } }).catch(() => {});
         }
+      } };
+    }
+    if (commandName === 'starboard') {
+      if (!hasPermission(interaction.member?.permissions, 32n)) return { immediate: response('You need Manage Server to configure starboard.') };
+      if (!starboard || !config.starboardEnabled) return { immediate: response('Enable DISCORD_STARBOARD_ENABLED and restart Latch before using starboard.') };
+      const action = subcommand?.name; const options = subcommand?.options || [];
+      if (!['configure', 'status', 'pause', 'sync'].includes(action)) return { immediate: response('Choose a starboard action.') };
+      return { immediate: defer(), work: async () => {
+        let content;
+        try {
+          if (action === 'configure') { await starboard.configure({ destination: findOption(options, 'destination'), source: findOption(options, 'source'), threshold: findOption(options, 'threshold') }); content = 'Starboard configured. Only public, non-NSFW source message links are highlighted; message text and attachments are not copied.'; }
+          else if (action === 'pause') { await starboard.pause(); content = 'Starboard paused. Saved highlights remain.'; }
+          else if (action === 'sync') content = await starboard.sync(findOption(options, 'channel'), findOption(options, 'message'));
+          else { const state = starboard.store.snapshot(); content = state.settings ? `Starboard: ${state.settings.enabled ? 'enabled' : 'paused'} | destination ${state.settings.destination} | threshold ${state.settings.threshold}\nSources: ${state.settings.sources.join(', ')}\nTracked: ${state.entries.length}/500 | pending: ${state.entries.filter(e => e.status === 'pending').length}\n${state.entries.filter(e => e.status === 'pending').slice(0, 10).map(e => `Pending source ${e.channel} / message ${e.id}`).join('\n')}` : 'Starboard is not configured.'; }
+        } catch { content = 'Could not complete starboard action. Check public channel permissions, settings and capacity. Pending publication receipts require staff inspection; Latch does not blindly resend them.'; try { logger('starboard_action_failed', { action }); } catch {} }
+        await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } }).catch(() => {});
       } };
     }
     if (commandName === 'automod') {

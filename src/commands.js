@@ -88,6 +88,15 @@ const commands = [
     options: [subcommand('levels', 'Show the XP leaderboard.'), subcommand('coins', 'Show the coin leaderboard.')]
   },
   {
+    name: 'starboard', description: 'Configure and reconcile public-message star highlights.', type: 1, default_member_permissions: '32',
+    options: [
+      subcommand('configure', 'Enable a destination and add a public source channel.', [option(7, 'destination', 'Public starboard text channel.', { required: true, channel_types: [0] }), option(7, 'source', 'Public text channel to watch.', { required: true, channel_types: [0] }), option(4, 'threshold', 'Eligible normal stars needed for a first highlight.', { required: true, min_value: 2, max_value: 50 })]),
+      subcommand('status', 'Inspect saved settings and pending publication receipts.'),
+      subcommand('pause', 'Pause reaction-driven publishing without deleting highlights.'),
+      subcommand('sync', 'Reconcile one source message from current Discord reactions.', [option(7, 'channel', 'Configured source text channel.', { required: true, channel_types: [0] }), option(3, 'message', 'Source message ID.', { required: true, min_length: 5, max_length: 25 })])
+    ]
+  },
+  {
     name: 'automod', description: 'Manage Discord native message filtering rules.', type: 1, default_member_permissions: '32',
     options: [
       subcommand('list', 'List server AutoMod rules and their IDs.'),

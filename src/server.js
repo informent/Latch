@@ -1,4 +1,6 @@
 'use strict';
+const { StarboardStore } = require('./starboard-store');
+const { StarboardService } = require('./starboard-service');
 
 const http = require('node:http');
 const path = require('node:path');
@@ -106,14 +108,14 @@ function installShutdownHandlers(server, { log, gateway, processRef = process, t
     void server.roleMenus?.stop();
     void server.timers?.stop();
     void server.ticketPanels?.stop();
-    void server.levelRewards?.stop();
+    void server.levelRewards?.stop(), server.starboard?.stop();
     const timeout = setTimeout(() => {
       safeLog(log, 'shutdown_drain_timed_out', { pending: server.pendingWorkCount() });
       processRef.exitCode = 1;
     }, timeoutMs);
     if (server.listening) server.close();
     else server.once('listening', () => server.close());
-    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop(), server.levelRewards?.stop()])).then(
+    void Promise.all([server.drain(), gatewayDrain]).then(() => Promise.all([server.community?.stop(), server.voice?.stop(), server.roleMenus?.stop(), server.timers?.stop(), server.ticketPanels?.stop(), server.levelRewards?.stop(), server.starboard?.stop()])).then(
       () => clearTimeout(timeout),
       () => {
         clearTimeout(timeout);
@@ -139,6 +141,9 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const ticketPanelStore = new TicketPanelStore(config.ticketPanelStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'ticket-panels.json'), config.guildId);
   await ticketPanelStore.load();
   const ticketPanels = new TicketPanelService({ config, store: ticketPanelStore, tickets, discord, botUserId: botUser.id, logger });
+  const starboardStore = new StarboardStore(config.starboardStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'starboard.json'), config.guildId);
+  await starboardStore.load();
+  const starboard = new StarboardService({ config, store: starboardStore, discord, botUserId: botUser.id, logger });
   const automod = new AutoModService({ discord, guildId: config.guildId, botUserId: botUser.id });
   const community = new CommunityService({ config, store: communityStore, discord, levels, logger });
   const voiceStore = new VoiceStore(config.voiceStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'voice.json'), config.guildId);
@@ -155,15 +160,17 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   const timerStore = new TimerStore(config.timerStorePath || path.join(path.dirname(config.storePath || './data/tickets.json'), 'timers.json'), config.guildId);
   await timerStore.load();
   const timers = new TimerService({ config, store: timerStore, discord, logger });
-  const handle = createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
+  const handle = createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, starboard, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard: new ModerationGuard({ config, discord, botUserId: botUser.id }), logger });
   const server = startServer({ config, publicKey, handle, logger });
+  server.starboard = starboard;
   server.community = community;
   server.voice = voice;
   server.roleMenus = roleMenus;
   server.timers = timers;
   server.ticketPanels = ticketPanels;
   server.levelRewards = levelRewards;
-  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); void ticketPanels.stop(); void levelRewards.stop(); });
+  server.once('close', () => { void community.stop(); void voice.stop(); void roleMenus.stop(); void timers.stop(); void ticketPanels.stop(); void levelRewards.stop(); void starboard.stop(); });
+  starboard.start();
   community.start();
   voice.start();
   roleMenus.start();
@@ -174,7 +181,7 @@ async function createServerRuntime({ config, publicKey, discord, store, moderati
   if (config.gatewayEnabled !== false && gateway) {
     gateway.intents = config.gatewayIntents;
     gateway.onObserveDispatch = (type, data) => voice.observe(type, data);
-    gateway.onDispatch = async (type, data) => { await guildEvents.dispatch(type, data); await voice.dispatch(type, data); await roleMenus.dispatch(type, data); await responderService.dispatch(type, data); };
+    gateway.onDispatch = async (type, data) => { await guildEvents.dispatch(type, data); await voice.dispatch(type, data); await roleMenus.dispatch(type, data); await responderService.dispatch(type, data); await starboard.dispatch(type, data); };
     gateway.start();
   }
   server.gateway = gateway || null;

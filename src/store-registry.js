@@ -11,7 +11,8 @@ const definitions = [
   ['Responders', 'responderStorePath', 'responders.json', require('./responder-store').ResponderStore, true],
   ['Timers', 'timerStorePath', 'timers.json', require('./timer-store').TimerStore, true],
   ['Ticket panels', 'ticketPanelStorePath', 'ticket-panels.json', require('./ticket-panel-store').TicketPanelStore, true],
-  ['Level rewards', 'levelRewardStorePath', 'level-rewards.json', require('./level-reward-store').LevelRewardStore, true]
+  ['Level rewards', 'levelRewardStorePath', 'level-rewards.json', require('./level-reward-store').LevelRewardStore, true],
+  ['Starboard', 'starboardStorePath', 'starboard.json', require('./starboard-store').StarboardStore, true]
 ].map(([name, key, file, Store, guildBound = false]) => Object.freeze({ name, key, file, Store, guildBound }));
 const storeDefinitions = Object.freeze(definitions);
 function openStore(definition, file, guildId) { return definition.guildBound ? new definition.Store(file, guildId) : new definition.Store(file); }

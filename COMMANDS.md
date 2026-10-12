@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 207 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 211 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -18,6 +18,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 - [/roles](#roles): Manage server roles and member nicknames.
 - [/level](#level): View a member’s level and XP.
 - [/leaderboard](#leaderboard): Show a server leaderboard.
+- [/starboard](#starboard): Configure and reconcile public-message star highlights.
 - [/automod](#automod): Manage Discord native message filtering rules.
 - [/embed](#embed): Publish a custom embed in the current channel.
 - [/fun](#fun): Free random games and utilities.
@@ -570,6 +571,43 @@ Options: none.
 Show the coin leaderboard.
 
 Options: none.
+
+## starboard
+
+Configure and reconcile public-message star highlights.
+
+Default command visibility: Manage Server (32).
+
+### /starboard configure
+
+Enable a destination and add a public source channel.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| destination | channel | yes | Public starboard text channel.; Allowed Discord channel type IDs: 0 |
+| source | channel | yes | Public text channel to watch.; Allowed Discord channel type IDs: 0 |
+| threshold | integer | yes | Eligible normal stars needed for a first highlight.; Minimum: 2; Maximum: 50 |
+
+### /starboard status
+
+Inspect saved settings and pending publication receipts.
+
+Options: none.
+
+### /starboard pause
+
+Pause reaction-driven publishing without deleting highlights.
+
+Options: none.
+
+### /starboard sync
+
+Reconcile one source message from current Discord reactions.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| channel | channel | yes | Configured source text channel.; Allowed Discord channel type IDs: 0 |
+| message | text | yes | Source message ID.; Minimum text length: 5; Maximum text length: 25 |
 
 ## automod
 

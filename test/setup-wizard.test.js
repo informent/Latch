@@ -34,7 +34,7 @@ test('guided setup validates four values, hides token prompt and produces a load
 test('community preset enables matching features and explains privileged intents', async (t) => {
   const f = await fixture(t, null, ['100001', 'a'.repeat(64), '100002', 'fixture-token', '2', 'n']);
   await runSetup(f.options); const config = loadConfig(parseEnv(await f.read()));
-  assert.ok(config.gatewayEnabled && config.levelingEnabled && config.voiceEnabled && config.respondersEnabled && config.memberEventsEnabled);
+  assert.ok(config.gatewayEnabled && config.levelingEnabled && config.voiceEnabled && config.respondersEnabled && config.memberEventsEnabled && config.starboardEnabled);
   assert.ok(f.lines.some((line) => line.includes('Server Members Intent') && line.includes('Message Content Intent')));
 });
 test('rerunning setup preserves complete configuration bytes and custom settings', async (t) => {

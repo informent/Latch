@@ -86,7 +86,7 @@ Autoresponders now have eight `/responder` paths with persistent, disabled-by-de
 
 Saved embeds now have nine `/template` command paths with durable storage, cloning, renaming, private previews and staff publication; see the [template guide](TEMPLATES.md). This is partial embed functionality: scripting, variables and webhook branding remain absent.
 
-Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, starboard, broader level reward policies, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
+Antinuke, antiraid, reaction/booster/vanity roles, additional button-role policies, richer starboard policies, broader level reward policies, bump reminders, reaction triggers, logging, counters, webhook utilities, Spotify, social notifications, Fortnite, roleplay, image manipulation, and the remaining information/fun commands. Native AutoMod and join-burst alerts cover portions of filtering and reporting only. The current button/autorole suite is restricted to permission-free roles and lacks full competitor policies; see [role-menu guide](ROLE-MENUS.md).
 
 ## Latch additions already implemented
 
@@ -105,3 +105,5 @@ Giveaways add six paths for role/level requirements, clearing requirements, curr
 ## Giveaway presentation added in 0.29.0
 
 Six additional paths add host/description/image/thumbnail editing, presentation resets and private saved-embed previews. Creation accepts optional presentation settings, and list now supports five-entry pages with complete prizes and retained history. The [Bleed giveaway guide](https://docs.bleed.bot/miscellaneous/giveaway) was checked again on 2026-10-11 for these documented capabilities. This implements the named behaviors with Latch syntax and limits; it does not prove full competitor parity or live Discord operation.
+
+Starboard: `/starboard configure`, `status`, `pause` and `sync` are implemented for public-message link highlights. See [limits and recovery](STARBOARD.md).

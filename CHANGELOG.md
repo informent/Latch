@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.34.0 - 2026-10-11
+
+- Add an opt-in public-channel starboard with staff configuration, pause, status and manual synchronization commands. Count normal star reactions, excluding bots and the message author. Publish links without copying message text or attachments.
+- Persist publication receipts before sending, reconcile existing highlights after restart and verify ownership before edits or source-deletion cleanup. Recover ambiguous receipts from recent destination history without blindly reposting.
+- Add starboard to startup checks, thirteen-store backups and private data exclusions. Continue verifying complete legacy twelve-store backups and explicitly report their absent starboard store.
+- Add bounded source, highlight, reaction-scan and operation queues, plus signed runtime and backup recovery checks. Live Discord validation remains pending.
+
+
+
 ## 0.33.0 - 2026-10-11
 
 - Add in-place AutoMod keyword and mention editing, optional raid detection changes and rule renaming with existing rule IDs and enforcement settings preserved.

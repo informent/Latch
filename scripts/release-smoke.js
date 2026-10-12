@@ -6,17 +6,19 @@ const { CommunityStore } = require('../src/community-store');
 const { createBackup, verifyBackup } = require('./backup');
 const { gunzipSync } = require('node:zlib');
 const { unpack } = require('./transcript-unpack');
+const { StarboardStore } = require('../src/starboard-store');
 const { version } = require('../package.json');
 async function runSmoke({ container = false } = {}) {
   if (container) assert.equal(process.getuid?.(), 1000, 'Container must run as the node user.');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-release-smoke-'));
   const ids = { guild: '123456789012345678', bot: '223456789012345678', actor: '323456789012345678', target: '423456789012345678', role: '523456789012345678', channel: '623456789012345678', request: '723456789012345678', owner: '823456789012345678' };
+  const starDestination = String(BigInt(ids.channel) + 9n), starMessage = String(BigInt(ids.request) + 5000n); let starPost;
   let server, giveaway, ticketChannel, historyMode = 'single'; const responses = [], transcriptFiles = [], autoRules = new Map(), pair = crypto.generateKeyPairSync('ed25519');
   try {
     const env = { DISCORD_APPLICATION_ID: ids.bot, DISCORD_GUILD_ID: ids.guild, DISCORD_PUBLIC_KEY: pair.publicKey.export({ type: 'spki', format: 'der' }).subarray(-32).toString('hex'), DISCORD_BOT_TOKEN: 'isolated-smoke-placeholder', DISCORD_GATEWAY_ENABLED: 'false', HOST: '127.0.0.1', PORT: '3000' };
-    const keys = ['TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH'];
+    const keys = ['STARBOARD_STORE_PATH', 'TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH'];
     keys.forEach((key, index) => { env[key] = path.join(root, `store-${index}.json`); });
-    const config = { ...loadConfig(env), port: 0 }, economy = new EconomyStore(config.economyStorePath);
+    const config = { ...loadConfig(env), starboardEnabled: true, port: 0 }, economy = new EconomyStore(config.economyStorePath);
     // This adapter never contacts Discord. Unexpected calls fail the smoke test.
     const discord = {
       getCurrentUser: async () => ({ id: ids.bot }),
@@ -28,7 +30,7 @@ async function runSmoke({ container = false } = {}) {
       createChannel: async (guild, body) => { assert.equal(guild, ids.guild); ticketChannel = { ...structuredClone(body), id: String(BigInt(ids.channel) + 1n), guild_id: guild }; return structuredClone(ticketChannel); },
       setMemberOverwrite: async (channel, user, body) => { assert.equal(channel, ticketChannel.id); ticketChannel.permission_overwrites = ticketChannel.permission_overwrites.filter(entry => entry.id !== user || entry.type !== 1); ticketChannel.permission_overwrites.push({ id: user, ...structuredClone(body) }); },
       editChannel: async (channel, body) => { assert.equal(channel, ticketChannel.id); Object.assign(ticketChannel, structuredClone(body)); },
-      request: async (method, route) => { assert.equal(method, 'GET'); if (route === `/channels/${ids.channel}`) return { id: ids.channel, guild_id: ids.guild, type: 0 }; if (ticketChannel && route === `/channels/${ticketChannel.id}`) return structuredClone(ticketChannel); assert.equal(route, `/guilds/${ids.guild}/roles`); return [{ id: ids.guild, permissions: '0' }, { id: ids.role, permissions: '32' }]; },
+      request: async (method, route) => { assert.equal(method, 'GET'); if(route === `/channels/${starDestination}`) return { id: starDestination, guild_id: ids.guild, type: 0, nsfw: false, permission_overwrites: [] }; if(route === `/channels/${ids.channel}/messages/${starMessage}`) return { id: starMessage, channel_id: ids.channel, author: { id: ids.actor }, type: 0 }; if(route.startsWith(`/channels/${ids.channel}/messages/${starMessage}/reactions/`)) return [{ id: ids.actor }, { id: ids.target }, { id: ids.owner }]; if(starPost && route === `/channels/${starDestination}/messages/${starPost.id}`) return structuredClone(starPost); if (route === `/channels/${ids.channel}`) return { id: ids.channel, guild_id: ids.guild, type: 0, nsfw: false, permission_overwrites: [] }; if (ticketChannel && route === `/channels/${ticketChannel.id}`) return structuredClone(ticketChannel); assert.equal(route, `/guilds/${ids.guild}/roles`); return [{ id: ids.guild, permissions: '1024' }, { id: ids.role, permissions: '32' }]; },
       editOriginalResponse: async (_application, _token, body, file) => { responses.push(body); if (file) transcriptFiles.push(file); },
       getChannelMessages: async (channel, limit, before) => {
         assert.equal(channel, ticketChannel.id); assert.ok(limit > 0 && limit <= 100);
@@ -36,8 +38,8 @@ async function runSmoke({ container = false } = {}) {
         const messages = historyMode === 'single' ? [message(0)] : Array.from({ length: 235 }, (_, index) => message(734 - index));
         return messages.filter(item => !before || BigInt(item.id) < BigInt(before)).slice(0, limit);
       },
-      createMessage: async (channel, body) => { assert.equal(channel, ids.channel); assert.equal(giveaway, undefined); giveaway = { ...structuredClone(body), id: String(BigInt(ids.request) + 99n) }; return structuredClone(giveaway); },
-      editMessage: async (channel, id, body) => { assert.equal(channel, ids.channel); assert.equal(id, giveaway.id); Object.assign(giveaway, structuredClone(body)); }
+      createMessage: async (channel, body) => { if(channel === starDestination) { assert.equal(starPost, undefined); starPost = { ...structuredClone(body), id: String(BigInt(starMessage) + 1n), channel_id: channel, author: { id: ids.bot } }; return structuredClone(starPost); } assert.equal(channel, ids.channel); assert.equal(giveaway, undefined); giveaway = { ...structuredClone(body), id: String(BigInt(ids.request) + 99n) }; return structuredClone(giveaway); },
+      editMessage: async (channel, id, body) => { if(channel === starDestination) { assert.equal(id, starPost.id); Object.assign(starPost, structuredClone(body)); return; } assert.equal(channel, ids.channel); assert.equal(id, giveaway.id); Object.assign(giveaway, structuredClone(body)); }
     };
     server = await createServerRuntime({ config, publicKey: publicKeyFromHex(config.publicKey), discord, store: new TicketStore(config.storePath), economy });
     await once(server, 'listening'); const url = `http://127.0.0.1:${server.address().port}`;
@@ -99,16 +101,22 @@ async function runSmoke({ container = false } = {}) {
     await send(autoCommand(22, 'mentions', { name: 'Mention safety', limit: 5 })); const mentionRule = [...autoRules.values()][1]; assert.equal(mentionRule.trigger_type, 5);
     await send(autoCommand(23, 'mentions-edit', { rule: mentionRule.id, limit: 3, 'raid-protection': false })); assert.deepEqual(mentionRule.trigger_metadata, { mention_total_limit: 3, mention_raid_protection_enabled: false }); assert.equal(mentionRule.enabled, false);
     await send(autoCommand(24, 'info', { rule: keywordRule.id })); assert.match(responses.at(-1).content, /Timeout seconds: 60/); assert.ok(responses.at(-1).content.includes(ids.channel)); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
-    await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
-    const backup = path.join(root, 'backup'), created = await createBackup(config, backup); assert.equal(created.present, 3); assert.equal(created.missing.length, 9); assert.equal((await verifyBackup(backup, ids.guild)).ok, true);
+    const starCommand = (offset, name, values) => ({ ...command, id: String(BigInt(ids.request) + BigInt(offset)), data: { name: 'starboard', options: [{ name, options: Object.entries(values).map(([name, value]) => ({ name, value })) }] } });
+    assert.deepEqual(await send(starCommand(25, 'configure', { destination: starDestination, source: ids.channel, threshold: 2 })), { type: 5, data: { flags: 64 } }); assert.match(responses.at(-1).content, /Starboard configured/);
+    await send(starCommand(26, 'sync', { channel: ids.channel, message: starMessage })); assert.match(responses.at(-1).content, /2 eligible normal stars/); assert.equal(starPost.enforce_nonce, true); assert.deepEqual(starPost.allowed_mentions, { parse: [] }); assert.equal(starPost.flags, 4);
+    const originalPost = starPost.id; await send(starCommand(27, 'sync', { channel: ids.channel, message: starMessage })); assert.equal(starPost.id, originalPost);
+    await send(starCommand(28, 'status', {})); assert.match(responses.at(-1).content, /Tracked: 1/); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
+    await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop(), server.starboard.stop()]);
+    const backup = path.join(root, 'backup'), created = await createBackup(config, backup); assert.equal(created.present, 4); assert.equal(created.missing.length, 9); assert.equal((await verifyBackup(backup, ids.guild)).ok, true);
     const recovered = new EconomyStore(path.join(backup, 'economy.json')); await recovered.load(); assert.equal(recovered.balance(ids.guild, ids.target), 100); assert.equal(recovered.adjustmentHistory(ids.guild).length, 1);
     const recoveredCommunity = new CommunityStore(path.join(backup, 'community.json')); await recoveredCommunity.load();
     assert.deepEqual(recoveredCommunity.get(giveawayId).presentation, { hostId: ids.target, description: 'Restart-safe details', image: null, thumbnail: null });
+    const recoveredStarboard = new StarboardStore(path.join(backup, 'starboard.json'), ids.guild); await recoveredStarboard.load(); assert.equal(recoveredStarboard.snapshot().entries[0].post, originalPost);
     const recoveredTickets = new TicketStore(path.join(backup, 'tickets.json')); await recoveredTickets.load(); assert.equal(recoveredTickets.getByChannel(ticketChannel.id).status, 'closed'); assert.deepEqual(recoveredTickets.getByChannel(ticketChannel.id).guests, []);
-    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery', 'signed-calculator', 'signed-server-artwork', 'signed-giveaway-create', 'signed-giveaway-edit', 'signed-giveaway-preview', 'signed-giveaway-clear', 'community-recovery', 'signed-ticket-create', 'signed-ticket-guest-add', 'signed-ticket-guest-list', 'signed-ticket-guest-remove', 'signed-ticket-close', 'ticket-guest-recovery', 'ticket-closure-recovery', 'signed-ticket-transcript-text', 'signed-ticket-transcript-json', 'signed-ticket-transcript-paged-gzip', 'signed-ticket-transcript-continuation', 'compressed-transcript-unpack', 'signed-ticket-queue-history', 'signed-automod-keywords-create', 'signed-automod-policy', 'signed-automod-keywords-edit', 'signed-automod-rename', 'signed-automod-mentions-create', 'signed-automod-mentions-edit', 'signed-automod-info'] };
+    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'thirteen-store-backup', 'backup-verification', 'economy-recovery', 'signed-calculator', 'signed-server-artwork', 'signed-giveaway-create', 'signed-giveaway-edit', 'signed-giveaway-preview', 'signed-giveaway-clear', 'community-recovery', 'signed-ticket-create', 'signed-ticket-guest-add', 'signed-ticket-guest-list', 'signed-ticket-guest-remove', 'signed-ticket-close', 'ticket-guest-recovery', 'ticket-closure-recovery', 'signed-ticket-transcript-text', 'signed-ticket-transcript-json', 'signed-ticket-transcript-paged-gzip', 'signed-ticket-transcript-continuation', 'compressed-transcript-unpack', 'signed-ticket-queue-history', 'signed-automod-keywords-create', 'signed-automod-policy', 'signed-automod-keywords-edit', 'signed-automod-rename', 'signed-automod-mentions-create', 'signed-automod-mentions-edit', 'signed-automod-info', 'signed-starboard-configure', 'signed-starboard-sync', 'starboard-duplicate-protection', 'signed-starboard-status', 'starboard-backup-recovery'] };
   } finally {
     if (server) {
-      await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
+      await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop(), server.starboard.stop()]);
       await server.drain(); if (server.listening) await new Promise((resolve) => server.close(resolve));
     }
     const resolved = path.resolve(root), temporaryRoot = path.resolve(os.tmpdir());

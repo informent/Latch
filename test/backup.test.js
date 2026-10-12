@@ -17,14 +17,14 @@ async function fixture(t, missing = false) {
   return { root, config, destination, create };
 }
 async function manifest(f, edit) { const file = path.join(f.destination, 'manifest.json'), value = JSON.parse(await fs.readFile(file, 'utf8')); edit(value); await fs.writeFile(file, JSON.stringify(value)); }
-test('complete backup verifies all twelve stores, preserves exact bytes and omits source paths and credentials', async (t) => {
-  const f = await fixture(t); f.config.botToken = 'secret-never-copy'; const result = await f.create(); assert.equal(result.present, 12); assert.deepEqual(result.missing, []);
+test('complete backup verifies all thirteen stores, preserves exact bytes and omits source paths and credentials', async (t) => {
+  const f = await fixture(t); f.config.botToken = 'secret-never-copy'; const result = await f.create(); assert.equal(result.present, 13); assert.deepEqual(result.missing, []);
   const raw = await fs.readFile(path.join(f.destination, 'manifest.json'), 'utf8'); assert.doesNotMatch(raw, /secret-never-copy|[A-Z]:\\/);
   for (const definition of storeDefinitions) assert.deepEqual(await fs.readFile(f.config[definition.key]), await fs.readFile(path.join(f.destination, definition.file)));
   assert.deepEqual(await verifyBackup(f.destination, ids.guild), result);
 });
 test('fresh-install backup explicitly records every missing store without creating source files', async (t) => {
-  const f = await fixture(t, true); const result = await f.create(); assert.equal(result.present, 0); assert.equal(result.missing.length, 12); assert.deepEqual(await fs.readdir(path.join(f.root, 'data')), []); assert.deepEqual(await fs.readdir(f.destination), ['manifest.json']);
+  const f = await fixture(t, true); const result = await f.create(); assert.equal(result.present, 0); assert.equal(result.missing.length, 13); assert.deepEqual(await fs.readdir(path.join(f.root, 'data')), []); assert.deepEqual(await fs.readdir(f.destination), ['manifest.json']);
 });
 test('backup preserves an existing destination and all source files', async (t) => {
   const f = await fixture(t); await f.create(); const before = await fs.readFile(path.join(f.destination, 'manifest.json')); await assert.rejects(f.create(), /EEXIST/); assert.deepEqual(await fs.readFile(path.join(f.destination, 'manifest.json')), before);
@@ -70,11 +70,11 @@ test('backup verifier detects backup changes during schema verification', async 
 });
 test('backup command rejects unknown and incomplete arguments', async () => { for (const args of [[], ['create'], ['delete', 'folder'], ['verify', ''], ['verify', 'folder', 'extra']]) await assert.rejects(main(args), /Usage/); });
 test('backup verification command needs no Discord configuration or token', async (t) => {
-  const f = await fixture(t); await f.create(); const output = []; t.mock.method(console, 'log', (value) => output.push(value)); await main(['verify', f.destination]); assert.equal(JSON.parse(output[0]).present, 12);
+  const f = await fixture(t); await f.create(); const output = []; t.mock.method(console, 'log', (value) => output.push(value)); await main(['verify', f.destination]); assert.equal(JSON.parse(output[0]).present, 13);
 });
-test('doctor and backups share the complete twelve-store registry', async (t) => {
+test('doctor and backups share the complete thirteen-store registry', async (t) => {
   const f = await fixture(t, true); const env = { DISCORD_APPLICATION_ID: ids.bot, DISCORD_GUILD_ID: ids.guild, DISCORD_PUBLIC_KEY: 'a'.repeat(64), DISCORD_BOT_TOKEN: 'fixture' };
-  const envKeys = ['TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH'];
+  const envKeys = ['TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH', 'STARBOARD_STORE_PATH'];
   storeDefinitions.forEach((definition, index) => { env[envKeys[index]] = f.config[definition.key]; }); const result = await inspectSetup(env);
   assert.equal(result.ok, true); for (const definition of storeDefinitions) assert.equal(result.checks.find((check) => check.name === `${definition.name} store`).status, 'pass');
 });
@@ -88,4 +88,8 @@ test('backup source and verification reject symbolic file metadata', async (t) =
   const f = await fixture(t), stat = fs.lstat;
   t.mock.method(fs, 'lstat', async (...args) => { const value = await stat(...args); if (args[0] === f.config.storePath) return { size: value.size, isFile: () => true, isSymbolicLink: () => true }; return value; });
   await assert.rejects(f.create(), /regular file/);
+});
+
+test('backup verifier accepts a complete legacy twelve-store snapshot and reports absent starboard', async t => {
+ const f=await fixture(t);await f.create();await fs.unlink(path.join(f.destination,'starboard.json'));await manifest(f,m=>{m.stores=m.stores.filter(r=>r.key!=='starboardStorePath');m.opendeskVersion='0.33.0';});const result=await verifyBackup(f.destination,ids.guild);assert.equal(result.present,12);assert.ok(result.missing.includes('starboardStorePath'));
 });
