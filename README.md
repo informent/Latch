@@ -152,4 +152,4 @@ There are no third-party runtime dependencies. Run `npm run release:verify` befo
 
 AutoMod staff controls: [action policies, timeout limits and alert privacy](docs/AUTOMOD-POLICIES.md).
 
-Public-message highlights: [starboard setup, reaction counting and recovery](docs/STARBOARD.md).
+Public-message highlights with private history, exact-post recovery and durable cleanup: [starboard setup, reaction counting and recovery](docs/STARBOARD.md).

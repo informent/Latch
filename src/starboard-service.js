@@ -2,6 +2,8 @@
 const { randomBytes } = require('node:crypto');
 const { ID } = require('./starboard-store');
 const STAR = String.fromCodePoint(0x2b50);
+const missingMessage = (error) =>
+  error?.statusCode === 404 && error.discordCode === 10008;
 class StarboardService {
   constructor({ config, store, discord, botUserId, logger = () => {} }) {
     Object.assign(this, { config, store, discord, botUserId, logger });
@@ -50,8 +52,14 @@ class StarboardService {
     this.reconciling = true;
     try {
       const s = this.store.snapshot();
-      if (!s.settings?.enabled) return;
-      const active = s.entries.filter((e) => e.status !== 'deleted');
+      if (!s.settings) return;
+      const active = s.entries.filter(
+        (e) =>
+          e.status === 'deleting' ||
+          (s.settings.enabled &&
+            s.settings.sources.includes(e.channel) &&
+            e.status !== 'deleted'),
+      );
       if (!active.length) return;
       const batch = Array.from(
         { length: Math.min(5, active.length) },
@@ -61,7 +69,8 @@ class StarboardService {
       for (const e of batch) {
         if (!this.running) break;
         try {
-          await this.sync(e.channel, e.id);
+          if (e.status === 'deleting') await this.remove(e.channel, e.id);
+          else await this.sync(e.channel, e.id);
         } catch {
           try {
             this.logger('starboard_reconcile_failed', {});
@@ -148,6 +157,101 @@ class StarboardService {
       }),
     );
   }
+  removeSource(channel) {
+    return this.serialize(async () => {
+      if (!ID(channel)) throw new Error('Invalid source channel.');
+      const s = this.store.snapshot();
+      if (!s.settings) throw new Error('Configure starboard first.');
+      if (!s.settings.sources.includes(channel)) return { changed: false };
+      await this.store.mutate((state) => {
+        state.settings.sources = state.settings.sources.filter(
+          (id) => id !== channel,
+        );
+        if (!state.settings.sources.length) state.settings.enabled = false;
+      });
+      return { changed: true };
+    });
+  }
+  list({ state = 'all', page = 1 } = {}) {
+    if (
+      !['all', 'pending', 'posted', 'deleting', 'deleted'].includes(state) ||
+      !Number.isInteger(page) ||
+      page < 1
+    )
+      throw new Error('Invalid history filter or page.');
+    const entries = this.store
+      .snapshot()
+      .entries.filter((e) => state === 'all' || e.status === state)
+      .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1));
+    const pages = Math.max(1, Math.ceil(entries.length / 10));
+    if (page > pages) throw new Error('Page is outside the filtered history.');
+    return {
+      entries: entries.slice((page - 1) * 10, page * 10),
+      total: entries.length,
+      page,
+      pages,
+      state,
+    };
+  }
+  recover(id, postId) {
+    return this.serialize(async () => {
+      if (!ID(id) || !ID(postId)) throw new Error('Invalid message IDs.');
+      const s = this.store.snapshot(),
+        e = s.entries.find((e) => e.id === id);
+      if (!e || e.status !== 'pending')
+        throw new Error('Choose a pending source receipt.');
+      const post = await this.discord.request(
+        'GET',
+        `/channels/${s.settings.destination}/messages/${postId}`,
+      );
+      if (post?.id !== postId || !this.owned(post, e))
+        throw new Error('Receipt ownership could not be verified.');
+      await this.store.mutate((state) => {
+        const saved = state.entries.find((e) => e.id === id);
+        saved.post = postId;
+        saved.status = 'posted';
+      });
+    });
+  }
+  retire(id) {
+    if (!ID(id)) return Promise.reject(new Error('Invalid source message ID.'));
+    return this.serialize(async () => {
+      const e = this.store.snapshot().entries.find((e) => e.id === id);
+      if (!e) throw new Error('Unknown tracked source message.');
+      await this.deleteHighlight(e.channel, id);
+    });
+  }
+  prune({ channel, limit = 25 } = {}) {
+    return this.serialize(async () => {
+      if (
+        (channel !== undefined && !ID(channel)) ||
+        !Number.isInteger(limit) ||
+        limit < 1 ||
+        limit > 100
+      )
+        throw new Error('Choose a valid channel and a limit from 1 to 100.');
+      const s = this.store.snapshot();
+      if (!s.settings) return { removed: 0 };
+      // Only finished deletions from removed sources can be forgotten. Re-adding
+      // a source explicitly permits qualifying messages there to be highlighted again.
+      const ids = new Set(
+        s.entries
+          .filter(
+            (e) =>
+              e.status === 'deleted' &&
+              !s.settings.sources.includes(e.channel) &&
+              (channel === undefined || e.channel === channel),
+          )
+          .slice(0, limit)
+          .map((e) => e.id),
+      );
+      if (ids.size)
+        await this.store.mutate((state) => {
+          state.entries = state.entries.filter((e) => !ids.has(e.id));
+        });
+      return { removed: ids.size };
+    });
+  }
   async count(channel, id, author) {
     const started = Date.now();
     let after,
@@ -207,8 +311,17 @@ class StarboardService {
   }
   async refresh(channel, id) {
     if (!ID(channel) || !ID(id)) throw new Error('Invalid message IDs.');
-    let s = this.store.snapshot();
+    const s = this.store.snapshot();
     const c = s.settings;
+    let e = s.entries.find((e) => e.id === id);
+    if (e && e.channel !== channel)
+      throw new Error('Message channel mismatch.');
+    if (e?.status === 'deleted')
+      return 'This highlight was retired; it will not be republished.';
+    if (e?.status === 'deleting') {
+      await this.deleteHighlight(channel, id);
+      return 'Highlight deletion completed.';
+    }
     if (
       !this.config.starboardEnabled ||
       !c?.enabled ||
@@ -219,10 +332,17 @@ class StarboardService {
       this.publicChannel(channel),
       this.publicChannel(c.destination),
     ]);
-    const message = await this.discord.request(
-      'GET',
-      `/channels/${channel}/messages/${id}`,
-    );
+    let message;
+    try {
+      message = await this.discord.request(
+        'GET',
+        `/channels/${channel}/messages/${id}`,
+      );
+    } catch (error) {
+      if (!missingMessage(error) || !e || e.status !== 'posted') throw error;
+      await this.deleteHighlight(channel, id);
+      return 'Missing source confirmed; highlight retired.';
+    }
     if (
       message?.id !== id ||
       message.channel_id !== channel ||
@@ -233,11 +353,6 @@ class StarboardService {
     )
       throw new Error('Choose a regular human message in a configured source.');
     const count = await this.count(channel, id, message.author.id);
-    let e = s.entries.find((e) => e.id === id);
-    if (e?.channel !== channel && e)
-      throw new Error('Message channel mismatch.');
-    if (e?.status === 'deleted')
-      return 'This highlight was retired after source deletion.';
     if (!e && count < c.threshold)
       return `Below threshold: ${count}/${c.threshold}.`;
     // Recheck visibility after the reaction scan before any destination write.
@@ -300,31 +415,67 @@ class StarboardService {
     return `Highlight synchronized: ${count} eligible normal stars.`;
   }
   remove(channel, id) {
-    return this.serialize(async () => {
-      const s = this.store.snapshot(),
-        e = s.entries.find((e) => e.id === id && e.channel === channel);
-      if (!e || e.status === 'deleted') return;
-      if (e.status === 'pending')
-        throw new Error('Resolve pending highlight before deletion.');
-      const p = await this.discord.request(
+    return this.serialize(() => this.deleteHighlight(channel, id));
+  }
+  async deleteHighlight(channel, id) {
+    if (!ID(channel) || !ID(id)) throw new Error('Invalid message IDs.');
+    const s = this.store.snapshot(),
+      e = s.entries.find((e) => e.id === id && e.channel === channel);
+    if (!e || e.status === 'deleted') return;
+    if (e.status === 'pending')
+      throw new Error('Recover the pending receipt before retiring it.');
+    let post,
+      confirmedMissing = false;
+    try {
+      post = await this.discord.request(
         'GET',
         `/channels/${s.settings.destination}/messages/${e.post}`,
       );
-      if (!this.owned(p, e))
-        throw new Error('Highlight ownership could not be verified.');
-      await this.discord.deleteChannelMessage(s.settings.destination, e.post);
-      await this.store.mutate((s) => {
-        const saved = s.entries.find((x) => x.id === id);
-        saved.status = 'deleted';
-        saved.post = null;
+    } catch (error) {
+      if (!missingMessage(error)) throw error;
+      confirmedMissing = true;
+    }
+    if (!confirmedMissing && (post?.id !== e.post || !this.owned(post, e)))
+      throw new Error('Highlight ownership could not be verified.');
+    if (e.status !== 'deleting')
+      await this.store.mutate((state) => {
+        state.entries.find((x) => x.id === id).status = 'deleting';
       });
+    if (post) {
+      try {
+        await this.discord.deleteChannelMessage(s.settings.destination, e.post);
+      } catch (error) {
+        if (!missingMessage(error)) throw error;
+      }
+    }
+    await this.store.mutate((state) => {
+      const saved = state.entries.find((x) => x.id === id);
+      saved.status = 'deleted';
+      saved.post = null;
     });
   }
   async dispatch(type, data) {
     if (!this.config.starboardEnabled || data?.guild_id !== this.config.guildId)
       return;
     try {
-      if (type === 'MESSAGE_DELETE')
+      if (type === 'MESSAGE_DELETE_BULK') {
+        if (
+          !ID(data.channel_id) ||
+          !Array.isArray(data.ids) ||
+          data.ids.length > 100 ||
+          !data.ids.every(ID)
+        )
+          return;
+        for (const id of new Set(data.ids)) {
+          try {
+            await this.remove(data.channel_id, id);
+          } catch {
+            try {
+              this.logger('starboard_sync_failed', {});
+            } catch {}
+          }
+        }
+      } else if (type === 'MESSAGE_DELETE')
         await this.remove(data.channel_id, data.id);
       else if (
         [

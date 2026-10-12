@@ -1,6 +1,6 @@
 # Release readiness
 
-Latch v0.32.0 is a release candidate. It is available as free MIT-licensed source and a Linux container build, for one configured guild per process. It requires Node 22.9+ or Node 24; there are no third-party runtime packages or paid command gates. The complete [command reference](../COMMANDS.md) covers the registered implementation. Full competitor parity remains unfinished.
+Latch v0.35.0 is a release candidate. It is available as free MIT-licensed source and a Linux container build, for one configured guild per process. It requires Node 22.9+ or Node 24; there are no third-party runtime packages or paid command gates. The complete [command reference](../COMMANDS.md) covers the registered implementation. Full competitor parity remains unfinished.
 
 ## Automated release checks
 
@@ -22,10 +22,10 @@ Docker CI proves execution of the isolated workflow inside the built image. It d
 
 ## Get and install the candidate
 
-Download the source ZIP and SHA256SUMS from the [v0.32.0 release](https://github.com/informent/Latch/releases/tag/v0.32.0). Compare the ZIP hash before extracting; then run commands from the extracted Latch directory.
+Download the source ZIP and SHA256SUMS from the [v0.35.0 release](https://github.com/informent/Latch/releases/tag/v0.35.0). Compare the ZIP hash before extracting; then run commands from the extracted Latch directory.
 
 ```powershell
-Get-FileHash ./Latch-v0.32.0-source.zip -Algorithm SHA256
+Get-FileHash ./Latch-v0.35.0-source.zip -Algorithm SHA256
 npm run setup
 # Follow the guided setup prompts.
 npm run doctor
@@ -57,7 +57,7 @@ Use a disposable private guild for disruptive checks. Never put bot tokens, inte
 
 ## Promotion
 
-A stable release requires the live checks above, resolved critical failures, and exact-commit automated CI/artifact verification. Pin the source commit and verify downloaded ZIP bytes against SHA256SUMS. Keep release notes honest about supported scope, migrations and remaining features. Re-register after command changes. Ticket format 2, economy format 3 and community format 3 require compatible complete backups for rollback.
+A stable release requires the live checks above, resolved critical failures, and exact-commit automated CI/artifact verification. Pin the source commit and verify downloaded ZIP bytes against SHA256SUMS. Keep release notes honest about supported scope, migrations and remaining features. Re-register after command changes. Starboard format 2, ticket format 2, economy format 3 and community format 3 require compatible complete backups for rollback.
 
 No live account/server access is bundled or automatically provisioned by the candidate. Further feature development can continue while these release checks are completed.
 
@@ -75,4 +75,4 @@ Version 0.31.0 adds `/ticket transcript`; re-register after upgrading. Validate 
 
 Version 0.32.0 expands transcript count and adds before/compression options. Re-register commands and validate paged private downloads, gzip unpacking and live access revocation. Downloaded JSON snapshots use schema 2; no additional ticket store migration is introduced.
 
-The starboard release smoke covers signed configuration, synchronization, duplicate-post protection, private status and saved-receipt backup recovery. Actual Gateway reaction delivery and live Discord permissions still require acceptance testing.
+The starboard release smoke covers signed configuration, synchronization, duplicate-post protection, private status, saved-receipt backup recovery, explicit recovery, paginated history, lost deletion replies, retirement, source removal and pruning. Actual Gateway reaction delivery and live Discord permissions still require acceptance testing.

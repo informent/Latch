@@ -5,6 +5,23 @@ const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 const REQUEST_BUDGET_MS = 12_000;
 const MAX_RATE_LIMIT_RETRIES = 2;
 
+// Only retain the one error code needed to prove that a message no longer exists.
+// Other response fields, including server-provided text, never leave this helper.
+async function missingMessageCode(response) {
+  if (response.status !== 404 || !response.body?.getReader) return undefined;
+  const reader = response.body.getReader(); const chunks = []; let size = 0;
+  try {
+    while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      size += value.byteLength;
+      if (size > 8192) { await reader.cancel(); return undefined; }
+      chunks.push(Buffer.from(value));
+    }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))?.code === 10008 ? 10008 : undefined;
+  } catch { return undefined; }
+  finally { reader.releaseLock(); }
+}
+
 class DiscordApi {
   constructor(token, fetchImpl = fetch) {
     this.token = token;
@@ -49,7 +66,10 @@ class DiscordApi {
         await this.#waitUntil(retryAt, deadline);
         continue;
       }
-      if (!response.ok) throw Object.assign(new Error(`Discord API request failed (${response.status}).`), { statusCode: response.status });
+      if (!response.ok) {
+        const discordCode = await missingMessageCode(response);
+        throw Object.assign(new Error(`Discord API request failed (${response.status}).`), { statusCode: response.status, ...(discordCode === undefined ? {} : { discordCode }) });
+      }
       if (response.status === 204) return null;
       try { return await response.json(); }
       catch { throw new Error('Discord API response could not be decoded.'); }

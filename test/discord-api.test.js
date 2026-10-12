@@ -108,3 +108,10 @@ test('native AutoMod endpoints retain authorization, rule bodies and audit reaso
   assert.equal(calls[4].options.headers['X-Audit-Log-Reason'], 'staff%20remove');
   assert.ok(calls.every((call) => call.options.headers.Authorization === 'Bot fake-bot-secret'));
 });
+
+test('REST retains only bounded unknown-message proof without server text',async()=>{
+ const api=new DiscordApi('fake',async()=>new Response(JSON.stringify({code:10008,message:'PRIVATE_TOKEN',errors:{secret:'PRIVATE_TOKEN'}}),{status:404}));await assert.rejects(api.request('GET','/channels/12345/messages/23456'),error=>{assert.equal(error.statusCode,404);assert.equal(error.discordCode,10008);assert.doesNotMatch(JSON.stringify(error)+error.message,/PRIVATE_TOKEN/);return true;});
+});
+for(const body of ['not json',JSON.stringify({code:10003}),JSON.stringify({code:'10008'}),JSON.stringify({code:10008,padding:'x'.repeat(9000)})])test('REST does not mistake malformed or oversized error data for missing-message proof',async()=>{
+ const api=new DiscordApi('fake',async()=>new Response(body,{status:404}));await assert.rejects(api.request('GET','/channels/12345/messages/23456'),error=>{assert.equal(error.discordCode,undefined);return true;});
+});
