@@ -1,6 +1,6 @@
 {
   "name": "latch-discord",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "private": true,
   "description": "A free, self-hosted Discord community bot with moderation, economy, tickets, and server events.",
   "license": "MIT",
@@ -24,6 +24,7 @@
     "commands:write": "node scripts/command-catalog.js --write",
     "commands:check": "node scripts/command-catalog.js --check",
     "doctor:live": "node --env-file-if-exists=.env scripts/doctor-live.js",
-    "release:verify": "node scripts/release-verify.js"
+    "release:verify": "node scripts/release-verify.js",
+    "transcript:unpack": "node scripts/transcript-unpack.js"
   }
 }

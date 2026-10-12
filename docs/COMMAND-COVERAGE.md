@@ -35,12 +35,12 @@ Only command names and independently authored implementation notes are recorded 
 | giveaway end, list | `/giveaway end`, `/giveaway list` | Latch IDs; optional retained history lasts seven days after delivery |
 | giveaway cancel | `/giveaway cancel` | Ends entries without drawing; competitor deletion behavior differs |
 | tickets close | `/ticket close` | Private tickets with persistent category panels and staff reopening; per-option claim policies remain missing |
-| tickets list | `/ticket list` | Staff see all active tickets; others see only their own; ten per page |
+| tickets list | `/ticket list` | State/history, owner, handler and assignment filters for staff; members browse only their own active/closed records; ten per page |
 | tickets stats | `/ticket stats` | Staff-only lifetime counts; no time-window or per-staff workload reporting |
 | tickets claim, unclaim | `/ticket claim`, `/ticket unclaim` | Configured support role or administrator; owner cannot claim own ticket; any support staff may unclaim |
 | tickets move, reason | `/ticket move`, `/ticket reason` | Open stored tickets only; staff checks; explicit overwrite preservation/read-back; reason visible to owner and support |
 | ticket information | `/ticket info` | Stored metadata only; owner or support staff; recent-message exports through `/ticket transcript` |
-| ticket transcripts | `/ticket transcript` | Private text/JSON snapshots of up to 100 recent messages; current role/read access checks; full-history exports and retention remain unfinished |
+| ticket transcripts | `/ticket transcript` | Private text/JSON snapshots of up to 1000 messages with history cursors, gzip and current requester/bot read checks; automatic archives and retention remain unfinished |
 | tickets guests | `/ticket guest add`, `/ticket guest remove`, `/ticket guest list` | Staff-only, 20 screened human guests, persistent intent and permission verification; closure revokes, reopening does not reinvite |
 | tickets rename | `/ticket rename` | Open Latch tickets only; staff-only; no arbitrary text-channel rename |
 | giveaway edit prize, duration, winners, host, description, image, thumbnail | `/giveaway edit` subcommands | Staff Manage Messages; edits before deadline; human host attribution and bounded HTTPS media; lifetime limited to 30 days |

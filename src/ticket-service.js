@@ -1,6 +1,6 @@
 'use strict';
 
-const { exportTranscript, channelAccess, LIMIT } = require('./ticket-transcript');
+const { exportTranscript, collectTranscript, channelAccess, LIMIT } = require('./ticket-transcript');
 const { MAX_GUESTS } = require('./ticket-store');
 
 const PERMISSIONS = Object.freeze({
@@ -151,12 +151,20 @@ class TicketService {
     }));
   }
 
-  list({ userId, roles = [], permissions = '0', page = 1 }) {
+  list({ userId, roles = [], permissions = '0', page = 1, state = 'active', ownerId, handlerId, assignment = 'all' }) {
     if (!Number.isInteger(page) || page < 1 || page > 10000) return { ok: false, reason: 'Choose a valid page.' };
+    if (!['active', 'open', 'closing', 'closed', 'reopening', 'all'].includes(state) || !['all', 'assigned', 'unassigned'].includes(assignment) || [ownerId, handlerId].some(id => id !== undefined && (typeof id !== 'string' || !/^\d{5,25}$/.test(id)))) return { ok: false, reason: 'Choose valid ticket state, assignment and member filters.' };
     const staff = this.isStaff({ roles, permissions });
-    const records = this.store.list().filter((ticket) => ticket.status !== 'closed' && (staff || ticket.ownerId === userId))
-      .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
-    return { ok: true, tickets: records.slice((page - 1) * 10, page * 10), total: records.length, page, pages: Math.max(1, Math.ceil(records.length / 10)) };
+    if (!staff && (ownerId !== undefined && ownerId !== userId || handlerId !== undefined || assignment !== 'all')) return { ok: false, reason: 'Support queue member and assignment filters require support access. Members can browse only their own ticket history.' };
+    const records = this.store.list().filter(ticket => (staff || ticket.ownerId === userId)
+      && (state === 'all' || state === 'active' && ticket.status !== 'closed' || ticket.status === state)
+      && (ownerId === undefined || ticket.ownerId === ownerId)
+      && (handlerId === undefined || ticket.claimedBy === handlerId)
+      && (assignment === 'all' || (assignment === 'assigned' ? Boolean(ticket.claimedBy) : !ticket.claimedBy)))
+      .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || (BigInt(a.channelId) < BigInt(b.channelId) ? -1 : BigInt(a.channelId) > BigInt(b.channelId) ? 1 : 0));
+    const pages = Math.max(1, Math.ceil(records.length / 10));
+    if (page > pages) return { ok: false, reason: `Choose a page from 1 to ${pages} for these filters.` };
+    return { ok: true, tickets: records.slice((page - 1) * 10, page * 10), total: records.length, page, pages, state, ownerId, handlerId, assignment };
   }
 
   stats(actor) {
@@ -173,24 +181,32 @@ class TicketService {
     return { ok: true, ticket: { ...ticket } };
   }
 
-  async transcript({ channelId, userId, roles = [], permissions = '0', limit = 50, format = 'text' }) {
-    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId) || !Number.isInteger(limit) || limit < 1 || limit > LIMIT || !['text', 'json'].includes(format)) return { ok: false, reason: 'Choose a ticket, text or JSON, and 1 to 100 recent messages.' };
+  async transcript({ channelId, userId, roles = [], permissions = '0', limit = 50, format = 'text', compression = 'none', before }) {
+    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId) || !Number.isInteger(limit) || limit < 1 || limit > LIMIT || !['text', 'json'].includes(format) || !['none', 'gzip'].includes(compression) || before !== undefined && (typeof before !== 'string' || !/^\d{5,25}$/.test(before))) return { ok: false, reason: 'Choose a ticket, text or JSON, 1 to 1000 messages and an optional numeric before cursor.' };
     return this.store.withChannelLock(channelId, async () => {
       const ticket = this.store.getByChannel(channelId);
       if (!ticket || ticket.ownerId !== userId && !this.isStaff({ roles, permissions })) return { ok: false, reason: 'Only the ticket owner or support team can export its conversation.' };
-      const member = await this.discord.getGuildMember(this.config.guildId, userId);
-      if (member?.user?.id !== userId || member.user.bot || member.pending) return { ok: false, reason: 'Conversation exports require current human membership and completed screening.' };
-      const [guild, currentRoles, channel] = await Promise.all([this.discord.getGuild(this.config.guildId), this.discord.request('GET', `/guilds/${this.config.guildId}/roles`), this.discord.request('GET', `/channels/${channelId}`)]);
-      if (guild?.id !== this.config.guildId) throw new Error('Transcript guild unavailable.');
-      const entries = privateChannel(channel, channelId, this.config.guildId);
-      const access = channelAccess({ guild, roles: currentRoles, member, entries });
-      if (ticket.ownerId !== userId && !this.isStaff({ roles: member.roles, permissions: access.base.toString() })) return { ok: false, reason: 'Your support access is no longer active.' };
-      if (!access.readable) return { ok: false, reason: 'Your current roles and ticket permissions must allow viewing the channel and reading message history.' };
-      const before = permissionSnapshot(entries);
-      const messages = await this.discord.getChannelMessages(channelId, limit);
-      const file = exportTranscript({ ticket, channelId, guildId: this.config.guildId, messages, limit, format, exportedAt: this.now().toISOString() });
-      const confirmed = await this.discord.request('GET', `/channels/${channelId}`);
-      if (permissionSnapshot(privateChannel(confirmed, channelId, this.config.guildId)) !== before) throw new Error('Ticket permissions changed during export. Retry after inspection.');
+      const accessSnapshot = async () => {
+        const [guild, currentRoles, channel, member, bot] = await Promise.all([
+          this.discord.getGuild(this.config.guildId), this.discord.request('GET', `/guilds/${this.config.guildId}/roles`), this.discord.request('GET', `/channels/${channelId}`),
+          this.discord.getGuildMember(this.config.guildId, userId), this.discord.getGuildMember(this.config.guildId, this.botUserId)
+        ]);
+        if (guild?.id !== this.config.guildId || bot?.user?.id !== this.botUserId) throw new Error('Transcript guild or bot membership unavailable.');
+        if (member?.user?.id !== userId || member.user.bot || member.pending) return { ok: false, reason: 'Conversation exports require current human membership and completed screening.' };
+        const entries = privateChannel(channel, channelId, this.config.guildId);
+        const access = channelAccess({ guild, roles: currentRoles, member, entries });
+        if (ticket.ownerId !== userId && !this.isStaff({ roles: member.roles, permissions: access.base.toString() })) return { ok: false, reason: 'Your support access is no longer active.' };
+        if (!access.readable) return { ok: false, reason: 'Your current roles and ticket permissions must allow viewing the channel and reading message history.' };
+        if (!channelAccess({ guild, roles: currentRoles, member: bot, entries }).readable) return { ok: false, reason: 'Latch needs View Channel and Read Message History to export this ticket.' };
+        return { ok: true, permissions: permissionSnapshot(entries) };
+      };
+      const initial = await accessSnapshot();
+      if (!initial.ok) return initial;
+      const history = await collectTranscript({ discord: this.discord, channelId, limit, before });
+      const confirmed = await accessSnapshot();
+      if (!confirmed.ok) return confirmed;
+      if (confirmed.permissions !== initial.permissions) throw new Error('Ticket permissions changed during export. Retry after inspection.');
+      const file = exportTranscript({ ticket, channelId, guildId: this.config.guildId, ...history, limit, format, compression, exportedAt: this.now().toISOString() });
       return { ok: true, file };
     });
   }

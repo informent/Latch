@@ -8,3 +8,9 @@ data/*.json
 data/*.tmp
 node_modules/
 npm-debug.log*
+
+# Private exported conversation files
+ticket-*.txt
+ticket-*.json
+ticket-*.txt.gz
+ticket-*.json.gz

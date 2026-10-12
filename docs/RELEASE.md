@@ -1,6 +1,6 @@
 # Release readiness
 
-Latch v0.31.0 is a release candidate. It is available as free MIT-licensed source and a Linux container build, for one configured guild per process. It requires Node 22.9+ or Node 24; there are no third-party runtime packages or paid command gates. The complete [command reference](../COMMANDS.md) covers the registered implementation. Full competitor parity remains unfinished.
+Latch v0.32.0 is a release candidate. It is available as free MIT-licensed source and a Linux container build, for one configured guild per process. It requires Node 22.9+ or Node 24; there are no third-party runtime packages or paid command gates. The complete [command reference](../COMMANDS.md) covers the registered implementation. Full competitor parity remains unfinished.
 
 ## Automated release checks
 
@@ -22,10 +22,10 @@ Docker CI proves execution of the isolated workflow inside the built image. It d
 
 ## Get and install the candidate
 
-Download the source ZIP and SHA256SUMS from the [v0.31.0 release](https://github.com/informent/Latch/releases/tag/v0.31.0). Compare the ZIP hash before extracting; then run commands from the extracted Latch directory.
+Download the source ZIP and SHA256SUMS from the [v0.32.0 release](https://github.com/informent/Latch/releases/tag/v0.32.0). Compare the ZIP hash before extracting; then run commands from the extracted Latch directory.
 
 ```powershell
-Get-FileHash ./Latch-v0.31.0-source.zip -Algorithm SHA256
+Get-FileHash ./Latch-v0.32.0-source.zip -Algorithm SHA256
 npm run setup
 # Follow the guided setup prompts.
 npm run doctor
@@ -63,7 +63,7 @@ No live account/server access is bundled or automatically provisioned by the can
 
 ## Online preflight from the current main branch
 
-After configuring .env locally, run `npm run doctor:live -- --json` before live acceptance testing. This command is available on main in v0.31.0. It makes authenticated GET requests only, checks identity, membership, guild permission masks, configured support role and channels, and compares registered command definitions with the local version. It never registers commands or changes Discord objects. Output omits credentials, IDs, response bodies and remote error text. A nonzero exit code means a required check failed. Warnings explain permissions and behavior that still need live validation.
+After configuring .env locally, run `npm run doctor:live -- --json` before live acceptance testing. This command is available on main in v0.32.0. It makes authenticated GET requests only, checks identity, membership, guild permission masks, configured support role and channels, and compares registered command definitions with the local version. It never registers commands or changes Discord objects. Output omits credentials, IDs, response bodies and remote error text. A nonzero exit code means a required check failed. Warnings explain permissions and behavior that still need live validation.
 
 Guild permission masks do not include channel overwrites or target role hierarchy. A successful preflight does not prove HTTPS signatures, Gateway events, actual command execution or production persistence. Keep using the stable release checklist above. Command registration reads use the official [Get Guild Application Commands endpoint](https://docs.discord.com/developers/interactions/application-commands#get-guild-application-commands).
 
@@ -72,3 +72,5 @@ The 0.29.0 command expansion requires re-running `npm run register` after upgrad
 Version 0.30.0 adds three guest commands; re-register after upgrading. The next successful ticket mutation writes format 2. See [ticket guest migration and recovery](TICKET-GUESTS.md).
 
 Version 0.31.0 adds `/ticket transcript`; re-register after upgrading. Validate real private text/JSON uploads and Message Content access before stable release. See [export limits](TICKET-TRANSCRIPTS.md).
+
+Version 0.32.0 expands transcript count and adds before/compression options. Re-register commands and validate paged private downloads, gzip unpacking and live access revocation. Downloaded JSON snapshots use schema 2; no additional ticket store migration is introduced.

@@ -266,8 +266,8 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
     if (commandName === 'ticket' && subcommand?.name === 'transcript') {
       return { immediate: defer(), work: async () => {
         try {
-          const result = await tickets.transcript({ channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0', limit: findOption(subcommand.options || [], 'count') ?? 50, format: findOption(subcommand.options || [], 'format') ?? 'text' });
-          const content = result.ok ? `Private snapshot: ${result.file.count} of up to ${result.file.limit} recent messages. Older/deleted messages and attachment bytes are excluded. Discord content access can limit this export. Keep the downloaded file private.` : result.reason;
+          const result = await tickets.transcript({ channelId: findOption(subcommand.options || [], 'channel') || interaction.channel_id, userId: user.id, roles: interaction.member?.roles || [], permissions: interaction.member?.permissions || '0', limit: findOption(subcommand.options || [], 'count') ?? 50, format: findOption(subcommand.options || [], 'format') ?? 'text', before: findOption(subcommand.options || [], 'before'), compression: findOption(subcommand.options || [], 'compression') ?? 'none' });
+          const content = result.ok ? `Private snapshot: ${result.file.count} of up to ${result.file.limit} messages across ${result.file.pagination.pages} history page(s). ${result.file.pagination.nextBefore ? `Continue with before:${result.file.pagination.nextBefore}. ` : 'History ended during this read. '}Messages outside this window, deleted messages and attachment bytes are excluded. Discord content access can limit this export. Keep the downloaded file private.\nSHA256: ${result.file.sha256}` : result.reason;
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } }, result.ok ? result.file : undefined);
         } catch {
           try { logger('ticket_transcript_failed', {}); } catch {}
@@ -323,8 +323,8 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           let result;
           let content;
           if (action === 'list') {
-            result = tickets.list({ ...actor, page: findOption(subcommand.options || [], 'page') ?? 1 });
-            content = result.ok ? `**Open tickets: ${result.total} (page ${result.page}/${result.pages})**\n${result.tickets.map((ticket) => `<#${ticket.channelId}> | owner <@${ticket.ownerId}> | ${ticket.status} | ${ticket.claimedBy ? `handler <@${ticket.claimedBy}>` : 'unclaimed'}`).join('\n') || 'No tickets on this page.'}` : result.reason;
+            result = tickets.list({ ...actor, page: findOption(subcommand.options || [], 'page') ?? 1, state: findOption(subcommand.options || [], 'state') ?? 'active', ownerId: findOption(subcommand.options || [], 'owner'), handlerId: findOption(subcommand.options || [], 'handler'), assignment: findOption(subcommand.options || [], 'assignment') ?? 'all' });
+            content = result.ok ? `**Tickets: ${result.total} (page ${result.page}/${result.pages})**\nState: ${result.state} | assignment: ${result.assignment}${result.ownerId ? ` | owner <@${result.ownerId}>` : ''}${result.handlerId ? ` | handler <@${result.handlerId}>` : ''}\n${result.tickets.map((ticket) => `<#${ticket.channelId}> | owner <@${ticket.ownerId}> | ${ticket.status} | ${ticket.claimedBy ? `handler <@${ticket.claimedBy}>` : 'unclaimed'}`).join('\n') || 'No tickets on this page.'}` : result.reason;
           } else if (action === 'stats') {
             result = tickets.stats(actor);
             content = result.ok ? `**Ticket statistics**\nTotal: ${result.total}\nOpen: ${result.open}\nClosing: ${result.closing}\nReopening: ${result.reopening ?? 0}\nClosed: ${result.closed}\nOpen and claimed: ${result.claimed}` : result.reason;
