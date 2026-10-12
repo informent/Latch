@@ -25,7 +25,7 @@ const commands = [
       subcommand('rename', 'Rename an open ticket as support staff.', [option(3, 'name', 'Lowercase letters, digits and hyphens; maximum 90 characters.', { required: true, min_length: 1, max_length: 90 }), option(7, 'channel', 'Ticket channel; defaults to this channel.', { channel_types: [0] })])]
   },
   {
-    name: 'moderation', description: 'Moderate members and manage server warnings.', type: 1,
+    name: 'moderation', description: 'Moderate members and manage staff warnings and strikes.', type: 1,
     options: [
       subcommand('ban', 'Ban a member from this server.', [target, reason]),
       subcommand('unban', 'Remove a server ban by user ID.', [option(3, 'user-id', 'ID of the banned user.', { required: true, min_length: 5, max_length: 25 }), reason]),
@@ -36,7 +36,11 @@ const commands = [
       subcommand('slowmode', 'Set the current channel slowmode.', [option(4, 'seconds', 'Delay between messages (0 to disable, maximum 21600).', { required: true, min_value: 0, max_value: 21600 })]),
       subcommand('warn', 'Record a staff warning for a member.', [target, option(3, 'reason', 'Why this warning was issued.', { required: true, max_length: 400 })]),
       subcommand('warnings', 'Show recorded warnings for a member.', [target]),
-      subcommand('clear-warnings', 'Clear recorded warnings for a member.', [target])
+      subcommand('clear-warnings', 'Clear recorded warnings for a member.', [target]),
+      subcommand('strike-add', 'Record an individually tracked staff strike.', [target, option(3, 'reason', 'Why this strike was issued.', { required: true, max_length: 400 }), option(4, 'days', 'Optional expiry in 1 to 365 days.', { min_value: 1, max_value: 365 })]),
+      subcommand('strike-list', 'List active strikes or the full strike history.', [target, option(5, 'include-history', 'Include removed and expired strikes.'), option(4, 'page', 'History page, five records per page.', { min_value: 1, max_value: 2000 })]),
+      subcommand('strike-remove', 'Remove one active strike and keep its audit record.', [target, option(3, 'case-id', 'Full case ID shown by strike-list.', { required: true, min_length: 36, max_length: 36 }), option(3, 'reason', 'Why the strike is being removed.', { required: true, max_length: 400 })]),
+      subcommand('strike-clear', 'Clear all active strikes while preserving their history.', [target, option(3, 'reason', 'Why the active strikes are being cleared.', { required: true, max_length: 400 })])
     ]
   },
   {

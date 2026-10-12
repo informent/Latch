@@ -9,7 +9,7 @@ async function fixture(t, missing = false) {
     const file = path.join(root, 'data', definition.file); config[definition.key] = file;
     if (missing) continue;
     const store = definition.guildBound ? new definition.Store(file, ids.guild) : new definition.Store(file);
-    const state = store.state || (definition.key === 'storePath' ? { version: 1, tickets: [] } : definition.key === 'moderationStorePath' ? { version: 1, warnings: [] } : definition.key === 'communityStorePath' ? { version: 2, jobs: [] } : { version: 1, accounts: [] });
+    const state = store.state || (definition.key === 'storePath' ? { version: 1, tickets: [] } : definition.key === 'moderationStorePath' ? { version: 2, warnings: [], strikes: [] } : definition.key === 'communityStorePath' ? { version: 2, jobs: [] } : { version: 1, accounts: [] });
     await fs.writeFile(file, JSON.stringify(state));
   }
   const destination = path.join(root, 'backup');

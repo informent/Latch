@@ -2,7 +2,7 @@
 
 Latch is a free, open-source, self-hosted Discord server bot. Its feature suites cover moderation, AutoMod, roles, staff warnings, utilities, tickets, coins, XP, embeds, polls, reminders, giveaways, games, and optional temporary voice channels. It requires no SaaS account, paid tier, database server, or third-party runtime package.
 
-[![CI](https://github.com/informent/Latch/actions/workflows/ci.yml/badge.svg)](https://github.com/informent/Latch/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Operations guide](docs/OPERATIONS.md) · [Changelog](CHANGELOG.md) · [Feature roadmap](ROADMAP.md)
+[![CI](https://github.com/informent/Latch/actions/workflows/ci.yml/badge.svg)](https://github.com/informent/Latch/actions/workflows/ci.yml) · [MIT license](LICENSE) · [Operations guide](docs/OPERATIONS.md) · [Moderation guide](docs/MODERATION.md) · [Changelog](CHANGELOG.md) · [Feature roadmap](ROADMAP.md)
 
 ## Start here
 
@@ -64,7 +64,7 @@ Saved embed templates use `data/templates.json`, an eighth guild-bound store wit
 
 Role menus and join-role configuration use `data/role-menus.json` for guild, menu/channel/message IDs, titles, labels, role IDs, menu states and publication retry metadata. Include this seventh store in backups. Member role assignments remain in Discord; interaction tokens are not stored.
 
-Latch stores ticket state in `data/tickets.json`, staff warning records in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, host attribution, descriptions, media URLs and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning records contain guild, target, and staff user IDs, a reason, and a timestamp. Leveling uses message events but stores guild/user IDs, XP, award timestamps, the latest awarded message ID and per-guild settings (including ignored channel IDs); received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
+Latch stores ticket state in `data/tickets.json`, staff warnings and strike history in `data/moderation.json`, per-server coin balances and reward cooldowns in `data/economy.json`, per-server XP in `data/levels.json`, and scheduled community jobs in `data/community.json`. Community records include reminder text or giveaway prizes, user/channel IDs, deadlines, entrants, winners, host attribution, descriptions, media URLs and retry status; they never include interaction tokens. Completed/cancelled jobs are pruned after seven days while the scheduler runs. Warning and strike records contain guild, target, and staff user IDs, a reason, and timestamps; strike entries also keep expiry and removal history. Leveling uses message events but stores guild/user IDs, XP, award timestamps, the latest awarded message ID and per-guild settings (including ignored channel IDs); received message content is never persisted or logged. Welcome messages use member join events when enabled. Keep all data files private and back them up together. Ticket conversations remain in Discord and follow your server's retention settings.
 
 ## Requirements
 
@@ -97,7 +97,7 @@ See the generated [complete command reference](COMMANDS.md) for the current comm
 - `/moderation ban`, `/moderation kick`, `/moderation timeout`, and `/moderation untimeout` perform Discord moderation actions with audit-log reasons. Discord enforces the bot's permissions and role hierarchy.
 - `/moderation purge` deletes up to 100 recent messages from the current channel and skips messages older than 14 days. `/moderation slowmode` sets or disables the current channel's slowmode.
 - `/roles grant`, `/roles revoke`, `/roles nickname`, and `/roles clear-nickname` manage member roles and nicknames. Discord enforces role hierarchy and permissions.
-- `/moderation warn`, `/moderation warnings`, and `/moderation clear-warnings` maintain a local staff-warning register.
+- `/moderation warn`, `/moderation warnings`, and `/moderation clear-warnings` maintain a local staff-warning register. `/moderation strike-add`, `strike-list`, `strike-remove`, and `strike-clear` add individually tracked strikes with optional expiry and retained removal history. Strikes do not trigger automatic punishments. See the [moderation guide](docs/MODERATION.md).
 - `/utility` now includes member banners, server artwork, paginated role/emoji/sticker browsers, boost status, timestamps, ID decoding, color inspection and a bounded calculator. All replies are private. See the [utility guide](docs/UTILITIES.md).
 - Optional welcome messages and join burst reports use member join events. Both require the Server Members privileged intent; burst detection only logs an alert.
 - `/economy balance`, `/economy daily`, `/economy work`, and `/economy pay` provide a small per-server coin system. Daily rewards are 100 coins; work rewards 25-100 coins with a one-hour cooldown. Transfers are limited to 1,000,000 coins per command.

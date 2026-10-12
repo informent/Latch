@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 216 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 220 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -12,7 +12,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 
 - [/poll](#poll): Create a native Discord community poll.
 - [/ticket](#ticket): Create or close a private support ticket.
-- [/moderation](#moderation): Moderate members and manage server warnings.
+- [/moderation](#moderation): Moderate members and manage staff warnings and strikes.
 - [/utility](#utility): Useful server information and bot health.
 - [/economy](#economy): Earn, save, and share server coins.
 - [/roles](#roles): Manage server roles and member nicknames.
@@ -191,7 +191,7 @@ Rename an open ticket as support staff.
 
 ## moderation
 
-Moderate members and manage server warnings.
+Moderate members and manage staff warnings and strikes.
 
 Default command visibility: all members; individual staff actions require runtime permission checks.
 
@@ -281,6 +281,45 @@ Clear recorded warnings for a member.
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | user | user | yes | Member to act on. |
+
+### /moderation strike-add
+
+Record an individually tracked staff strike.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to act on. |
+| reason | text | yes | Why this strike was issued.; Maximum text length: 400 |
+| days | integer | no | Optional expiry in 1 to 365 days.; Minimum: 1; Maximum: 365 |
+
+### /moderation strike-list
+
+List active strikes or the full strike history.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to act on. |
+| include-history | boolean | no | Include removed and expired strikes. |
+| page | integer | no | History page, five records per page.; Minimum: 1; Maximum: 2000 |
+
+### /moderation strike-remove
+
+Remove one active strike and keep its audit record.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to act on. |
+| case-id | text | yes | Full case ID shown by strike-list.; Minimum text length: 36; Maximum text length: 36 |
+| reason | text | yes | Why the strike is being removed.; Maximum text length: 400 |
+
+### /moderation strike-clear
+
+Clear all active strikes while preserving their history.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| user | user | yes | Member to act on. |
+| reason | text | yes | Why the active strikes are being cleared.; Maximum text length: 400 |
 
 ## utility
 

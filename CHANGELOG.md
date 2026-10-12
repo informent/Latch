@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add staff-only strike add, list, remove and clear actions with unique case IDs, optional expiry and preserved removal history. Strike decisions stay manual; the bot does not apply automatic punishments.
+- Upgrade moderation data from version 1 to version 2 on the next successful write while preserving existing warning records.
+- Add strike lifecycle, migration, permission and command-catalog coverage. Live Discord acceptance remains pending.
+
 ## 0.35.0 - 2026-10-12
 
 - Add five staff starboard commands: paginated history, exact existing-post recovery, durable retirement, source removal and bounded pruning.

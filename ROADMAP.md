@@ -6,7 +6,7 @@ All Latch features are intended to be available without subscriptions or premium
 
 | Area | Current implementation | Remaining work |
 | --- | --- | --- |
-| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, staff warnings; live actor/bot hierarchy checks for member moderation | Cases, strikes/expiry, appeals, configurable audit channel, delegation audit records and configurable policies |
+| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, warnings, persistent strikes with optional expiry and retained removal history; live actor/bot hierarchy checks for member moderation | Case history for every action, strike thresholds and optional punishment policies, appeals, configurable audit channel, delegation audit records and configurable policies |
 | AutoMod | Native keyword, spam, mention and preset filters; rule inspection, enable/disable/remove, role/channel exemptions, allowed words and block explanations | Regex validation, advanced action policies and management UI |
 | Server security | Join burst detection; native mention-raid filter | Account-age policies, antinuke audit attribution, action budgets, restoration plans |
 | Tickets | Private channels, durable ownership/assignment, filtered queues and closed history, stats/info, saved reasons, rename, permission-preserving moves and retryable closure, staff reopening, retryable guest access with close-time revocation, paged text/JSON history exports with cursors and gzip and persistent category-button panels | Per-option policies/intake forms, automatic archival, attachments and configurable retention |
