@@ -41,9 +41,33 @@ Operations serialize within this process and re-read the rule before each edit, 
 
 Allowed words replace the current exception list on keyword or preset rules; omitting words clears it. Latch accepts up to 100 comma-separated entries of 60 characters each, removes duplicates and preserves other trigger metadata, including existing regex patterns. The bot does not validate or author Rust regex patterns.
 
-Block explanations accept 1-150 characters and require an existing message-blocking action. Other actions and their metadata are retained. Latch does not add timeout or alert actions through these commands. Existing externally configured actions remain active.
+Block explanations accept 1-150 characters and require an existing message-blocking action. Other actions and their metadata are retained. Use `/automod policy` to configure blocking, alert and timeout combinations. See [action policies and filter editing](AUTOMOD-POLICIES.md) for limits, permissions and alert privacy.
 
 These configuration commands preserve the enabled state. Editing an enabled rule takes effect in Discord without a separate enable command. Use `disable` before configuring a rule if staff need a review period. `remove` permanently deletes the native rule.
+
+## Upgrade and first policy
+
+Back up the existing installation before upgrading. Keep the existing `.env` and data files private and preserve their paths. After installing this version, run:
+
+```sh
+npm run doctor
+npm run register
+npm run doctor:live
+```
+
+Restart the bot. The new commands will appear after registration; no local AutoMod data migration is needed. Existing native rules stay in Discord.
+
+Create a disabled rule, copy its ID from the private response, then configure and inspect it:
+
+```text
+/automod keywords name:Link safety keywords:*scam*
+/automod block-message rule:RULE_ID message:Please follow the community rules.
+/automod policy rule:RULE_ID mode:block-alert channel:STAFF_CHANNEL
+/automod info rule:RULE_ID
+/automod enable rule:RULE_ID
+```
+
+Choose the actual ID and channel using Discord's command inputs. An alert logs matching user content in the selected channel. Test with a non-exempt member in a non-exempt test channel. Disable the rule immediately if it blocks legitimate messages, adjust keywords or allowed words, inspect again and re-enable after review. Use a keyword or mention rule and add `seconds` for timeout modes; both staff and bot need Moderate Members.
 
 ## Recovery and verification
 
