@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add in-place AutoMod keyword and mention editing, optional raid detection changes and rule renaming with existing rule IDs and enforcement settings preserved.
+
 - Add `/automod policy` with block, alert and timeout combinations, strict trigger and channel validation, extra staff timeout permission checks, serialized edits and audit reasons.
 - Preserve filters, exemptions, enable state and existing block explanations; reject unsupported actions. Show alert destinations and timeout duration in rule inspection.
 - Add 19 AutoMod regression tests and document policy replacement and alert privacy.

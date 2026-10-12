@@ -107,6 +107,29 @@ class AutoModService {
       return { changed: true };
     });
   }
+  editFilter({ ruleId, kind, keywords, limit, raidProtection, name, actorId }) {
+    return this.#serialize(async () => {
+      const rule = await this.#owned(ruleId); let patch;
+      if (kind === 'rename') {
+        if (typeof name !== 'string' || !name.trim() || name.trim().length > 80 || /[\r\n\u0000]/.test(name)) throw new Error('Use a single-line rule name of 1 to 80 characters.');
+        patch = { name: PREFIX + name.trim() };
+      } else {
+        if (rule.event_type !== 1 || !rule.trigger_metadata || typeof rule.trigger_metadata !== 'object' || Array.isArray(rule.trigger_metadata)) throw new Error('Rule metadata is invalid.');
+        if (kind === 'keywords-edit') {
+          if (rule.trigger_type !== 1 || typeof keywords !== 'string') throw new Error('Choose a keyword message rule and enter keywords.');
+          const terms = [...new Set(keywords.split(',').map((term) => term.trim()).filter(Boolean))];
+          if (!terms.length || terms.length > 100 || terms.some((term) => term.length > 60)) throw new Error('Use 1 to 100 keywords, each at most 60 characters.');
+          patch = { trigger_metadata: { ...rule.trigger_metadata, keyword_filter: terms } };
+        } else if (kind === 'mentions-edit') {
+          if (rule.trigger_type !== 5 || !Number.isInteger(limit) || limit < 1 || limit > 50 || raidProtection !== undefined && typeof raidProtection !== 'boolean') throw new Error('Choose a mention rule, a limit from 1 to 50 and an optional boolean raid setting.');
+          patch = { trigger_metadata: { ...rule.trigger_metadata, mention_total_limit: limit, ...(raidProtection === undefined ? {} : { mention_raid_protection_enabled: raidProtection }) } };
+        } else throw new Error('Choose a supported filter edit.');
+      }
+      if (Object.entries(patch).every(([key, value]) => JSON.stringify(value) === JSON.stringify(rule[key]))) return { changed: false };
+      await this.discord.editAutoModRule(this.guildId, ruleId, patch, `AutoMod ${kind} by ${actorId}`);
+      return { changed: true };
+    });
+  }
   async #owned(ruleId) {
     if (!ID(ruleId)) throw new Error('Enter a valid rule ID.');
     const rule = await this.discord.getAutoModRule(this.guildId, ruleId);

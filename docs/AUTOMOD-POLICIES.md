@@ -17,3 +17,11 @@ The command preserves a valid existing block explanation when blocking remains s
 Review `/automod info` and Server Settings > AutoMod before enabling. Test with a non-exempt member in a non-exempt channel. Discord exemptions and platform behavior still apply. This feature has automated adapter tests; live Discord enforcement acceptance remains pending.
 
 [Discord Auto Moderation reference](https://docs.discord.com/developers/resources/auto-moderation)
+
+## Edit existing filters
+
+- `/automod keywords-edit rule:<id> keywords:<comma-separated terms>` replaces the keyword list. Accepts 1 to 100 unique nonempty terms of up to 60 characters, within the command's 2000-character input. Existing regex patterns and allow words are preserved.
+- `/automod mentions-edit rule:<id> limit:<1-50> raid-protection:<true|false>` updates the mention threshold. Omit raid-protection to preserve its current value. An explicit false disables raid detection.
+- `/automod rename rule:<id> name:<new name>` preserves the rule ID and other settings. The Latch prefix is applied automatically, including on rules with the legacy OpenDesk prefix.
+
+All require Manage Server, only edit rules created by this bot, serialize with other Latch AutoMod changes and preserve actions, exemptions and enable state. Identical updates send no write. Changes on an enabled rule apply immediately; disable it first if staff need to review the new filter. Discord API failures leave the local operation queue available for retry. External edits made simultaneously in Server Settings are not covered by this queue.
