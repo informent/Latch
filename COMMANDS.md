@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 203 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 204 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -582,6 +582,17 @@ Default command visibility: Manage Server (32).
 List server AutoMod rules and their IDs.
 
 Options: none.
+
+### /automod policy
+
+Replace rule actions without changing filters or enable state.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| rule | text | yes | Latch rule ID.; Maximum text length: 25 |
+| mode | text | yes | Actions to execute when this rule matches.; Choices: block = block, alert = alert, block-alert = block-alert, block-timeout = block-timeout, block-alert-timeout = block-alert-timeout |
+| channel | channel | no | Alert destination. Required only for alert policies.; Allowed Discord channel type IDs: 0, 5 |
+| seconds | integer | no | Timeout duration. Required only for timeout policies.; Minimum: 1; Maximum: 2419200 |
 
 ### /automod info
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add `/automod policy` with block, alert and timeout combinations, strict trigger and channel validation, extra staff timeout permission checks, serialized edits and audit reasons.
+- Preserve filters, exemptions, enable state and existing block explanations; reject unsupported actions. Show alert destinations and timeout duration in rule inspection.
+- Add 19 AutoMod regression tests and document policy replacement and alert privacy.
+
+
 ## 0.32.0 - 2026-10-11
 
 - Add support queue state, owner, handler and assignment filters, private closed history for ticket owners and explicit filtered-page errors.

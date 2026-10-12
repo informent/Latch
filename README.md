@@ -149,3 +149,5 @@ Support queues: `/ticket list` now filters active/closed history, owner, handler
 ## Development
 
 There are no third-party runtime dependencies. Run `npm run release:verify` before proposing changes. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+AutoMod staff controls: [action policies, timeout limits and alert privacy](docs/AUTOMOD-POLICIES.md).
