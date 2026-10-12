@@ -92,6 +92,11 @@ const commands = [
     options: [
       subcommand('configure', 'Enable a destination and add a public source channel.', [option(7, 'destination', 'Public starboard text channel.', { required: true, channel_types: [0] }), option(7, 'source', 'Public text channel to watch.', { required: true, channel_types: [0] }), option(4, 'threshold', 'Eligible normal stars needed for a first highlight.', { required: true, min_value: 2, max_value: 50 })]),
       subcommand('status', 'Inspect saved settings and pending publication receipts.'),
+      subcommand('source-remove', 'Stop watching one source; keep its saved highlights.', [option(7, 'channel', 'Source channel to stop watching.', { required: true })]),
+      subcommand('list', 'Browse tracked highlights and pending or completed operations.', [option(3, 'state', 'Filter by saved lifecycle state.', { choices: ['all', 'pending', 'posted', 'deleting', 'deleted'].map(value => ({ name: value, value })) }), option(4, 'page', 'Ten records per page.', { min_value: 1, max_value: 10000 })]),
+      subcommand('recover', 'Attach a verified existing bot post to a pending source receipt.', [option(3, 'message', 'Pending source message ID.', { required: true, min_length: 5, max_length: 25 }), option(3, 'post', 'Existing highlight message ID in the saved destination.', { required: true, min_length: 5, max_length: 25 })]),
+      subcommand('retire', 'Delete a verified highlight and retain a record preventing reposts.', [option(3, 'message', 'Tracked source message ID.', { required: true, min_length: 5, max_length: 25 })]),
+      subcommand('prune', 'Free capacity by forgetting completed deletions from removed sources.', [option(7, 'channel', 'Optional removed source filter.'), option(4, 'limit', 'Maximum records to forget; default 25.', { min_value: 1, max_value: 100 })]),
       subcommand('pause', 'Pause reaction-driven publishing without deleting highlights.'),
       subcommand('sync', 'Reconcile one source message from current Discord reactions.', [option(7, 'channel', 'Configured source text channel.', { required: true, channel_types: [0] }), option(3, 'message', 'Source message ID.', { required: true, min_length: 5, max_length: 25 })])
     ]

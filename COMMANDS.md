@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 211 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 216 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -593,6 +593,49 @@ Enable a destination and add a public source channel.
 Inspect saved settings and pending publication receipts.
 
 Options: none.
+
+### /starboard source-remove
+
+Stop watching one source; keep its saved highlights.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| channel | channel | yes | Source channel to stop watching. |
+
+### /starboard list
+
+Browse tracked highlights and pending or completed operations.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| state | text | no | Filter by saved lifecycle state.; Choices: all = all, pending = pending, posted = posted, deleting = deleting, deleted = deleted |
+| page | integer | no | Ten records per page.; Minimum: 1; Maximum: 10000 |
+
+### /starboard recover
+
+Attach a verified existing bot post to a pending source receipt.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| message | text | yes | Pending source message ID.; Minimum text length: 5; Maximum text length: 25 |
+| post | text | yes | Existing highlight message ID in the saved destination.; Minimum text length: 5; Maximum text length: 25 |
+
+### /starboard retire
+
+Delete a verified highlight and retain a record preventing reposts.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| message | text | yes | Tracked source message ID.; Minimum text length: 5; Maximum text length: 25 |
+
+### /starboard prune
+
+Free capacity by forgetting completed deletions from removed sources.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| channel | channel | no | Optional removed source filter. |
+| limit | integer | no | Maximum records to forget; default 25.; Minimum: 1; Maximum: 100 |
 
 ### /starboard pause
 

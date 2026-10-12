@@ -106,4 +106,4 @@ Giveaways add six paths for role/level requirements, clearing requirements, curr
 
 Six additional paths add host/description/image/thumbnail editing, presentation resets and private saved-embed previews. Creation accepts optional presentation settings, and list now supports five-entry pages with complete prizes and retained history. The [Bleed giveaway guide](https://docs.bleed.bot/miscellaneous/giveaway) was checked again on 2026-10-11 for these documented capabilities. This implements the named behaviors with Latch syntax and limits; it does not prove full competitor parity or live Discord operation.
 
-Starboard: `/starboard configure`, `status`, `pause` and `sync` are implemented for public-message link highlights. See [limits and recovery](STARBOARD.md).
+Starboard: `/starboard configure`, `status`, `pause`, `sync`, `list`, `recover`, `retire`, `source-remove` and `prune` are implemented for public-message link highlights. See [limits and recovery](STARBOARD.md).

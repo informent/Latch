@@ -7,7 +7,7 @@ class StarboardStore {
   constructor(filePath, guildId) {
     this.filePath = filePath;
     this.guildId = guildId;
-    this.state = { version: 1, guildId, settings: null, entries: [] };
+    this.state = { version: 2, guildId, settings: null, entries: [] };
     this.queue = Promise.resolve();
   }
   valid(s) {
@@ -15,7 +15,7 @@ class StarboardStore {
     return (
       s &&
       Object.keys(s).sort().join(',') === 'entries,guildId,settings,version' &&
-      s.version === 1 &&
+      [1, 2].includes(s.version) &&
       s.guildId === this.guildId &&
       ID(s.guildId) &&
       (c === null ||
@@ -27,7 +27,8 @@ class StarboardStore {
           c.threshold >= 2 &&
           c.threshold <= 50 &&
           Array.isArray(c.sources) &&
-          c.sources.length >= 1 &&
+          c.sources.length >= (s.version === 1 ? 1 : 0) &&
+          (!c.enabled || c.sources.length > 0) &&
           c.sources.length <= 20 &&
           c.sources.every(ID) &&
           !c.sources.includes(c.destination) &&
@@ -41,18 +42,29 @@ class StarboardStore {
           Object.keys(e).sort().join(',') ===
             'author,channel,count,id,nonce,post,status' &&
           [e.id, e.channel, e.author].every(ID) &&
-          c.sources.includes(e.channel) &&
+          (s.version === 2 || c.sources.includes(e.channel)) &&
           typeof e.nonce === 'string' &&
           /^[a-f0-9]{24}$/.test(e.nonce) &&
           Number.isInteger(e.count) &&
           e.count >= 0 &&
           e.count <= 1000 &&
-          ['pending', 'posted', 'deleted'].includes(e.status) &&
-          (e.status === 'posted' ? ID(e.post) : e.post === null),
+          (s.version === 1
+            ? ['pending', 'posted', 'deleted']
+            : ['pending', 'posted', 'deleting', 'deleted']
+          ).includes(e.status) &&
+          (['posted', 'deleting'].includes(e.status)
+            ? ID(e.post)
+            : e.post === null),
       ) &&
       new Set(s.entries.map((e) => e.id)).size === s.entries.length &&
       new Set(s.entries.map((e) => e.nonce)).size === s.entries.length &&
-      new Set(s.entries.filter(e => e.status === 'posted').map(e => e.post)).size === s.entries.filter(e => e.status === 'posted').length
+      new Set(
+        s.entries
+          .filter((e) => ['posted', 'deleting'].includes(e.status))
+          .map((e) => e.post),
+      ).size ===
+        s.entries.filter((e) => ['posted', 'deleting'].includes(e.status))
+          .length
     );
   }
   async load() {
@@ -72,6 +84,7 @@ class StarboardStore {
   mutate(work) {
     const task = this.queue.then(async () => {
       const s = this.snapshot();
+      s.version = 2;
       work(s);
       if (!this.valid(s))
         throw new Error('Invalid starboard state or capacity reached.');

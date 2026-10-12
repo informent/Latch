@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.35.0 - 2026-10-12
+
+- Add five staff starboard commands: paginated history, exact existing-post recovery, durable retirement, source removal and bounded pruning.
+- Save deletion intent before Discord calls and resume incomplete deletions after restart, including while paused. Require confirmed Unknown Message responses before accepting an absent source or destination post.
+- Handle bulk source deletion independently per highlight so one failure does not stop the remaining cleanup.
+- Read starboard formats 1 and 2; write format 2 on the next successful mutation. Keep completed tombstones until staff explicitly prune removed sources. Back up while stopped before upgrading and keep a compatible backup for rollback.
+- Add signed runtime recovery and cleanup checks plus regressions for permissions, lost replies, migrations, history and malformed responses. Live Discord acceptance remains pending.
+
 ## 0.34.0 - 2026-10-11
 
 - Add an opt-in public-channel starboard with staff configuration, pause, status and manual synchronization commands. Count normal star reactions, excluding bots and the message author. Publish links without copying message text or attachments.

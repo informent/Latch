@@ -61,6 +61,6 @@ Restoring local files does not recreate deleted Discord objects or retract alrea
 
 ## Verification evidence
 
-Automated tests cover all thirteen stores, exact bytes, missing stores, existing-destination refusal, corrupt schemas, manifest validation, checksums, source changes, extra/missing files, file types, manifest changes, command arguments and shared doctor inventory. Starboard adds a guild-bound format 1 store. Re-register commands after upgrading. Complete legacy twelve-store backups remain verifiable; starboard is reported as absent. Older versions cannot verify the new thirteen-store manifest.
+Automated tests cover all thirteen stores, exact bytes, missing stores, existing-destination refusal, corrupt schemas, manifest validation, checksums, source changes, extra/missing files, file types, manifest changes, command arguments and shared doctor inventory. Starboard reads guild-bound formats 1 and 2 and writes format 2 on its next successful mutation. Keep a compatible pre-upgrade backup for rollback. Re-register commands after upgrading. Complete legacy twelve-store backups remain verifiable; starboard is reported as absent. Older versions cannot verify the new thirteen-store manifest.
 
-Starboard receipts: `STARBOARD_STORE_PATH`, portable filename `starboard.json`, format 1, guild-bound configuration and up to 500 highlight receipts.
+Starboard receipts: `STARBOARD_STORE_PATH`, portable filename `starboard.json`, reads formats 1 and 2 and writes format 2, guild-bound configuration and up to 500 highlight receipts.
