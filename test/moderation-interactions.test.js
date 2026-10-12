@@ -78,6 +78,64 @@ test('timeout and untimeout actions, bounded durations, and warnings persist', a
   assert.equal(edited.length, 3);
 });
 
+test('strike commands enforce staff permission and keep individually removable audit records', async () => {
+  const strikes = [];
+  const edited = [];
+  const fixedNow = new Date('2026-10-12T12:00:00.000Z');
+  const moderation = {
+    addStrike: async (strike) => strikes.push(strike),
+    listStrikes: (guildId, memberId, { includeInactive = false } = {}) => strikes.filter((strike) => strike.guildId === guildId && strike.userId === memberId && (includeInactive || !strike.removedAt)),
+    removeStrike: async (guildId, memberId, strikeId, details) => {
+      const index = strikes.findIndex((strike) => strike.guildId === guildId && strike.userId === memberId && strike.id === strikeId && !strike.removedAt);
+      if (index < 0) return null;
+      strikes[index] = { ...strikes[index], removedAt: details.removedAt, removedBy: details.actorId, removalReason: details.reason };
+      return strikes[index];
+    },
+    clearStrikes: async (guildId, memberId, details) => {
+      let removed = 0;
+      for (let index = 0; index < strikes.length; index += 1) {
+        if (strikes[index].guildId === guildId && strikes[index].userId === memberId && !strikes[index].removedAt) {
+          strikes[index] = { ...strikes[index], removedAt: details.removedAt, removedBy: details.actorId, removalReason: details.reason };
+          removed += 1;
+        }
+      }
+      return removed;
+    }
+  };
+  const discord = { editOriginalResponse: async (...args) => edited.push(args) };
+  const handler = createInteractionHandler({ config, moderation, discord, now: () => fixedNow });
+  const unauthorized = await handler(base('strike-add', '0', [targetOption, { name: 'reason', value: 'Repeated spam' }]));
+  assert.match(unauthorized.immediate.data.content, /do not have permission/);
+  assert.equal(strikes.length, 0);
+
+  const add = await handler(base('strike-add', String(1n << 40n), [targetOption, { name: 'reason', value: 'Repeated spam' }, { name: 'days', value: 30 }]));
+  await add.work();
+  const first = strikes[0];
+  assert.equal(first.actorId, userId);
+  assert.equal(first.reason, 'Repeated spam');
+  assert.equal(first.expiresAt, '2026-11-11T12:00:00.000Z');
+  assert.match(edited[0][2].content, new RegExp(first.id));
+
+  const list = await handler(base('strike-list', String(1n << 40n), [targetOption, { name: 'include-history', value: true }]));
+  await list.work();
+  assert.match(edited[1][2].content, /Strike history/);
+  assert.match(edited[1][2].content, new RegExp(first.id));
+  assert.deepEqual(edited[1][2].allowed_mentions, { parse: [] });
+
+  const remove = await handler(base('strike-remove', String(1n << 40n), [targetOption, { name: 'case-id', value: first.id }, { name: 'reason', value: 'Appeal accepted' }]));
+  await remove.work();
+  assert.equal(strikes[0].removedBy, userId);
+  assert.equal(strikes[0].removalReason, 'Appeal accepted');
+  assert.match(edited[2][2].content, /kept its history/);
+
+  const second = await handler(base('strike-add', String(1n << 40n), [targetOption, { name: 'reason', value: 'Repeated disruption' }]));
+  await second.work();
+  const clear = await handler(base('strike-clear', String(1n << 40n), [targetOption, { name: 'reason', value: 'Case review' }]));
+  await clear.work();
+  assert.equal(strikes[1].removalReason, 'Case review');
+  assert.match(edited[4][2].content, /Strike history was preserved/);
+});
+
 test('purge skips messages older than Discord bulk-delete retention and slowmode is bounded', async () => {
   const calls = [];
   const edited = [];

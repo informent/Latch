@@ -43,7 +43,7 @@ function hasPermission(permissions, bit) {
 }
 function safeText(value) { return String(value).replace(/[`@<>]/g, (character) => ({ '`': 'ˋ', '@': '＠', '<': '‹', '>': '›' })[character]); }
 
-const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
+const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n, 'strike-add': 1n << 40n, 'strike-list': 1n << 40n, 'strike-remove': 1n << 40n, 'strike-clear': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, starboard, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
   const handleInformation = createInformationHandler({ config, discord, logger, now }, { response, defer, findOption });
@@ -388,10 +388,13 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
       const targetId = typeof targetUser === 'object' ? targetUser.id : targetUser;
       const providedReason = findOption(options, 'reason');
       const reasonText = typeof providedReason === 'string' && providedReason.trim() ? providedReason.trim() : 'No reason provided.';
-      const targetActions = ['ban', 'unban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings'];
+      const strikeActions = ['strike-add', 'strike-list', 'strike-remove', 'strike-clear'];
+      const targetActions = ['ban', 'unban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings', ...strikeActions];
       if (targetActions.includes(action) && !/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
-      if (['warn', 'warnings', 'clear-warnings'].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
+      if (['warn', 'warnings', 'clear-warnings', ...strikeActions].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
       if (action === 'warn' && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for the warning.') };
+      if (['strike-add', 'strike-remove', 'strike-clear'].includes(action) && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for this strike action.') };
+      if (action === 'strike-remove' && !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(findOption(options, 'case-id') || '')) return { immediate: response('Enter the full case ID shown by /moderation strike-list.') };
       return { immediate: defer(), work: async () => {
         try {
           if (['ban', 'kick', 'timeout', 'untimeout'].includes(action)) await moderationGuard.check(action, user.id, targetId);
@@ -432,6 +435,55 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           } else if (action === 'clear-warnings') {
             const removed = await moderation.clearWarnings(interaction.guild_id, targetId);
             await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Cleared ${removed} warning${removed === 1 ? '' : 's'} for <@${targetId}>.`, allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'strike-add') {
+            const days = findOption(options, 'days');
+            if (days !== undefined && (!Number.isInteger(days) || days < 1 || days > 365)) throw new Error('Strike expiry must be between 1 and 365 days.');
+            const createdAt = now().toISOString();
+            const strike = {
+              id: crypto.randomUUID(), guildId: interaction.guild_id, userId: targetId, actorId: user.id,
+              reason: providedReason.trim().slice(0, 400), createdAt,
+              expiresAt: days === undefined ? null : new Date(Date.parse(createdAt) + days * 86_400_000).toISOString(),
+              removedAt: null, removedBy: null, removalReason: null
+            };
+            await moderation.addStrike(strike);
+            const activeCount = moderation.listStrikes(interaction.guild_id, targetId, { now: now() }).length;
+            const expiry = strike.expiresAt ? ` Expires in ${days} day${days === 1 ? '' : 's'}.` : '';
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Recorded strike ${strike.id} for <@${targetId}>. Active strikes: ${activeCount}.${expiry}`, allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'strike-list') {
+            const includeHistory = findOption(options, 'include-history') === true;
+            const currentTime = now();
+            const records = moderation.listStrikes(interaction.guild_id, targetId, { includeInactive: includeHistory, now: currentTime })
+              .slice().sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+            const page = findOption(options, 'page') ?? 1;
+            const pages = Math.max(1, Math.ceil(records.length / 5));
+            if (!Number.isInteger(page) || page < 1 || page > pages) throw new Error(`Choose a strike history page from 1 to ${pages}.`);
+            const currentMs = currentTime.getTime();
+            const rows = records.slice((page - 1) * 5, page * 5).map((strike) => {
+              const state = strike.removedAt ? 'removed' : strike.expiresAt && Date.parse(strike.expiresAt) <= currentMs ? 'expired' : 'active';
+              const reason = safeText(strike.reason).replace(/[\r\n]+/g, ' ').slice(0, 140);
+              const expiry = strike.expiresAt ? ` | expires <t:${Math.floor(Date.parse(strike.expiresAt) / 1000)}:R>` : '';
+              const removal = strike.removedAt ? ` | removed <t:${Math.floor(Date.parse(strike.removedAt) / 1000)}:R> by <@${strike.removedBy}>` : '';
+              return `${strike.id} | ${state} | by <@${strike.actorId}> | <t:${Math.floor(Date.parse(strike.createdAt) / 1000)}:R>${expiry}${removal}\n${reason}`;
+            });
+            const active = moderation.listStrikes(interaction.guild_id, targetId, { now: currentTime }).length;
+            const heading = `${includeHistory ? 'Strike history' : 'Active strikes'} for <@${targetId}>: ${active} active${includeHistory ? ` | ${records.length} total` : ''} | page ${page}/${pages}`;
+            const content = rows.length ? `${heading}\n${rows.join('\n')}` : `${heading}\nNo ${includeHistory ? 'strike history' : 'active strikes'} recorded.`;
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'strike-remove') {
+            const removed = await moderation.removeStrike(interaction.guild_id, targetId, findOption(options, 'case-id'), {
+              actorId: user.id, removedAt: now().toISOString(), reason: providedReason.trim().slice(0, 400)
+            });
+            const content = removed ? `Removed strike ${removed.id} for <@${targetId}> and kept its history.` : 'That active strike was not found. Check the case ID and member, or list strike history.';
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content, allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'strike-clear') {
+            const removed = await moderation.clearStrikes(interaction.guild_id, targetId, {
+              actorId: user.id, removedAt: now().toISOString(), reason: providedReason.trim().slice(0, 400)
+            });
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: `Cleared ${removed} active strike${removed === 1 ? '' : 's'} for <@${targetId}>. Strike history was preserved.`, allowed_mentions: { parse: [] } });
             return;
           }
           const label = action === 'timeout' ? `for ${findOption(options, 'minutes')} minute(s)` : '';
@@ -496,7 +548,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           }
         } };
       }
-      if (subcommand?.name === 'help') return { immediate: response(`**Latch features**\n/utility: profiles, banners, server artwork, roles, emojis, stickers, boosts, ID decoding, timestamps, colors and arithmetic\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions and warnings\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/starboard: public highlights, history and staff recovery controls\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
+      if (subcommand?.name === 'help') return { immediate: response(`**Latch features**\n/utility: profiles, banners, server artwork, roles, emojis, stickers, boosts, ID decoding, timestamps, colors and arithmetic\n/ticket and /ticketpanel: private support, category panels and staff reopen\n/moderation: staff actions, warnings and strikes\n/roles: roles and nicknames\n/automod: native Discord filters (Manage Server required)\n/embed: custom announcements (Manage Messages required)\n/template: saved embeds and private previews (Manage Messages required)\n/responder: opt-in exact-text channel replies (Manage Server required)\n/rolemenu and /autorole: permission-free role automation\n/voice: temporary room lifecycle and owner controls\n/poll: native community voting\n/reminder: public channel reminders with private list/cancel\n/timer: persistent recurring channel messages (Manage Server required)\n/giveaway: staff giveaways with persistent entry buttons\n/shop: items, inventory, gifts and transaction history\n/economy and /leaderboard coins: server coins\n/levelreward: earned role milestones, previews and reconciliation\n/levelconfig: XP settings, ignored channels and pause/resume (Manage Server required)\n/level and /leaderboard levels: XP (awards ${config.levelingEnabled ? 'enabled' : 'disabled'})\n/starboard: public highlights, history and staff recovery controls\n/fun: coin flips, dice, and eight ball\nGateway events: ${config.gatewayEnabled ? 'enabled' : 'disabled'}`) };
       if (subcommand?.name === 'ping') return { immediate: response('Latch is responding.') };
       if (subcommand?.name === 'server') return { immediate: defer(), work: async () => {
         try {

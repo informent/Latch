@@ -2,7 +2,7 @@
 
 # Command coverage
 
-Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus Latch additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-11, not a complete competitor command count.
+Goal: independently implement the publicly documented capabilities of Bleed and Greed, plus Latch additions, as free MIT-licensed source. **Full parity has not been achieved.** This is a partial inventory checked on 2026-10-12, not a complete competitor command count.
 
 Latch currently uses slash commands. Competitor prefix commands, aliases, argument syntax, permission policies, and nested settings are separate requirements. A similar slash command is not proof of identical behavior. No placeholders count as implemented commands. Source implementation also does not establish live Discord validation.
 
@@ -22,7 +22,8 @@ Only command names and independently authored implementation notes are recorded 
 | --- | --- | --- |
 | ban, kick, timeout, untimeout | `/moderation` actions | Slash syntax; no competitor-specific message customization |
 | unban | `/moderation unban user-id` | Slash syntax; requires Ban Members |
-| warn | `/moderation warn` | Persistent warning only; no strike punishment policy |
+| warn | `/moderation warn` | Persistent staff warning; kept separate from strike records |
+| strike add/remove/clear | `/moderation strike-add`, `strike-list`, `strike-remove`, `strike-clear` | Slash syntax; optional expiry up to 365 days; removals keep actor and reason history; no automatic punishment or strike-threshold policy |
 | Role inspection | `/utility role` | Private metadata and raw permission bits; does not calculate effective channel/member access |
 | Role/nickname delegation | `/roles` actions | Live actor/bot hierarchy and grant-permission checks; conservative equal-position and protected-target rules |
 | ping, help | `/utility ping`, `/utility help` | Slash syntax |
@@ -63,7 +64,7 @@ Thirteen additional command paths provide member banners, server artwork, boost 
 
 These are concrete gaps from the sources above; the list will expand as further official pages are inventoried.
 
-- Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list, strike add/remove/clear, toggle-strikes. Also missing strike limits, expiry and punishment configuration.
+- Moderation: setup, setupmute, jail, tempban, softban, hardban, bind staff, bind staff list and toggle-strikes. Strike expiry is optional per record; strike thresholds, automatic punishment and competitor-specific expiry policies remain unimplemented.
 - Giveaways: exact competitor syntax and aliases remain different. Publicly documented host/description/media edits and role/level gates now have independent Latch implementations. Cancellation retains the message; retained history is limited to seven days after delivery.
 - Tickets: resend, form, advanced options, blacklist, profiles, profile, delete, transcript, allow, allow list, deny, trainee, trainee grant/revoke/list. Existing list/stats/claim/rename commands still lack competitor-specific policies and reporting options.
 - [VoiceMaster](https://docs.bleed.bot/configuration/voicemaster): default settings, generated setup channels/interface buttons, role, music, bitrate/region controls and role-based access. Core room lifecycle is implemented, but live operation and parity remain unverified. See [voice guide](VOICE.md).
