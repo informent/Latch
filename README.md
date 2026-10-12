@@ -97,7 +97,7 @@ See the generated [complete command reference](COMMANDS.md) for the current comm
 - `/moderation ban`, `/moderation kick`, `/moderation timeout`, and `/moderation untimeout` perform Discord moderation actions with audit-log reasons. Discord enforces the bot's permissions and role hierarchy.
 - `/moderation purge` deletes up to 100 recent messages from the current channel and skips messages older than 14 days. `/moderation slowmode` sets or disables the current channel's slowmode.
 - `/roles grant`, `/roles revoke`, `/roles nickname`, and `/roles clear-nickname` manage member roles and nicknames. Discord enforces role hierarchy and permissions.
-- `/moderation warn`, `/moderation warnings`, and `/moderation clear-warnings` maintain a local staff-warning register.
+- `/moderation warn`, `/moderation warnings`, `/moderation case`, `/moderation unwarn`, and `/moderation clear-warnings` maintain a local staff-warning case register. Cases include a server-scoped UUID, issuing staff member, reason and timestamp.
 - `/utility` now includes member banners, server artwork, paginated role/emoji/sticker browsers, boost status, timestamps, ID decoding, color inspection and a bounded calculator. All replies are private. See the [utility guide](docs/UTILITIES.md).
 - Optional welcome messages and join burst reports use member join events. Both require the Server Members privileged intent; burst detection only logs an alert.
 - `/economy balance`, `/economy daily`, `/economy work`, and `/economy pay` provide a small per-server coin system. Daily rewards are 100 coins; work rewards 25-100 coins with a one-hour cooldown. Transfers are limited to 1,000,000 coins per command.

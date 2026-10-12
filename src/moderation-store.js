@@ -30,6 +30,20 @@ class ModerationStore {
     return this.warnings.filter((warning) => warning.guildId === guildId && warning.userId === userId);
   }
 
+  getWarning(guildId, warningId) {
+    return this.warnings.find((warning) => warning.guildId === guildId && warning.id === warningId) || null;
+  }
+
+  async removeWarning(guildId, warningId) {
+    return this.#transaction(() => {
+      const previous = this.warnings;
+      const warning = previous.find((item) => item.guildId === guildId && item.id === warningId);
+      if (!warning) return null;
+      this.warnings = previous.filter((item) => item !== warning);
+      return warning;
+    });
+  }
+
   async addWarning(warning) {
     return this.#transaction(() => {
       if (!this.#valid(warning)) throw new Error('Invalid warning record.');

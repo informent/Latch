@@ -78,6 +78,29 @@ test('timeout and untimeout actions, bounded durations, and warnings persist', a
   assert.equal(edited.length, 3);
 });
 
+test('warning case lookup and removal are scoped to the current server', async () => {
+  const record = { id: '123e4567-e89b-42d3-a456-426614174000', guildId: config.guildId, userId: targetId, actorId: userId, reason: 'Repeated links', createdAt: '2026-10-09T00:00:00.000Z' };
+  const calls = [], edited = [];
+  const moderation = {
+    getWarning: (guildId, id) => guildId === record.guildId && id === record.id ? record : null,
+    removeWarning: async (guildId, id) => { calls.push([guildId, id]); return guildId === record.guildId && id === record.id ? record : null; }
+  };
+  const discord = { editOriginalResponse: async (...args) => edited.push(args) };
+  const handler = createInteractionHandler({ config, moderation, discord });
+  const lookup = await handler(base('case', String(1n << 40n), [{ name: 'id', value: record.id }]));
+  await lookup.work();
+  assert.match(edited[0][2].content, /Repeated links/);
+  assert.match(edited[0][2].content, new RegExp(targetId));
+  const remove = await handler(base('unwarn', String(1n << 40n), [{ name: 'id', value: record.id }]));
+  await remove.work();
+  assert.deepEqual(calls, [[config.guildId, record.id]]);
+  assert.match(edited[1][2].content, /Removed warning case/);
+  const invalid = await handler(base('case', String(1n << 40n), [{ name: 'id', value: 'bad' }]));
+  assert.equal(invalid.immediate.type, 5);
+  await invalid.work();
+  assert.match(edited[2][2].content, /Could not complete case/);
+});
+
 test('purge skips messages older than Discord bulk-delete retention and slowmode is bounded', async () => {
   const calls = [];
   const edited = [];

@@ -36,6 +36,8 @@ const commands = [
       subcommand('slowmode', 'Set the current channel slowmode.', [option(4, 'seconds', 'Delay between messages (0 to disable, maximum 21600).', { required: true, min_value: 0, max_value: 21600 })]),
       subcommand('warn', 'Record a staff warning for a member.', [target, option(3, 'reason', 'Why this warning was issued.', { required: true, max_length: 400 })]),
       subcommand('warnings', 'Show recorded warnings for a member.', [target]),
+      subcommand('case', 'Look up a warning case by its ID.', [option(3, 'id', 'Warning case ID.', { required: true, min_length: 36, max_length: 36 })]),
+      subcommand('unwarn', 'Remove one warning case by ID while retaining other cases.', [option(3, 'id', 'Warning case ID from /moderation warnings or case.', { required: true, min_length: 36, max_length: 36 })]),
       subcommand('clear-warnings', 'Clear recorded warnings for a member.', [target])
     ]
   },

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.36.0 - 2026-10-12
+
+- Add server-scoped warning case lookup and single-case removal. Warning history now shows stable UUIDs and total count while remaining bounded in the private response.
+- Keep the existing warnings store format and add serialized removal with rollback on failed persistence; no data migration is required.
+- Add regressions for case persistence, lookup/removal scope, invalid IDs and updated registration/catalog counts. The public command catalog now contains 218 paths.
+- Strike thresholds, expiry and automatic punishment policies remain unfinished; complete Bleed and Greed command parity is not claimed.
+
 ## 0.35.0 - 2026-10-12
 
 - Add five staff starboard commands: paginated history, exact existing-post recovery, durable retirement, source removal and bounded pruning.

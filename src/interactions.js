@@ -43,7 +43,7 @@ function hasPermission(permissions, bit) {
 }
 function safeText(value) { return String(value).replace(/[`@<>]/g, (character) => ({ '`': 'ˋ', '@': '＠', '<': '‹', '>': '›' })[character]); }
 
-const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, 'clear-warnings': 1n << 40n });
+const MODERATION_PERMISSIONS = Object.freeze({ ban: 4n, unban: 4n, kick: 2n, timeout: 1n << 40n, untimeout: 1n << 40n, purge: 1n << 13n, slowmode: 1n << 4n, warn: 1n << 40n, warnings: 1n << 40n, case: 1n << 40n, unwarn: 1n << 40n, 'clear-warnings': 1n << 40n });
 
 function createInteractionHandler({ config, tickets, ticketPanels, moderation, economy, levels, levelRewards, automod, starboard, community, voice, roleMenus, templates, responders, timers, discord, moderationGuard = new ModerationGuard({ config, discord }), logger = () => {}, now = () => new Date() }) {
   const handleInformation = createInformationHandler({ config, discord, logger, now }, { response, defer, findOption });
@@ -390,7 +390,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
       const reasonText = typeof providedReason === 'string' && providedReason.trim() ? providedReason.trim() : 'No reason provided.';
       const targetActions = ['ban', 'unban', 'kick', 'timeout', 'untimeout', 'warn', 'warnings', 'clear-warnings'];
       if (targetActions.includes(action) && !/^\d{5,25}$/.test(targetId || '')) return { immediate: response('Choose a valid server member.') };
-      if (['warn', 'warnings', 'clear-warnings'].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
+      if (['warn', 'warnings', 'case', 'unwarn', 'clear-warnings'].includes(action) && !moderation) return { immediate: response('The moderation store is unavailable. Ask an administrator to check the bot setup.') };
       if (action === 'warn' && (typeof providedReason !== 'string' || !providedReason.trim())) return { immediate: response('Enter a reason for the warning.') };
       return { immediate: defer(), work: async () => {
         try {
@@ -423,11 +423,25 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
           } else if (action === 'warn') {
             await moderation.addWarning({ id: crypto.randomUUID(), guildId: interaction.guild_id, userId: targetId, actorId: user.id, reason: reasonText, createdAt: now().toISOString() });
           } else if (action === 'warnings') {
-            const records = moderation.listWarnings(interaction.guild_id, targetId).slice(-8);
+            const allRecords = moderation.listWarnings(interaction.guild_id, targetId);
+            const records = allRecords.slice(-8);
             const content = records.length
-              ? `Recent warnings for <@${targetId}>:\n${records.map((warning, index) => `${index + 1}. ${safeText(warning.reason)} - <t:${Math.floor(Date.parse(warning.createdAt) / 1000)}:R>`).join('\n')}`
+              ? `Recent warnings for <@${targetId}> (${allRecords.length} total):\n${records.map((warning) => `\`${warning.id}\` ${safeText(warning.reason)} - <t:${Math.floor(Date.parse(warning.createdAt) / 1000)}:R>`).join('\n')}`
               : `No warnings are recorded for <@${targetId}>.`;
             await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'case') {
+            const id = findOption(options, 'id');
+            if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) throw new Error('Enter a valid warning case ID.');
+            const record = moderation.getWarning?.(interaction.guild_id, id) || null;
+            const content = record ? `**Warning case** \`${record.id}\`\nMember: <@${record.userId}>\nStaff: <@${record.actorId}>\nCreated: <t:${Math.floor(Date.parse(record.createdAt) / 1000)}:F>\nReason: ${safeText(record.reason)}` : 'No warning case with that ID exists in this server.';
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), allowed_mentions: { parse: [] } });
+            return;
+          } else if (action === 'unwarn') {
+            const id = findOption(options, 'id');
+            if (typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) throw new Error('Enter a valid warning case ID.');
+            const removed = await moderation.removeWarning(interaction.guild_id, id);
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: removed ? `Removed warning case \`${removed.id}\` for <@${removed.userId}>.` : 'No warning case with that ID exists in this server.', allowed_mentions: { parse: [] } });
             return;
           } else if (action === 'clear-warnings') {
             const removed = await moderation.clearWarnings(interaction.guild_id, targetId);

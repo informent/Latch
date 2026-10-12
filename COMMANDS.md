@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 216 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 218 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -273,6 +273,22 @@ Show recorded warnings for a member.
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | user | user | yes | Member to act on. |
+
+### /moderation case
+
+Look up a warning case by its ID.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Warning case ID.; Minimum text length: 36; Maximum text length: 36 |
+
+### /moderation unwarn
+
+Remove one warning case by ID while retaining other cases.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| id | text | yes | Warning case ID from /moderation warnings or case.; Minimum text length: 36; Maximum text length: 36 |
 
 ### /moderation clear-warnings
 

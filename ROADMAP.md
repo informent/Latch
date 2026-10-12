@@ -1,12 +1,12 @@
 # Latch feature roadmap
 
-Goal: a free, open-source community bot spanning the feature areas advertised by [Bleed](https://bleed.bot/commands) and [Greed](https://greed.sh/docs/introduction/), with transparent configuration, durable data, and documented operating limits. This is a feature-area comparison, not a claim of command-for-command parity. Inventory reviewed October 11, 2026.
+Goal: a free, open-source community bot spanning the feature areas advertised by [Bleed](https://bleed.bot/commands) and [Greed](https://greed.sh/docs/introduction/), with transparent configuration, durable data, and documented operating limits. This is a feature-area comparison, not a claim of command-for-command parity. Inventory reviewed October 12, 2026.
 
 All Latch features are intended to be available without subscriptions or premium gates. Self-hosting still needs a machine and network access. External providers can require their own credentials, impose limits, or charge fees; integrations must document those conditions.
 
 | Area | Current implementation | Remaining work |
 | --- | --- | --- |
-| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, staff warnings; live actor/bot hierarchy checks for member moderation | Cases, strikes/expiry, appeals, configurable audit channel, delegation audit records and configurable policies |
+| Moderation | Ban/unban, kick, timeout/removal, purge, slowmode, persistent warning cases with UUID lookup/removal; live actor/bot hierarchy checks for member moderation | Strike thresholds/expiry, appeals, configurable audit channel, delegation audit records and configurable policies |
 | AutoMod | Native keyword, spam, mention and preset filters; rule inspection, enable/disable/remove, role/channel exemptions, allowed words and block explanations | Regex validation, advanced action policies and management UI |
 | Server security | Join burst detection; native mention-raid filter | Account-age policies, antinuke audit attribution, action budgets, restoration plans |
 | Tickets | Private channels, durable ownership/assignment, filtered queues and closed history, stats/info, saved reasons, rename, permission-preserving moves and retryable closure, staff reopening, retryable guest access with close-time revocation, paged text/JSON history exports with cursors and gzip and persistent category-button panels | Per-option policies/intake forms, automatic archival, attachments and configurable retention |

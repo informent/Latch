@@ -25,7 +25,12 @@ test('serializes concurrent warning writes and reloads persisted records', async
   const reloaded = new ModerationStore(file);
   await reloaded.load();
   assert.deepEqual(reloaded.listWarnings(warnings[0].guildId, warnings[0].userId).map((warning) => warning.reason), warnings.map((warning) => warning.reason));
-  assert.equal(await reloaded.clearWarnings(warnings[0].guildId, warnings[0].userId), warnings.length);
+  assert.equal(reloaded.getWarning(warnings[0].guildId, warnings[3].id).reason, warnings[3].reason);
+  assert.equal((await reloaded.removeWarning(warnings[0].guildId, warnings[3].id)).id, warnings[3].id);
+  assert.equal(reloaded.getWarning(warnings[0].guildId, warnings[3].id), null);
+  assert.equal(await reloaded.removeWarning('923456789012345678', warnings[2].id), null);
+  assert.equal(reloaded.listWarnings(warnings[0].guildId, warnings[0].userId).length, warnings.length - 1);
+  assert.equal(await reloaded.clearWarnings(warnings[0].guildId, warnings[0].userId), warnings.length - 1);
   assert.equal(reloaded.listWarnings(warnings[0].guildId, warnings[0].userId).length, 0);
 });
 
