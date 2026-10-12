@@ -120,3 +120,46 @@ test('AutoMod policy queue recovers after Discord refuses an edit', async () => 
   await assert.rejects(f.service.policy({ ruleId: ids.menu, mode: 'block' })); assert.equal(f.rule.actions.length, 2);
   f.discord.editAutoModRule = original; await f.service.policy({ ruleId: ids.menu, mode: 'block' }); assert.deepEqual(f.rule.actions, [{ type: 1 }]);
 });
+
+test('AutoMod keyword editing preserves regex, allow words, actions and enable state', async () => {
+  const f = fixture(); f.rule.enabled = true; f.rule.trigger_metadata.allow_list = ['safe']; const original = structuredClone(f.rule);
+  const input = { ruleId: ids.menu, kind: 'keywords-edit', keywords: ' cat*, *dog, cat* ' };
+  await f.service.editFilter(input); assert.deepEqual(f.rule.trigger_metadata, { ...original.trigger_metadata, keyword_filter: ['cat*', '*dog'] });
+  for (const key of Object.keys(original).filter((key) => key !== 'trigger_metadata')) assert.deepEqual(f.rule[key], original[key]);
+  assert.deepEqual(await f.service.editFilter(input), { changed: false });
+});
+for (const keywords of ['', ' , ', null, 'x'.repeat(61), Array.from({ length: 101 }, (_, n) => `word${n}`).join(',')]) test(`AutoMod keyword edit rejects malformed input of length ${String(keywords).length}`, async () => {
+  const f = fixture(); await assert.rejects(f.service.editFilter({ ruleId: ids.menu, kind: 'keywords-edit', keywords })); assert.equal(f.edits.length, 0);
+});
+test('AutoMod filter edits reject wrong triggers, event types and invalid metadata', async () => {
+  const f = fixture();
+  for (const extra of [{ trigger_type: 4 }, { event_type: 2 }, { trigger_metadata: null }, { trigger_metadata: [] }]) {
+    const original = structuredClone(f.rule); Object.assign(f.rule, extra); await assert.rejects(f.service.editFilter({ ruleId: ids.menu, kind: 'keywords-edit', keywords: 'term' })); Object.assign(f.rule, original);
+  }
+  assert.equal(f.edits.length, 0);
+});
+for (const raidProtection of [undefined, false, true]) test(`AutoMod mention editing handles raid protection ${raidProtection}`, async () => {
+  const f = fixture(); f.rule.trigger_type = 5; f.rule.trigger_metadata = { mention_total_limit: 5, mention_raid_protection_enabled: true }; const actions = structuredClone(f.rule.actions);
+  await f.service.editFilter({ ruleId: ids.menu, kind: 'mentions-edit', limit: 50, raidProtection });
+  assert.equal(f.rule.trigger_metadata.mention_total_limit, 50); assert.equal(f.rule.trigger_metadata.mention_raid_protection_enabled, raidProtection ?? true); assert.deepEqual(f.rule.actions, actions);
+});
+for (const extra of [{ limit: 0 }, { limit: 51 }, { limit: 1.5 }, { limit: '2' }, { raidProtection: 'false' }]) test(`AutoMod mention editing rejects ${JSON.stringify(extra)}`, async () => {
+  const f = fixture(); f.rule.trigger_type = 5; await assert.rejects(f.service.editFilter({ ruleId: ids.menu, kind: 'mentions-edit', limit: 2, ...extra })); assert.equal(f.edits.length, 0);
+});
+test('AutoMod rename retains identity, migrates legacy prefix and rejects invalid names', async () => {
+  const f = fixture(); f.rule.name = 'OpenDesk: Legacy'; const before = structuredClone(f.rule);
+  await f.service.editFilter({ ruleId: ids.menu, kind: 'rename', name: ' New name ' }); assert.equal(f.rule.name, 'Latch: New name');
+  for (const key of Object.keys(before).filter((key) => key !== 'name')) assert.deepEqual(f.rule[key], before[key]);
+  for (const name of ['', ' ', 'x'.repeat(81), 'two\nlines', null]) await assert.rejects(f.service.editFilter({ ruleId: ids.menu, kind: 'rename', name }));
+});
+test('AutoMod filter editing and policy changes serialize without losing settings', async () => {
+  const f = fixture(); await Promise.all([f.service.editFilter({ ruleId: ids.menu, kind: 'keywords-edit', keywords: 'new' }), f.service.policy({ ruleId: ids.menu, mode: 'block-timeout', seconds: 60 }), f.service.editFilter({ ruleId: ids.menu, kind: 'rename', name: 'Updated' })]);
+  assert.deepEqual(f.rule.trigger_metadata.keyword_filter, ['new']); assert.equal(f.rule.actions[1].metadata.duration_seconds, 60); assert.equal(f.rule.name, 'Latch: Updated');
+});
+for (const action of ['rename', 'keywords-edit', 'mentions-edit']) test(`AutoMod ${action} denies nonstaff and responds privately for authorized edits`, async () => {
+  const f = fixture(); if (action === 'mentions-edit') f.rule.trigger_type = 5;
+  const handler = createInteractionHandler({ config: { guildId: ids.guild, applicationId: ids.bot }, automod: f.service, discord: f.discord });
+  const values = { rule: ids.menu, name: 'Renamed', keywords: 'new', limit: 2, 'raid-protection': false };
+  const denied = await handler(interaction('automod', action, values, '0')); assert.match(denied.immediate.data.content, /Manage Server/); assert.equal(f.edits.length, 0);
+  const allowed = await handler(interaction('automod', action, values, '32')); assert.equal(allowed.immediate.data.flags, 64); await allowed.work(); assert.match(f.calls.at(-1)[3].content, /updated/); assert.deepEqual(f.calls.at(-1)[3].allowed_mentions, { parse: [] });
+});

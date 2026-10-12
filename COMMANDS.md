@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 204 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 207 registered command paths across 25 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -582,6 +582,34 @@ Default command visibility: Manage Server (32).
 List server AutoMod rules and their IDs.
 
 Options: none.
+
+### /automod rename
+
+Rename a Latch rule while retaining its ID and settings.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| rule | text | yes | Latch rule ID.; Maximum text length: 25 |
+| name | text | yes | New rule name.; Minimum text length: 1; Maximum text length: 80 |
+
+### /automod keywords-edit
+
+Replace keywords while preserving regex, exceptions and actions.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| rule | text | yes | Latch keyword rule ID.; Maximum text length: 25 |
+| keywords | text | yes | Comma-separated keywords, up to 100 of 60 characters.; Minimum text length: 1; Maximum text length: 2000 |
+
+### /automod mentions-edit
+
+Update mention threshold and optional raid protection.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| rule | text | yes | Latch mention rule ID.; Maximum text length: 25 |
+| limit | integer | yes | Maximum unique mentions per message.; Minimum: 1; Maximum: 50 |
+| raid-protection | boolean | no | Enable or disable automatic raid detection; omit to preserve. |
 
 ### /automod policy
 

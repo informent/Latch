@@ -234,12 +234,15 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
       if (!hasPermission(interaction.member?.permissions, 32n)) return { immediate: response('You need Manage Server to manage AutoMod rules.') };
       if (!automod) return { immediate: response('AutoMod is unavailable. Ask an administrator to check the bot setup.') };
       const action = subcommand?.name;
-      if (!['policy', 'list', 'info', 'presets', 'keywords', 'mentions', 'spam', 'enable', 'disable', 'remove', 'exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel', 'allow-words', 'block-message'].includes(action)) return { immediate: response('Choose an AutoMod action.') };
+      if (!['rename', 'keywords-edit', 'mentions-edit', 'policy', 'list', 'info', 'presets', 'keywords', 'mentions', 'spam', 'enable', 'disable', 'remove', 'exempt-role', 'unexempt-role', 'exempt-channel', 'unexempt-channel', 'allow-words', 'block-message'].includes(action)) return { immediate: response('Choose an AutoMod action.') };
       return { immediate: defer(), work: async () => {
         try {
           const options = subcommand.options || [];
           let content;
-          if (action === 'policy') {
+          if (['rename', 'keywords-edit', 'mentions-edit'].includes(action)) {
+            const result = await automod.editFilter({ ruleId: findOption(options, 'rule'), kind: action, keywords: findOption(options, 'keywords'), limit: findOption(options, 'limit'), raidProtection: findOption(options, 'raid-protection'), name: findOption(options, 'name'), actorId: user.id });
+            content = result.changed ? 'AutoMod rule updated. Existing actions, exemptions and enable state were preserved.' : 'These rule settings are already configured.';
+          } else if (action === 'policy') {
             const mode = findOption(options, 'mode');
             if (typeof mode === 'string' && mode.includes('timeout') && !hasPermission(interaction.member?.permissions, 1099511627776n)) {
               content = 'You also need Moderate Members to configure an AutoMod timeout.';
