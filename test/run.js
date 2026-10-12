@@ -60,3 +60,7 @@ require('./release-verify.test');
 require('./ticket-guests.test');
 
 require('./ticket-transcript.test');
+
+require('./transcript-history.test');
+
+require('./ticket-queue.test');

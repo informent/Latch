@@ -61,12 +61,14 @@ Default command visibility: all members; individual staff actions require runtim
 
 ### /ticket transcript
 
-Privately export up to 100 recent messages as text or JSON.
+Privately export up to 1000 messages with history cursors.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
-| count | integer | no | Recent messages, 1 to 100; defaults to 50.; Minimum: 1; Maximum: 100 |
+| count | integer | no | Messages, 1 to 1000; defaults to 50.; Minimum: 1; Maximum: 1000 |
 | format | text | no | Download format; defaults to text.; Choices: Text = text, JSON = json |
+| before | text | no | Export messages older than this ID; use the previous next cursor.; Minimum text length: 5; Maximum text length: 25 |
+| compression | text | no | Optional gzip for larger text or JSON downloads.; Choices: Uncompressed = none, Gzip = gzip |
 | channel | channel | no | Ticket; defaults to this channel.; Allowed Discord channel type IDs: 0 |
 
 ### /ticket guest add
@@ -119,11 +121,15 @@ Close a ticket in this channel or a selected channel.
 
 ### /ticket list
 
-List open tickets; members see only their own.
+Browse active tickets or closed history with staff queue filters.
 
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | page | integer | no | Results page, ten tickets per page.; Minimum: 1; Maximum: 10000 |
+| state | text | no | Defaults to active; members see only their own.; Choices: active = active, open = open, closing = closing, closed = closed, reopening = reopening, all = all |
+| owner | user | no | Staff: filter by ticket owner. |
+| handler | user | no | Staff: filter by saved handler. |
+| assignment | text | no | Staff: all, assigned or unassigned.; Choices: all = all, assigned = assigned, unassigned = unassigned |
 
 ### /ticket stats
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.32.0 - 2026-10-11
+
+- Add support queue state, owner, handler and assignment filters, private closed history for ticket owners and explicit filtered-page errors.
+
+- Expand ticket exports to 1000 messages across up to ten history pages, with optional before cursors and explicit continuation/exhaustion metadata.
+- Add optional gzip downloads, exact-file SHA256 digests and a cross-platform unpack command that validates sizes/content and never replaces existing files.
+- Recheck requester membership, staff roles and read permissions after collection, and validate bot read access before exporting. Missing history access no longer looks like an empty conversation.
+- Bound source/output memory to 8 MiB and uploads to 2 MiB; reject invalid, duplicate or stalled pages and expired collection budgets. No content truncation or local bot transcript persistence.
+- Add 47 history, compression, queue and access regression tests plus expanded signed runtime checks for paged gzip exports, older continuation and safe unpacking.
+- Re-register commands for new options. Ticket stores remain compatible; downloadable JSON snapshots now use schema 2 with pagination fields.
+
 ## 0.31.0 - 2026-10-11
 
 - Add private text and JSON ticket transcript downloads for up to 100 recent messages, ordered by exact numeric ID. Include message metadata, attachment links and embed text with explicit snapshot limitations.

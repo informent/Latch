@@ -4,12 +4,14 @@ const { loadConfig } = require('../src/config'), { createServerRuntime } = requi
 const { TicketStore } = require('../src/ticket-store'), { EconomyStore } = require('../src/economy-store');
 const { CommunityStore } = require('../src/community-store');
 const { createBackup, verifyBackup } = require('./backup');
+const { gunzipSync } = require('node:zlib');
+const { unpack } = require('./transcript-unpack');
 const { version } = require('../package.json');
 async function runSmoke({ container = false } = {}) {
   if (container) assert.equal(process.getuid?.(), 1000, 'Container must run as the node user.');
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-release-smoke-'));
   const ids = { guild: '123456789012345678', bot: '223456789012345678', actor: '323456789012345678', target: '423456789012345678', role: '523456789012345678', channel: '623456789012345678', request: '723456789012345678', owner: '823456789012345678' };
-  let server, giveaway, ticketChannel; const responses = [], transcriptFiles = [], pair = crypto.generateKeyPairSync('ed25519');
+  let server, giveaway, ticketChannel, historyMode = 'single'; const responses = [], transcriptFiles = [], pair = crypto.generateKeyPairSync('ed25519');
   try {
     const env = { DISCORD_APPLICATION_ID: ids.bot, DISCORD_GUILD_ID: ids.guild, DISCORD_PUBLIC_KEY: pair.publicKey.export({ type: 'spki', format: 'der' }).subarray(-32).toString('hex'), DISCORD_BOT_TOKEN: 'isolated-smoke-placeholder', DISCORD_GATEWAY_ENABLED: 'false', HOST: '127.0.0.1', PORT: '3000' };
     const keys = ['TICKET_STORE_PATH', 'MODERATION_STORE_PATH', 'ECONOMY_STORE_PATH', 'LEVEL_STORE_PATH', 'COMMUNITY_STORE_PATH', 'VOICE_STORE_PATH', 'ROLE_MENU_STORE_PATH', 'TEMPLATE_STORE_PATH', 'RESPONDER_STORE_PATH', 'TIMER_STORE_PATH', 'TICKET_PANEL_STORE_PATH', 'LEVEL_REWARD_STORE_PATH'];
@@ -19,13 +21,18 @@ async function runSmoke({ container = false } = {}) {
     const discord = {
       getCurrentUser: async () => ({ id: ids.bot }),
       getGuild: async () => ({ id: ids.guild, owner_id: ids.owner, name: 'Smoke guild', icon: 'a'.repeat(32) }),
-      getGuildMember: async (_guild, userId) => { assert.ok([ids.actor, ids.target].includes(userId)); return { user: { id: userId }, roles: userId === ids.actor ? [ids.role] : [] }; },
+      getGuildMember: async (_guild, userId) => { assert.ok([ids.actor, ids.target, ids.bot].includes(userId)); return { user: { id: userId }, roles: userId === ids.actor ? [ids.role] : [] }; },
       createChannel: async (guild, body) => { assert.equal(guild, ids.guild); ticketChannel = { ...structuredClone(body), id: String(BigInt(ids.channel) + 1n), guild_id: guild }; return structuredClone(ticketChannel); },
       setMemberOverwrite: async (channel, user, body) => { assert.equal(channel, ticketChannel.id); ticketChannel.permission_overwrites = ticketChannel.permission_overwrites.filter(entry => entry.id !== user || entry.type !== 1); ticketChannel.permission_overwrites.push({ id: user, ...structuredClone(body) }); },
       editChannel: async (channel, body) => { assert.equal(channel, ticketChannel.id); Object.assign(ticketChannel, structuredClone(body)); },
       request: async (method, route) => { assert.equal(method, 'GET'); if (ticketChannel && route === `/channels/${ticketChannel.id}`) return structuredClone(ticketChannel); assert.equal(route, `/guilds/${ids.guild}/roles`); return [{ id: ids.guild, permissions: '0' }, { id: ids.role, permissions: '32' }]; },
       editOriginalResponse: async (_application, _token, body, file) => { responses.push(body); if (file) transcriptFiles.push(file); },
-      getChannelMessages: async (channel, limit) => { assert.equal(channel, ticketChannel.id); assert.ok(limit > 0 && limit <= 100); return [{ id: ids.request, channel_id: channel, author: { id: ids.actor, username: 'Smoke member' }, content: 'Private transcript smoke content', timestamp: '2026-10-11T12:00:00Z', edited_timestamp: null, attachments: [], embeds: [] }]; },
+      getChannelMessages: async (channel, limit, before) => {
+        assert.equal(channel, ticketChannel.id); assert.ok(limit > 0 && limit <= 100);
+        const message = index => ({ id: String(BigInt(ids.request) + BigInt(index)), channel_id: channel, author: { id: ids.actor, username: 'Smoke member' }, content: `Private transcript smoke content ${index}`, timestamp: '2026-10-11T12:00:00Z', edited_timestamp: null, attachments: [], embeds: [] });
+        const messages = historyMode === 'single' ? [message(0)] : Array.from({ length: 235 }, (_, index) => message(734 - index));
+        return messages.filter(item => !before || BigInt(item.id) < BigInt(before)).slice(0, limit);
+      },
       createMessage: async (channel, body) => { assert.equal(channel, ids.channel); assert.equal(giveaway, undefined); giveaway = { ...structuredClone(body), id: String(BigInt(ids.request) + 99n) }; return structuredClone(giveaway); },
       editMessage: async (channel, id, body) => { assert.equal(channel, ids.channel); assert.equal(id, giveaway.id); Object.assign(giveaway, structuredClone(body)); }
     };
@@ -72,14 +79,21 @@ async function runSmoke({ container = false } = {}) {
     await send(ticketCommand(12, 'close')); assert.match(responses.at(-1).content, /Ticket closed/);
     const revoked = ticketChannel.permission_overwrites.find(entry => entry.id === ids.target && entry.type === 1); assert.equal(BigInt(revoked.allow) & 68608n, 0n); assert.equal(BigInt(revoked.deny) & 68608n, 68608n);
     await send(ticketCommand(13, 'transcript', [{ name: 'count', value: 10 }])); assert.match(responses.at(-1).content, /Private snapshot: 1/); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] }); assert.equal(transcriptFiles.at(-1).filename, `ticket-${ticketChannel.id}.txt`); assert.ok(transcriptFiles.at(-1).data.toString().includes('Private transcript smoke content'));
-    await send(ticketCommand(14, 'transcript', [{ name: 'format', value: 'json' }])); const transcript = JSON.parse(transcriptFiles.at(-1).data); assert.equal(transcript.channelId, ticketChannel.id); assert.equal(transcript.state, 'closed'); assert.equal(transcript.messages[0].content, 'Private transcript smoke content'); assert.equal(transcriptFiles.at(-1).contentType, 'application/json');
+    await send(ticketCommand(14, 'transcript', [{ name: 'format', value: 'json' }])); const transcript = JSON.parse(transcriptFiles.at(-1).data); assert.equal(transcript.channelId, ticketChannel.id); assert.equal(transcript.state, 'closed'); assert.equal(transcript.messages[0].content, 'Private transcript smoke content 0'); assert.equal(transcriptFiles.at(-1).contentType, 'application/json');
+    historyMode = 'paged';
+    await send(ticketCommand(15, 'transcript', [{ name: 'count', value: 205 }, { name: 'format', value: 'json' }, { name: 'compression', value: 'gzip' }]));
+    const packedFile = transcriptFiles.at(-1), packed = JSON.parse(gunzipSync(packedFile.data)); assert.equal(packed.messages.length, 205); assert.equal(packed.pagination.pages, 3); assert.equal(packed.pagination.historyExhausted, false); assert.match(responses.at(-1).content, /Continue with before:/); assert.ok(responses.at(-1).content.includes(crypto.createHash('sha256').update(packedFile.data).digest('hex')));
+    await send(ticketCommand(16, 'transcript', [{ name: 'count', value: 100 }, { name: 'format', value: 'json' }, { name: 'before', value: packed.pagination.nextBefore }]));
+    const older = JSON.parse(transcriptFiles.at(-1).data); assert.equal(older.messages.length, 30); assert.equal(older.pagination.historyExhausted, true); assert.equal(new Set([...packed.messages, ...older.messages].map(message => message.id)).size, 235);
+    const compressedPath = path.join(root, packedFile.filename), unpackedPath = compressedPath.slice(0, -3); await fs.writeFile(compressedPath, packedFile.data); await unpack(compressedPath, unpackedPath); assert.deepEqual(await fs.readFile(unpackedPath), gunzipSync(packedFile.data));
+    await send(ticketCommand(17, 'list', [{ name: 'state', value: 'closed' }, { name: 'owner', value: ids.actor }, { name: 'assignment', value: 'unassigned' }])); assert.match(responses.at(-1).content, /Tickets: 1/); assert.match(responses.at(-1).content, /State: closed/); assert.ok(responses.at(-1).content.includes(ticketChannel.id)); assert.deepEqual(responses.at(-1).allowed_mentions, { parse: [] });
     await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);
     const backup = path.join(root, 'backup'), created = await createBackup(config, backup); assert.equal(created.present, 3); assert.equal(created.missing.length, 9); assert.equal((await verifyBackup(backup, ids.guild)).ok, true);
     const recovered = new EconomyStore(path.join(backup, 'economy.json')); await recovered.load(); assert.equal(recovered.balance(ids.guild, ids.target), 100); assert.equal(recovered.adjustmentHistory(ids.guild).length, 1);
     const recoveredCommunity = new CommunityStore(path.join(backup, 'community.json')); await recoveredCommunity.load();
     assert.deepEqual(recoveredCommunity.get(giveawayId).presentation, { hostId: ids.target, description: 'Restart-safe details', image: null, thumbnail: null });
     const recoveredTickets = new TicketStore(path.join(backup, 'tickets.json')); await recoveredTickets.load(); assert.equal(recoveredTickets.getByChannel(ticketChannel.id).status, 'closed'); assert.deepEqual(recoveredTickets.getByChannel(ticketChannel.id).guests, []);
-    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery', 'signed-calculator', 'signed-server-artwork', 'signed-giveaway-create', 'signed-giveaway-edit', 'signed-giveaway-preview', 'signed-giveaway-clear', 'community-recovery', 'signed-ticket-create', 'signed-ticket-guest-add', 'signed-ticket-guest-list', 'signed-ticket-guest-remove', 'signed-ticket-close', 'ticket-guest-recovery', 'ticket-closure-recovery', 'signed-ticket-transcript-text', 'signed-ticket-transcript-json'] };
+    return { ok: true, version, node: process.versions.node, platform: process.platform, container, checks: ['runtime-startup', 'health', 'unsigned-rejection', 'signed-ping', 'signed-command', 'duplicate-protection', 'private-response', 'scheduler-shutdown', 'twelve-store-backup', 'backup-verification', 'economy-recovery', 'signed-calculator', 'signed-server-artwork', 'signed-giveaway-create', 'signed-giveaway-edit', 'signed-giveaway-preview', 'signed-giveaway-clear', 'community-recovery', 'signed-ticket-create', 'signed-ticket-guest-add', 'signed-ticket-guest-list', 'signed-ticket-guest-remove', 'signed-ticket-close', 'ticket-guest-recovery', 'ticket-closure-recovery', 'signed-ticket-transcript-text', 'signed-ticket-transcript-json', 'signed-ticket-transcript-paged-gzip', 'signed-ticket-transcript-continuation', 'compressed-transcript-unpack', 'signed-ticket-queue-history'] };
   } finally {
     if (server) {
       await Promise.all([server.community.stop(), server.voice.stop(), server.roleMenus.stop(), server.timers.stop(), server.ticketPanels.stop(), server.levelRewards.stop()]);

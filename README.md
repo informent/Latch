@@ -142,7 +142,9 @@ Reminder delivery is **at least once**: Discord message nonces suppress repeats 
 
 Ticket guests: support staff can use `/ticket guest add`, `/ticket guest remove` and `/ticket guest list`. Close revokes saved guests; reopening does not reinvite them. See [guest access and recovery](docs/TICKET-GUESTS.md) for permission limits and the ticket format 2 upgrade.
 
-Use `/ticket transcript` for a private text or JSON snapshot of up to 100 recent messages. See [conversation exports](docs/TICKET-TRANSCRIPTS.md) for access checks, content-intent requirements and omitted data.
+Use `/ticket transcript` for a private text or JSON history snapshot of up to 1000 messages, with older-history cursors, optional gzip and download digests. See [conversation exports](docs/TICKET-TRANSCRIPTS.md) for access checks, content-intent requirements and omitted data.
+
+Support queues: `/ticket list` now filters active/closed history, owner, handler and assignment status. Members retain access only to their own records. See [queue filters](docs/TICKET-QUEUE.md).
 
 ## Development
 

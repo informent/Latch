@@ -20,7 +20,8 @@ class DiscordApi {
     const signal = AbortSignal.timeout(REQUEST_BUDGET_MS);
     let serializedBody = body === undefined ? undefined : JSON.stringify(body);
     if (file !== undefined) {
-      if (!file || typeof file.filename !== 'string' || !/^[a-zA-Z0-9_-]{1,90}\.(?:txt|json)$/.test(file.filename) || !['text/plain; charset=utf-8', 'application/json'].includes(file.contentType) || !Buffer.isBuffer(file.data) || file.data.length === 0 || file.data.length > MAX_UPLOAD_BYTES) throw new Error('Invalid or oversized Discord export file.');
+      if (!file || typeof file.filename !== 'string' || !/^[a-zA-Z0-9_-]{1,90}\.(?:txt|json)(?:\.gz)?$/.test(file.filename) || !['text/plain; charset=utf-8', 'application/json', 'application/gzip'].includes(file.contentType) || !Buffer.isBuffer(file.data) || file.data.length === 0 || file.data.length > MAX_UPLOAD_BYTES) throw new Error('Invalid or oversized Discord export file.');
+      if (file.filename.endsWith('.gz') !== (file.contentType === 'application/gzip')) throw new Error('Export filename and MIME type disagree.');
       serializedBody = new FormData();
       serializedBody.append('payload_json', JSON.stringify({ ...body, attachments: [{ id: 0, filename: file.filename }] }));
       serializedBody.append('files[0]', new Blob([file.data], { type: file.contentType }), file.filename);
@@ -79,7 +80,10 @@ class DiscordApi {
   unbanMember(guildId, userId, reason) { return this.request('DELETE', `/guilds/${guildId}/bans/${userId}`, undefined, { auditReason: reason }); }
   kickMember(guildId, userId, reason) { return this.request('DELETE', `/guilds/${guildId}/members/${userId}`, undefined, { auditReason: reason }); }
   timeoutMember(guildId, userId, until, reason) { return this.request('PATCH', `/guilds/${guildId}/members/${userId}`, { communication_disabled_until: until }, { auditReason: reason }); }
-  getChannelMessages(channelId, limit) { return this.request('GET', `/channels/${channelId}/messages?limit=${limit}`); }
+  getChannelMessages(channelId, limit, before) {
+    if (typeof channelId !== 'string' || !/^\d{5,25}$/.test(channelId) || !Number.isInteger(limit) || limit < 1 || limit > 100 || before !== undefined && (typeof before !== 'string' || !/^\d{5,25}$/.test(before))) throw new Error('Invalid message history cursor.');
+    return this.request('GET', `/channels/${channelId}/messages?limit=${limit}${before ? `&before=${before}` : ''}`);
+  }
   deleteChannelMessage(channelId, messageId, reason) { return this.request('DELETE', `/channels/${channelId}/messages/${messageId}`, undefined, { auditReason: reason }); }
   bulkDeleteChannelMessages(channelId, messageIds, reason) { return this.request('POST', `/channels/${channelId}/messages/bulk-delete`, { messages: messageIds }, { auditReason: reason }); }
   grantRole(guildId, userId, roleId, reason) { return this.request('PUT', `/guilds/${guildId}/members/${userId}/roles/${roleId}`, undefined, { auditReason: reason }); }
