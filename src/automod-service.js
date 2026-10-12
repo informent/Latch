@@ -80,6 +80,33 @@ class AutoModService {
       return { changed: true };
     });
   }
+  policy({ ruleId, mode, channelId, seconds, actorId }) {
+    return this.#serialize(async () => {
+      const rule = await this.#owned(ruleId);
+      if (![1, 3, 4, 5].includes(rule.trigger_type) || rule.event_type !== 1) throw new Error('Only message filtering rules support this policy.');
+      if (!['block', 'alert', 'block-alert', 'block-timeout', 'block-alert-timeout'].includes(mode)) throw new Error('Choose a supported action policy.');
+      const alert = mode.includes('alert'); const timeout = mode.includes('timeout');
+      if (alert !== (channelId !== undefined) || timeout !== (seconds !== undefined)) throw new Error('Provide a channel only for alert policies and seconds only for timeout policies.');
+      if (timeout && (![1, 5].includes(rule.trigger_type) || !Number.isInteger(seconds) || seconds < 1 || seconds > 2419200)) throw new Error('Timeouts require a keyword or mention rule and 1 to 2419200 seconds.');
+      if (alert) {
+        if (!ID(channelId)) throw new Error('Choose a valid alert channel.');
+        const channel = await this.discord.request('GET', `/channels/${channelId}`);
+        if (!channel || channel.id !== channelId || channel.guild_id !== this.guildId || ![0, 5].includes(channel.type)) throw new Error('Choose a server text or announcement channel for alerts.');
+      }
+      if (!Array.isArray(rule.actions) || rule.actions.some((entry) => !entry || ![1, 2, 3].includes(entry.type)) || new Set(rule.actions.map((entry) => entry.type)).size !== rule.actions.length) throw new Error('Rule actions are invalid or unsupported.');
+      const actions = [];
+      if (mode !== 'alert') {
+        const message = rule.actions.find((entry) => entry.type === 1)?.metadata?.custom_message;
+        if (message !== undefined && (typeof message !== 'string' || !message.trim() || message.length > 150)) throw new Error('Rule block explanation is invalid.');
+        actions.push(message === undefined ? { type: 1 } : { type: 1, metadata: { custom_message: message } });
+      }
+      if (alert) actions.push({ type: 2, metadata: { channel_id: channelId } });
+      if (timeout) actions.push({ type: 3, metadata: { duration_seconds: seconds } });
+      if (JSON.stringify(actions) === JSON.stringify(rule.actions)) return { changed: false };
+      await this.discord.editAutoModRule(this.guildId, ruleId, { actions }, `AutoMod action policy by ${actorId}`);
+      return { changed: true };
+    });
+  }
   async #owned(ruleId) {
     if (!ID(ruleId)) throw new Error('Enter a valid rule ID.');
     const rule = await this.discord.getAutoModRule(this.guildId, ruleId);

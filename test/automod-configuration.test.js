@@ -75,3 +75,48 @@ test('AutoMod new command paths send private confirmations and safe failure repl
   assert.match(await run('info', { rule: ids.menu }), /Block explanation: Rules/);
   f.discord.getAutoModRule = async () => { throw new Error('PRIVATE_TOKEN'); }; const error = await run('info', { rule: ids.menu }); assert.match(error, /Could not complete/); assert.ok(!error.includes('PRIVATE_TOKEN'));
 });
+
+for (const mode of ['block', 'alert', 'block-alert', 'block-timeout', 'block-alert-timeout']) test(`AutoMod policy ${mode} replaces actions and preserves rule settings`, async () => {
+  const f = fixture(); const before = structuredClone(f.rule);
+  const input = { ruleId: ids.menu, mode, actorId: ids.actor };
+  if (mode.includes('alert')) input.channelId = ids.channel;
+  if (mode.includes('timeout')) input.seconds = 120;
+  await f.service.policy(input);
+  assert.deepEqual(f.rule.actions.map((entry) => entry.type), [ ...(mode !== 'alert' ? [1] : []), ...(mode.includes('alert') ? [2] : []), ...(mode.includes('timeout') ? [3] : []) ]);
+  for (const key of Object.keys(before).filter((key) => key !== 'actions')) assert.deepEqual(f.rule[key], before[key]);
+  assert.deepEqual(await f.service.policy(input), { changed: false });
+});
+for (const seconds of [0, -1, 1.5, 2419201, '60', null]) test(`AutoMod policy rejects invalid timeout ${seconds}`, async () => {
+  const f = fixture(); await assert.rejects(f.service.policy({ ruleId: ids.menu, mode: 'block-timeout', seconds }), /Timeouts/); assert.equal(f.edits.length, 0);
+});
+for (const trigger of [3, 4, 6]) test(`AutoMod policy rejects timeout trigger ${trigger}`, async () => {
+  const f = fixture(); f.rule.trigger_type = trigger; await assert.rejects(f.service.policy({ ruleId: ids.menu, mode: 'block-timeout', seconds: 60 })); assert.equal(f.edits.length, 0);
+});
+test('AutoMod policy validates channels, options and action snapshots before writes', async () => {
+  const f = fixture(); const input = { ruleId: ids.menu, mode: 'block-alert', channelId: ids.channel };
+  for (const extra of [{ mode: 'unknown' }, { channelId: undefined }, { seconds: 60 }, { channelId: 'bad' }]) await assert.rejects(f.service.policy({ ...input, ...extra }));
+  const channel = f.channels.get(ids.channel); const original = structuredClone(channel);
+  for (const extra of [{ guild_id: ids.owner }, { type: 2 }, { id: ids.owner }]) { Object.assign(channel, original, extra); await assert.rejects(f.service.policy(input), /channel/); }
+  Object.assign(channel, original); f.rule.actions = [{ type: 4 }]; await assert.rejects(f.service.policy(input), /unsupported/); assert.equal(f.edits.length, 0);
+});
+test('AutoMod policy preserves block explanation and serializes concurrent changes', async () => {
+  const f = fixture(); await Promise.all([f.configure('block-message', { message: 'Follow server rules.' }), f.service.policy({ ruleId: ids.menu, mode: 'block-timeout', seconds: 2419200 })]);
+  assert.deepEqual(f.rule.actions, [{ type: 1, metadata: { custom_message: 'Follow server rules.' } }, { type: 3, metadata: { duration_seconds: 2419200 } }]);
+});
+test('AutoMod timeout command requires Moderate Members in addition to Manage Server', async () => {
+  const f = fixture(); const handler = createInteractionHandler({ config: { guildId: ids.guild, applicationId: ids.bot }, automod: f.service, discord: f.discord });
+  const result = await handler(interaction('automod', 'policy', { rule: ids.menu, mode: 'block-timeout', seconds: 60 }, '32')); await result.work();
+  assert.equal(f.edits.length, 0); assert.match(f.calls.at(-1)[3].content, /Moderate Members/);
+});
+
+test('AutoMod policy command applies authorized timeout privately and reports policy metadata', async () => {
+  const f = fixture(); const handler = createInteractionHandler({ config: { guildId: ids.guild, applicationId: ids.bot }, automod: f.service, discord: f.discord });
+  const result = await handler(interaction('automod', 'policy', { rule: ids.menu, mode: 'block-alert-timeout', channel: ids.channel, seconds: 60 }, '1099511627808'));
+  assert.equal(result.immediate.data.flags, 64); await result.work(); assert.equal(f.rule.actions[2].metadata.duration_seconds, 60);
+  assert.deepEqual(f.calls.at(-1)[3].allowed_mentions, { parse: [] });
+});
+test('AutoMod policy queue recovers after Discord refuses an edit', async () => {
+  const f = fixture(); const original = f.discord.editAutoModRule; f.discord.editAutoModRule = async () => { throw new Error('Denied'); };
+  await assert.rejects(f.service.policy({ ruleId: ids.menu, mode: 'block' })); assert.equal(f.rule.actions.length, 2);
+  f.discord.editAutoModRule = original; await f.service.policy({ ruleId: ids.menu, mode: 'block' }); assert.deepEqual(f.rule.actions, [{ type: 1 }]);
+});
