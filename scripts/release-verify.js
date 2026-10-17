@@ -47,7 +47,9 @@ async function sourceDigest(files, root = ROOT) {
 }
 
 function testSummary(output) {
-  const get = (name) => Number(output.match(new RegExp(`^# ${name} (\\d+)\\s*$`, 'm'))?.[1] ?? NaN);
+  const normalized = output.includes('\\0') ? Buffer.from(output, 'binary').toString('utf16le') : output;
+  const tapOnly = normalized.split(/(?:\r?\n)\s*# start of coverage report/)[0].split(/(?:\r?\n)\s*ℹ start of coverage report/)[0];
+  const get = (name) => Number(tapOnly.match(new RegExp(`^(?:#|ℹ)\\s+${name} (\\d+)\\s*$`, 'm'))?.[1] ?? NaN);
   const result = { total: get('tests'), passed: get('pass'), failed: get('fail'), cancelled: get('cancelled'), skipped: get('skipped'), todo: get('todo') };
   return Object.values(result).every(Number.isSafeInteger) && result.total > 0 && result.passed === result.total && result.failed === 0 && result.cancelled === 0 && result.skipped === 0 && result.todo === 0 ? result : null;
 }

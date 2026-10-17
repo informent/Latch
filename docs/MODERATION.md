@@ -10,13 +10,13 @@ These checks follow Discord's [permission hierarchy](https://docs.discord.com/de
 
 Unban, warning records, purge and slowmode retain their existing permission checks. The guard also protects [role/nickname delegation](MEMBER-MANAGEMENT.md). Temporary bans, jail, antinuke and full competitor parity remain unfinished. Strike record actions are documented below. Member and role lookup data is not persisted. Private failures explain known policy denials; unknown API errors use a generic message.
 
-The moderation tests cover role hierarchy, permissions, persistence and strike lifecycle. Live Discord operation remains unverified.
+The moderation tests cover role hierarchy, permissions, persistence, warning case lookup/removal and strike lifecycle. Live Discord operation remains unverified.
 
 ## Warning and strike records
 
 Latch keeps staff warnings and strikes in `data/moderation.json`. These record commands require the Discord **Moderate Members** permission.
 
-Warnings and strikes are separate records. Use `/moderation warn` and `/moderation warnings` for one-off staff notes. `/moderation clear-warnings` deletes a member's warning records.
+Warnings and strikes are separate records. Use `/moderation warn` and `/moderation warnings` for one-off staff notes. Each warning has a full case ID returned when it is created. `/moderation case` privately looks up a warning by that ID within the current server. `/moderation unwarn` removes one warning by case ID and requires a removal reason; `/moderation clear-warnings` deletes all of a member's warning records.
 
 Use the strike commands to track repeat incidents:
 

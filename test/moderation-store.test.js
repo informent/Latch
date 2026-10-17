@@ -34,6 +34,23 @@ test('serializes concurrent warning writes and reloads persisted records', async
   assert.equal(reloaded.listWarnings(warnings[0].guildId, warnings[0].userId).length, 0);
 });
 
+test('looks up and removes warning cases only within their server', async (t) => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'latch-warning-cases-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const store = new ModerationStore(path.join(root, 'moderation.json'));
+  await store.load();
+  const warning = baseWarning();
+  await store.addWarning(warning);
+  assert.deepEqual(store.getWarning(warning.guildId, warning.id), warning);
+  assert.equal(store.getWarning('923456789012345678', warning.id), null);
+  assert.equal(await store.removeWarning('923456789012345678', warning.id), null);
+  assert.deepEqual(await store.removeWarning(warning.guildId, warning.id), warning);
+  assert.equal(store.getWarning(warning.guildId, warning.id), null);
+  const reloaded = new ModerationStore(store.filePath);
+  await reloaded.load();
+  assert.equal(reloaded.getWarning(warning.guildId, warning.id), null);
+});
+
 test('refuses malformed moderation state without replacing it', async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opendesk-moderation-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));

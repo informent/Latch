@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Add staff-only strike add, list, remove and clear actions with unique case IDs, optional expiry and preserved removal history. Strike decisions stay manual; the bot does not apply automatic punishments.
+- Add staff-only warning case lookup and individual removal by full case ID, with server scoping and recorded removal reason.
 - Upgrade moderation data from version 1 to version 2 on the next successful write while preserving existing warning records.
 - Add strike lifecycle, migration, permission and command-catalog coverage. Live Discord acceptance remains pending.
 
