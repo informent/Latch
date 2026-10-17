@@ -78,6 +78,27 @@ test('timeout and untimeout actions, bounded durations, and warnings persist', a
   assert.equal(edited.length, 3);
 });
 
+test('warning case lookup and removal require staff permission and stay private', async () => {
+  const record = { id: '123e4567-e89b-42d3-a456-426614174000', guildId: config.guildId, userId: targetId, actorId: userId, reason: 'Repeated @spam', createdAt: '2026-10-12T12:00:00.000Z' };
+  const edited = [];
+  const moderation = {
+    getWarning: (guildId, id) => guildId === record.guildId && id === record.id ? record : null,
+    removeWarning: async (guildId, id) => guildId === record.guildId && id === record.id ? record : null
+  };
+  const discord = { editOriginalResponse: async (...args) => edited.push(args) };
+  const handler = createInteractionHandler({ config, moderation, discord });
+  const unauthorized = await handler(base('case', '0', [{ name: 'case-id', value: record.id }]));
+  assert.match(unauthorized.immediate.data.content, /do not have permission/);
+  const lookup = await handler(base('case', String(1n << 40n), [{ name: 'case-id', value: record.id }]));
+  await lookup.work();
+  assert.match(edited[0][2].content, /Repeated ＠spam/);
+  assert.deepEqual(edited[0][2].allowed_mentions, { parse: [] });
+  const remove = await handler(base('unwarn', String(1n << 40n), [{ name: 'case-id', value: record.id }, { name: 'reason', value: 'Appeal accepted' }]));
+  await remove.work();
+  assert.match(edited[1][2].content, /Removed warning/);
+  assert.match(edited[1][2].content, /Appeal accepted/);
+});
+
 test('strike commands enforce staff permission and keep individually removable audit records', async () => {
   const strikes = [];
   const edited = [];

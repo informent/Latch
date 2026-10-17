@@ -41,6 +41,10 @@ class ModerationStore {
     return this.warnings.filter((warning) => warning.guildId === guildId && warning.userId === userId);
   }
 
+  getWarning(guildId, warningId) {
+    return this.warnings.find((warning) => warning.guildId === guildId && warning.id === warningId) || null;
+  }
+
   listStrikes(guildId, userId, { includeInactive = false, now = Date.now() } = {}) {
     const currentTime = now instanceof Date ? now.getTime() : Number(now);
     if (!Number.isFinite(currentTime)) throw new Error('Strike listing requires a valid current time.');
@@ -62,6 +66,15 @@ class ModerationStore {
       const previous = this.warnings;
       this.warnings = previous.filter((warning) => warning.guildId !== guildId || warning.userId !== userId);
       return previous.length - this.warnings.length;
+    });
+  }
+
+  async removeWarning(guildId, warningId) {
+    return this.#transaction(() => {
+      const index = this.warnings.findIndex((warning) => warning.guildId === guildId && warning.id === warningId);
+      if (index < 0) return null;
+      const [removed] = this.warnings.splice(index, 1);
+      return removed;
     });
   }
 
