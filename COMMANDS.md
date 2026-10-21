@@ -1,6 +1,6 @@
 # Latch command reference
 
-All 222 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
+All 226 registered command paths across 26 slash command roots are listed below. Every Latch feature is free and MIT-licensed.
 
 Generated from `src/commands.js` with `npm run commands:write`. CI runs `npm run commands:check` to reject an outdated reference. These are implemented Latch declarations, not a claim of full Bleed/Greed parity.
 
@@ -21,7 +21,7 @@ Start with `/utility help`. See [README](README.md), [operations](docs/OPERATION
 - [/starboard](#starboard): Configure and reconcile public-message star highlights.
 - [/automod](#automod): Manage Discord native message filtering rules.
 - [/embed](#embed): Publish a custom embed in the current channel.
-- [/fun](#fun): Free random games and utilities.
+- [/fun](#fun): Game night teams, brackets and free random utilities.
 - [/reminder](#reminder): Schedule reminders posted in the current channel.
 - [/giveaway](#giveaway): Host free community giveaways with persistent entry buttons.
 - [/shop](#shop): Server coin shop, inventory, gifts and transaction history.
@@ -898,7 +898,7 @@ Publish a custom embed in the current channel.
 
 ## fun
 
-Free random games and utilities.
+Game night teams, brackets and free random utilities.
 
 Default command visibility: all members; individual staff actions require runtime permission checks.
 
@@ -923,6 +923,23 @@ Ask the magic eight ball.
 | Option | Type | Required | Description and constraints |
 | --- | --- | --- | --- |
 | question | text | yes | Your question.; Maximum text length: 300 |
+
+### /fun teams
+
+Privately shuffle balanced teams for game night.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| players | text | yes | 2-32 comma-separated player names, at most 32 characters each.; Minimum text length: 3; Maximum text length: 1000 |
+| count | integer | no | Number of teams, default 2. At least one player per team.; Minimum: 2; Maximum: 8 |
+
+### /fun bracket
+
+Privately draw a single-elimination opening round with byes.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| players | text | yes | 2-32 comma-separated unique player names, at most 32 characters each.; Minimum text length: 3; Maximum text length: 1000 |
 
 ## reminder
 
@@ -1525,6 +1542,23 @@ update a saved embed template.
 List saved embed names.
 
 Options: none.
+
+### /template import
+
+Import a portable Latch JSON template without overwriting or publishing.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | New lowercase template name.; Minimum text length: 1; Maximum text length: 32 |
+| json | text | yes | Portable Latch template JSON, version 1.; Minimum text length: 2; Maximum text length: 6000 |
+
+### /template export
+
+Download one saved template privately as portable JSON.
+
+| Option | Type | Required | Description and constraints |
+| --- | --- | --- | --- |
+| name | text | yes | Saved template name.; Maximum text length: 32 |
 
 ### /template clone
 

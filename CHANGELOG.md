@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add private game-night team draws and single-elimination opening-round brackets with byes, unique player names, secure randomness and suppressed mentions. No scores or player lists are stored.
+- Add private portable JSON template export and create-only import, compatible with Guildkit's basic title/body/color exports. Imports require Manage Messages and never publish or replace existing templates.
+
 - Add staff-only strike add, list, remove and clear actions with unique case IDs, optional expiry and preserved removal history. Strike decisions stay manual; the bot does not apply automatic punishments.
 - Add staff-only warning case lookup and individual removal by full case ID, with server scoping and recorded removal reason.
 - Upgrade moderation data from version 1 to version 2 on the next successful write while preserving existing warning records.
