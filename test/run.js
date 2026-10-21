@@ -66,3 +66,5 @@ require('./transcript-history.test');
 require('./ticket-queue.test');
 
 require('./starboard.test');
+require('./game-night.test');
+require('./template-transfer.test');

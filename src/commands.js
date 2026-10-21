@@ -131,8 +131,10 @@ const commands = [
     options: [option(3, 'title', 'Announcement title.', { required: true, max_length: 256 }), option(3, 'description', 'Announcement body.', { required: true, max_length: 4000 }), option(3, 'color', 'Optional six-digit hex color, for example 5865f2.', { required: false, max_length: 7 })]
   },
   {
-    name: 'fun', description: 'Free random games and utilities.', type: 1,
-    options: [subcommand('coin', 'Flip a coin.'), subcommand('roll', 'Roll a die.', [option(4, 'sides', 'Number of sides.', { required: false, min_value: 2, max_value: 1000 })]), subcommand('eightball', 'Ask the magic eight ball.', [option(3, 'question', 'Your question.', { required: true, max_length: 300 })])]
+    name: 'fun', description: 'Game night teams, brackets and free random utilities.', type: 1,
+    options: [subcommand('coin', 'Flip a coin.'), subcommand('roll', 'Roll a die.', [option(4, 'sides', 'Number of sides.', { required: false, min_value: 2, max_value: 1000 })]), subcommand('eightball', 'Ask the magic eight ball.', [option(3, 'question', 'Your question.', { required: true, max_length: 300 })]),
+      subcommand('teams', 'Privately shuffle balanced teams for game night.', [option(3, 'players', '2-32 comma-separated player names, at most 32 characters each.', { required: true, min_length: 3, max_length: 1000 }), option(4, 'count', 'Number of teams, default 2. At least one player per team.', { min_value: 2, max_value: 8 })]),
+      subcommand('bracket', 'Privately draw a single-elimination opening round with byes.', [option(3, 'players', '2-32 comma-separated unique player names, at most 32 characters each.', { required: true, min_length: 3, max_length: 1000 })])]
   },
   {
     name: 'reminder', description: 'Schedule reminders posted in the current channel.', type: 1,
@@ -231,6 +233,8 @@ commands.push({
       option(3, 'color', 'Six-digit hex color; defaults to 5865f2.', { max_length: 7 })
     ])),
     subcommand('list', 'List saved embed names.'),
+    subcommand('import', 'Import a portable Latch JSON template without overwriting or publishing.', [option(3, 'name', 'New lowercase template name.', { required: true, min_length: 1, max_length: 32 }), option(3, 'json', 'Portable Latch template JSON, version 1.', { required: true, min_length: 2, max_length: 6000 })]),
+    subcommand('export', 'Download one saved template privately as portable JSON.', [option(3, 'name', 'Saved template name.', { required: true, max_length: 32 })]),
     ...['clone', 'rename'].map((action) => subcommand(action, `${action} a template without publishing or overwriting another.`, [
       option(3, 'name', 'Existing template name.', { required: true, min_length: 1, max_length: 32 }),
       option(3, 'destination', 'Unused lowercase name with letters, numbers, underscores or hyphens.', { required: true, min_length: 1, max_length: 32 })

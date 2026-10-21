@@ -1,6 +1,8 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { makeTeams, makeBracket, renderTeams, renderBracket } = require('./game-night');
+const { importTemplate, exportTemplate } = require('./template-transfer');
 const { createInformationHandler, INFORMATION_ACTIONS } = require('./information-interactions');
 const { createEconomyAdminHandler } = require('./economy-admin-interactions');
 const { createPollHandler } = require('./poll-interactions');
@@ -80,7 +82,12 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
         try {
           let content;
           let embeds = [];
-          if (action === 'create' || action === 'update') {
+            let file;
+            if (action === 'import') {
+              const item = importTemplate(findOption(options, 'json'), name);
+              await templates.change('create', item);
+              content = `Template ${safeText(name)} imported. Use preview to review it before publishing.`;
+            } else if (action === 'create' || action === 'update') {
             const color = String(findOption(options, 'color') || '5865f2').replace(/^#/, '');
             if (!/^[0-9a-f]{6}$/i.test(color)) throw new Error();
             await templates.change(action, { name, title: findOption(options, 'title'), description: findOption(options, 'description'), color: parseInt(color, 16) });
@@ -90,7 +97,11 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
             const item = templates.get(name);
             if (!item) throw new Error();
             const embed = { title: item.title, description: item.description, color: item.color };
-            if (action === 'delete') { await templates.change('delete', { name }); content = 'Template deleted. Previously published messages remain in Discord.'; }
+              if (action === 'export') {
+                file = { filename: `${item.name}.json`, contentType: 'application/json', data: Buffer.from(JSON.stringify(exportTemplate(item), null, 2) + '\n') };
+                content = 'Private template export. This contains message text; keep private templates private. Import accepts JSON up to 6000 characters.';
+              }
+              else if (action === 'delete') { await templates.change('delete', { name }); content = 'Template deleted. Previously published messages remain in Discord.'; }
             else if (action === 'clone' || action === 'rename') {
               const destination = findOption(options, 'destination');
               await templates.change(action, { name, destination });
@@ -105,7 +116,7 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
               content = `Template ${item.name} published in this channel.`;
             } else throw new Error();
           }
-          await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), embeds, allowed_mentions: { parse: [] } });
+            await discord.editOriginalResponse(config.applicationId, interaction.token, { content: content.slice(0, 1900), embeds, allowed_mentions: { parse: [] } }, file);
         } catch {
           logger('template_action_failed', { action });
           await discord.editOriginalResponse(config.applicationId, interaction.token, { content: 'Template action failed. Check the name, title/body, color, 50-template limit and channel permissions. Create needs a new name; update needs an existing name. Clone and rename need an existing source and an unused valid destination name. Delivery failures require checking the channel before sending again.', allowed_mentions: { parse: [] } }).catch(() => {});
@@ -199,6 +210,15 @@ function createInteractionHandler({ config, tickets, ticketPanels, moderation, e
     }
     if (commandName === 'fun') {
       const action = subcommand?.name;
+      if (action === 'teams' || action === 'bracket') {
+        try {
+          const players = findOption(subcommand.options || [], 'players');
+          const content = action === 'teams' ? renderTeams(makeTeams(players, findOption(subcommand.options || [], 'count') ?? 2)) : renderBracket(makeBracket(players));
+          const immediate = response('');
+          immediate.data.embeds = [{ description: content }];
+          return { immediate };
+        } catch (error) { return { immediate: response(error.message) }; }
+      }
       if (action === 'coin') return { immediate: response(`Coin flip: **${crypto.randomInt(2) ? 'Heads' : 'Tails'}**.`) };
       if (action === 'roll') {
         const sides = findOption(subcommand.options || [], 'sides') ?? 6;

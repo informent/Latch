@@ -66,4 +66,4 @@ class TemplateStore {
     this.queue = operation.catch(() => {}); return operation;
   }
 }
-module.exports = { TemplateStore };
+module.exports = { TemplateStore, validItem };
